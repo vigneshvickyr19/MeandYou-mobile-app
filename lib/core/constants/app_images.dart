@@ -9,4 +9,6 @@ class AppImages {
   static const calendarIcon = 'assets/images/calendar_icon.svg';
   static const faceMaleIcon = 'assets/images/face_male_icon.svg';
   static const faceFemaleIcon = 'assets/images/face_female_icon.svg';
+  static const addImageIcon = 'assets/images/add_image_icon.svg';
+  static const tickIcon = 'assets/images/tick-circle.svg';
 }

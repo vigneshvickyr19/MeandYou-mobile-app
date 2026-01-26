@@ -52,7 +52,7 @@ class _CreatePasswordPageState extends State<CreatePasswordPage> {
       type: SnackbarType.success,
     );
 
-    Navigator.pushReplacementNamed(context, AppRoutes.home);
+    Navigator.pushReplacementNamed(context, AppRoutes.profilePage);
   }
 
   @override

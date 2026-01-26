@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
           children: [
             const SizedBox(height: 40),
             const Text(
-              "Welcome to the App! Man",
+              "Welcome to the App! dating App",
               style: TextStyle(
                 color: AppColors.white,
                 fontSize: 24,

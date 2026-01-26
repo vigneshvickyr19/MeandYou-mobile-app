@@ -7,4 +7,5 @@ class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const verifyCode = '/verify-code';
   static const createPassword = '/create-password';
+  static const profilePage = '/profile';
 }
