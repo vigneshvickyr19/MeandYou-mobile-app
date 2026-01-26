@@ -11,4 +11,9 @@ class AppImages {
   static const faceFemaleIcon = 'assets/images/face_female_icon.svg';
   static const addImageIcon = 'assets/images/add_image_icon.svg';
   static const tickIcon = 'assets/images/tick-circle.svg';
+
+  static const homeIcon = 'assets/images/home.svg';
+  static const lovelyIcon = 'assets/images/lovely.svg';
+  static const messageIcon = 'assets/images/messages.svg';
+  static const profileIcon = 'assets/images/profile.svg';
 }

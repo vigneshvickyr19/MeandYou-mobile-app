@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_images.dart';
 import 'nav_item.dart';
 
 class CustomBottomNav extends StatelessWidget {
@@ -15,35 +16,46 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 70,
-      margin: const EdgeInsets.all(16),
+      height: 72,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: AppColors.black,
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.6), blurRadius: 20),
+          BoxShadow(color: Colors.black.withOpacity(0.7), blurRadius: 25),
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           NavItem(
-            icon: Icons.home,
-            label: "Home",
+            index: 0,
+            label: 'Home',
+            iconPath: AppImages.homeIcon,
             isActive: currentIndex == 0,
-            onTap: () => onChanged(0),
+            onTap: onChanged,
           ),
           NavItem(
-            icon: Icons.chat_bubble_outline,
-            label: "Chat",
+            index: 1,
+            label: 'Likes',
+            iconPath: AppImages.lovelyIcon,
             isActive: currentIndex == 1,
-            onTap: () => onChanged(1),
+            onTap: onChanged,
           ),
           NavItem(
-            icon: Icons.person_outline,
-            label: "Profile",
+            index: 2,
+            label: 'Chats',
+            iconPath: AppImages.messageIcon,
             isActive: currentIndex == 2,
-            onTap: () => onChanged(2),
+            onTap: onChanged,
+          ),
+          NavItem(
+            index: 3,
+            label: 'Profile',
+            iconPath: AppImages.profileIcon,
+            isActive: currentIndex == 3,
+            onTap: onChanged,
           ),
         ],
       ),

@@ -9,7 +9,7 @@ import 'features/auth/presentation/pages/sign_up_page.dart';
 import 'features/auth/presentation/pages/verify_code_page.dart';
 import 'features/auth/presentation/pages/create_password_page.dart';
 import 'features/home/presentation/pages/home_shell_page.dart';
-import 'features/profile/presentation/pages/profile_page.dart';
+import 'features/profile-setup/presentation/pages/profile_setup_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
         AppRoutes.verifyCode: (_) => const VerifyCodePage(),
         AppRoutes.createPassword: (_) => const CreatePasswordPage(),
-        AppRoutes.profilePage: (_) => const ProfilePage(),
+        AppRoutes.profileSetupPage: (_) => const ProfileSetupPage(),
 
         AppRoutes.home: (_) => const HomeShellPage(),
       },
