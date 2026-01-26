@@ -4,10 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 class ProfilePage extends StatelessWidget {
   final String? userId;
 
-  const ProfilePage({
-    super.key,
-    this.userId,
-  });
+  const ProfilePage({super.key, this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -31,4 +28,3 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
-
