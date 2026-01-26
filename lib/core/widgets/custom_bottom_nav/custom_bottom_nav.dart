@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_images.dart';
+import '../../constants/app_colors.dart';
+import '../../constants/app_images.dart';
 import 'nav_item.dart';
 
 class CustomBottomNav extends StatelessWidget {

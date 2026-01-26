@@ -8,7 +8,7 @@ class AppRoutes {
   static const verifyCode = '/verify-code';
   static const createPassword = '/create-password';
   static const profileSetupPage = 'profile-setup';
-  static const profilePage = '/profile';
+  static const profile = '/profile';
   static const chat = '/chat';
   static const likes = '/likes';
 }

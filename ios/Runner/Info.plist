@@ -49,5 +49,26 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Deep Linking Configuration -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.meandyou.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>meandyou</string>
+			</array>
+		</dict>
+	</array>
+	<!-- For Universal Links (production), add your domain -->
+	<!-- 
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:yourdomain.com</string>
+	</array>
+	-->
 </dict>
 </plist>

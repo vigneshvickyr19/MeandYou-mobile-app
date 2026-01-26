@@ -1,37 +1,45 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_routes.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/splash/presentation/pages/splash_page.dart';
-import 'features/auth/presentation/pages/get_started_page.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/pages/forgotPassword_page.dart';
-import 'features/auth/presentation/pages/sign_up_page.dart';
-import 'features/auth/presentation/pages/verify_code_page.dart';
-import 'features/auth/presentation/pages/create_password_page.dart';
-import 'features/home/presentation/pages/home_shell_page.dart';
-import 'features/profile-setup/presentation/pages/profile_setup_page.dart';
+import 'core/services/deep_link_service.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final DeepLinkService _deepLinkService = DeepLinkService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize deep link service after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _deepLinkService.initialize(_navigatorKey);
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: _navigatorKey,
       initialRoute: AppRoutes.splash,
       theme: AppTheme.darkTheme,
-      routes: {
-        AppRoutes.splash: (_) => const SplashPage(),
-        AppRoutes.getStarted: (_) => const GetStartedPage(),
-        AppRoutes.login: (_) => const LoginPage(),
-        AppRoutes.signUp: (_) => const SignUpPage(),
-        AppRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
-        AppRoutes.verifyCode: (_) => const VerifyCodePage(),
-        AppRoutes.createPassword: (_) => const CreatePasswordPage(),
-        AppRoutes.profileSetupPage: (_) => const ProfileSetupPage(),
-
-        AppRoutes.home: (_) => const HomeShellPage(),
-      },
+      routes: AppRouter.routes,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }
+
