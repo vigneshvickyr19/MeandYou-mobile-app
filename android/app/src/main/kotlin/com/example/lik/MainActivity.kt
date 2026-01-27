@@ -1,4 +1,4 @@
-package com.example.me_and_you
+package com.example.lik
 
 import io.flutter.embedding.android.FlutterActivity
 

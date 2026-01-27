@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import '../../firebase_options.dart';
 
 /// Service to initialize and manage Firebase
 class FirebaseService {
@@ -21,7 +22,9 @@ class FirebaseService {
     }
 
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       _initialized = true;
       if (kDebugMode) {
         print('Firebase initialized successfully');

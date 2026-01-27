@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -65,7 +65,23 @@ class NotificationService {
 
   /// Request notification permissions
   Future<void> _requestPermissions() async {
-    if (Platform.isIOS) {
+    if (kIsWeb) {
+      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+      if (kDebugMode) {
+        print('Web notification permission status: ${settings.authorizationStatus}');
+      }
+      return;
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Request iOS permissions
       NotificationSettings settings = await _firebaseMessaging.requestPermission(
         alert: true,
@@ -80,7 +96,7 @@ class NotificationService {
       if (kDebugMode) {
         print('iOS notification permission status: ${settings.authorizationStatus}');
       }
-    } else if (Platform.isAndroid) {
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
       // Request Android 13+ notification permission
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
           _localNotifications.resolvePlatformSpecificImplementation<
@@ -117,7 +133,7 @@ class NotificationService {
     );
 
     // Create Android notification channel
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
         'high_importance_channel', // id
         'High Importance Notifications', // name
@@ -170,7 +186,13 @@ class NotificationService {
   /// Get FCM token
   Future<void> _getToken() async {
     try {
-      _fcmToken = await _firebaseMessaging.getToken();
+      if (kIsWeb) {
+        _fcmToken = await _firebaseMessaging.getToken(
+          vapidKey: 'REPLACE_WITH_YOUR_VAPID_KEY',
+        );
+      } else {
+        _fcmToken = await _firebaseMessaging.getToken();
+      }
       if (kDebugMode) {
         print('FCM Token: $_fcmToken');
       }
