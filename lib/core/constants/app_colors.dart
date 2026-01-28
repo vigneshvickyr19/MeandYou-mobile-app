@@ -22,5 +22,5 @@ class AppColors {
     43,
     42,
     42,
-  ).withOpacity(0.9);
+  ).withValues(alpha: 0.9);
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_images.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_back_button.dart';
+import '../../../../core/providers/auth_provider.dart';
 
 class GetStartedPage extends StatelessWidget {
   const GetStartedPage({super.key});
@@ -45,7 +46,7 @@ class GetStartedPage extends StatelessWidget {
                     Text(
                       'Connect with people and start meaningful conversations.',
                       style: TextStyle(
-                        color: AppColors.white.withOpacity(0.7),
+                        color: AppColors.white.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -56,9 +57,16 @@ class GetStartedPage extends StatelessWidget {
                       text: 'Sign up with Google',
                       iconPath: AppImages.google,
                       type: AppButtonType.transparent,
-                      onPressed: () {
-                        // You can add Google auth flow here
-                        Navigator.pushNamed(context, AppRoutes.home);
+                      onPressed: () async {
+                        try {
+                          await Provider.of<AuthProvider>(context, listen: false).loginWithGoogle();
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Google Sign-In failed: $e')),
+                            );
+                          }
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -69,7 +77,6 @@ class GetStartedPage extends StatelessWidget {
                       type: AppButtonType.transparent,
                       onPressed: () {
                         // Add Apple auth flow here
-                        Navigator.pushNamed(context, AppRoutes.home);
                       },
                     ),
                     const SizedBox(height: 12),
@@ -89,7 +96,7 @@ class GetStartedPage extends StatelessWidget {
                       iconPath: AppImages.phone,
                       type: AppButtonType.transparent,
                       onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.signUp);
+                        Navigator.pushNamed(context, AppRoutes.phoneLogin);
                       },
                     ),
 

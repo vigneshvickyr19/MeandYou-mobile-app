@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "470989654160",
+    "project_id": "lik-connect",
+    "storage_bucket": "lik-connect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470989654160:android:20705a7d77b526b5d77015",
+        "android_client_info": {
+          "package_name": "com.example.lik"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRllM8rjTWKm4KJlayTIqBruFpPUF59bI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470989654160:ios:REPLACE_WITH_IOS_APP_ID",
+        "ios_client_info": {
+          "bundle_id": "com.example.lik"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRllM8rjTWKm4KJlayTIqBruFpPUF59bI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

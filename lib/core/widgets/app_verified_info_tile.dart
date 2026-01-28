@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
-class VerifiedInfoTile extends StatelessWidget {
+class AppVerifiedInfoTile extends StatelessWidget {
   final String label;
   final String value;
-  final bool verified;
+  final bool isVerified;
 
-  const VerifiedInfoTile({
+  const AppVerifiedInfoTile({
     super.key,
     required this.label,
     required this.value,
-    this.verified = true,
+    this.isVerified = true,
   });
 
   @override
@@ -43,7 +43,7 @@ class VerifiedInfoTile extends StatelessWidget {
                 ),
               ),
 
-              if (verified) ...[
+              if (isVerified) ...[
                 const SizedBox(width: 8),
                 Row(
                   children: const [

@@ -35,12 +35,6 @@ class _AppDatePickerState extends State<AppDatePicker> {
     super.dispose();
   }
 
-  OutlineInputBorder _border(Color color, double width) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: color, width: width),
-    );
-  }
 
   Future<void> _pickDate() async {
     _focusNode.requestFocus();
@@ -134,7 +128,10 @@ class _AppDatePickerState extends State<AppDatePicker> {
                     AppImages.calendarIcon,
                     width: 20,
                     height: 20,
-                    color: Colors.white54,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white54,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ],
               ),

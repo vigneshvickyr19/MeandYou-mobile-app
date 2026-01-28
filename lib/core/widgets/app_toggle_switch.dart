@@ -77,7 +77,7 @@ class _AppToggleSwitchState extends State<AppToggleSwitch> {
                     width: optionWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.darkOverlay.withOpacity(0.35),
+                        color: AppColors.darkOverlay.withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),

@@ -10,6 +10,7 @@ class AppButton extends StatelessWidget {
   final AppButtonType type;
   final String? iconPath;
   final bool isEnabled;
+  final bool isLoading;
 
   const AppButton({
     super.key,
@@ -18,17 +19,19 @@ class AppButton extends StatelessWidget {
     this.type = AppButtonType.primary,
     this.iconPath,
     this.isEnabled = true,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final isPrimary = type == AppButtonType.primary;
+    final bool effectiveEnabled = isEnabled && !isLoading;
 
     return SizedBox(
       height: 52,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: isEnabled ? onPressed : null,
+        onPressed: effectiveEnabled ? onPressed : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -36,66 +39,84 @@ class AppButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             side: isPrimary
                 ? BorderSide.none
-                : BorderSide(color: AppColors.white.withOpacity(0.15)),
+                : BorderSide(color: AppColors.white.withValues(alpha: 0.15)),
           ),
           padding: EdgeInsets.zero,
         ),
-        child: isPrimary ? _buildPrimary() : _buildTransparent(),
+        child: isPrimary ? _buildPrimary(effectiveEnabled) : _buildTransparent(effectiveEnabled),
       ),
     );
   }
 
   // ---------- PRIMARY BUTTON ----------
-  Widget _buildPrimary() {
+  Widget _buildPrimary(bool enabled) {
     return Ink(
       decoration: BoxDecoration(
-        gradient: isEnabled
+        gradient: enabled
             ? const LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [AppColors.primary, AppColors.secondary],
               )
             : null,
-        color: isEnabled ? null : AppColors.darkOverlay, // ✅ HERE
+        color: enabled ? null : AppColors.darkOverlay,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Center(
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isEnabled ? AppColors.black : AppColors.greyDark,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
+        child: isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.black,
+                ),
+              )
+            : Text(
+                text,
+                style: TextStyle(
+                  color: enabled ? AppColors.black : AppColors.greyDark,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
       ),
     );
   }
 
   // ---------- TRANSPARENT BUTTON ----------
-  Widget _buildTransparent() {
+  Widget _buildTransparent(bool enabled) {
     return Container(
       decoration: BoxDecoration(
-        color: isEnabled
-            ? Colors.transparent
-            : AppColors.darkOverlay, // ✅ HERE also
+        color: enabled ? Colors.transparent : AppColors.darkOverlay,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (iconPath != null) ...[
-            SvgPicture.asset(iconPath!, height: 20),
-            const SizedBox(width: 12),
-          ],
-          Text(
-            text,
-            style: TextStyle(
-              color: isEnabled ? AppColors.white : AppColors.greyDark,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          if (isLoading)
+            const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.white,
+              ),
+            )
+          else ...[
+            if (iconPath != null) ...[
+              SvgPicture.asset(iconPath!, height: 20),
+              const SizedBox(width: 12),
+            ],
+            Text(
+              text,
+              style: TextStyle(
+                color: enabled ? AppColors.white : AppColors.greyDark,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
