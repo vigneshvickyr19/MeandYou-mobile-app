@@ -7,7 +7,7 @@ class SplashController {
     Timer(const Duration(milliseconds: 2200), () {
       // Check if the widget is still mounted and context is valid
       if (context.mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.getStarted);
+        Navigator.pushReplacementNamed(context, AppRoutes.authWrapper);
       }
     });
   }

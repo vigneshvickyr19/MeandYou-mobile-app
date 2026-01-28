@@ -14,7 +14,7 @@ class AppProgressBar extends StatelessWidget {
       child: Stack(
         children: [
           /// Background bar
-          Container(height: height, color: AppColors.greyDark.withOpacity(0.3)),
+          Container(height: height, color: AppColors.greyDark.withValues(alpha: 0.3)),
 
           /// Solid fill
           LayoutBuilder(
@@ -42,8 +42,8 @@ class AppProgressBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.primary.withOpacity(0.0),
-                            AppColors.primary.withOpacity(0.6),
+                            AppColors.primary.withValues(alpha: 0.0),
+                            AppColors.primary.withValues(alpha: 0.6),
                             AppColors.primary,
                           ],
                           begin: Alignment.centerLeft,

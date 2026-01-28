@@ -1,5 +1,6 @@
 class AppRoutes {
   static const splash = "/";
+  static const authWrapper = "/auth-wrapper";
   static const getStarted = '/get-started';
   static const home = "/home";
   static const login = '/login';
@@ -11,4 +12,5 @@ class AppRoutes {
   static const profile = '/profile';
   static const chat = '/chat';
   static const likes = '/likes';
+  static const String phoneLogin = '/phone-login';
 }

@@ -90,7 +90,7 @@ class AppUploadBox extends StatelessWidget {
                   height: 24,
                   width: 24,
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.close, size: 16, color: Colors.white),

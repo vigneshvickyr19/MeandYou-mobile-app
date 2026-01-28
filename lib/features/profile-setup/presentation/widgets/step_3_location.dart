@@ -1,133 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/widgets/app_input.dart';
-import '../../../../core/widgets/app_select.dart';
+import '../../../../core/providers/profile_setup_provider.dart';
 
 class StepLocation extends StatefulWidget {
+  const StepLocation({super.key});
+
   @override
   State<StepLocation> createState() => _StepLocationState();
 }
 
 class _StepLocationState extends State<StepLocation> {
-  final addressLine1 = TextEditingController();
-  final addressLine2 = TextEditingController();
-  final pinCode = TextEditingController();
+  late TextEditingController address1Ctrl;
+  late TextEditingController address2Ctrl;
+  late TextEditingController cityCtrl;
+  late TextEditingController stateCtrl;
+  late TextEditingController countryCtrl;
+  late TextEditingController pinCodeCtrl;
 
-  String? city;
-  String? state;
-  String? country;
+  @override
+  void initState() {
+    super.initState();
+    final p = Provider.of<ProfileSetupProvider>(context, listen: false).draftProfile;
+    address1Ctrl = TextEditingController(text: p?.addressLine1 ?? '');
+    address2Ctrl = TextEditingController(text: p?.addressLine2 ?? '');
+    cityCtrl = TextEditingController(text: p?.city ?? '');
+    stateCtrl = TextEditingController(text: p?.state ?? '');
+    countryCtrl = TextEditingController(text: p?.country ?? '');
+    pinCodeCtrl = TextEditingController(text: p?.pinCode ?? '');
+  }
+
+  @override
+  void dispose() {
+    address1Ctrl.dispose();
+    address2Ctrl.dispose();
+    cityCtrl.dispose();
+    stateCtrl.dispose();
+    countryCtrl.dispose();
+    pinCodeCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = Provider.of<ProfileSetupProvider>(context);
+
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
         const Text(
           'Location Details',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur proin habitasse lacus senectus bibendum nibh egestas.',
-          style: TextStyle(color: Colors.white60),
-        ),
-
         const SizedBox(height: 24),
-
-        /// Address Line 1
         AppInput(
           label: 'Address Line 1',
-          hint: 'House / Street name',
-          controller: addressLine1,
+          hint: 'Enter address 1',
+          controller: address1Ctrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(addressLine1: v)),
         ),
-        const SizedBox(height: 20),
-
-        /// Address Line 2
+        const SizedBox(height: 16),
         AppInput(
-          label: 'Address Line 2',
-          hint: 'Area / Landmark',
-          controller: addressLine2,
+          label: 'Address Line 2 (Optional)',
+          hint: 'Enter address 2',
+          controller: address2Ctrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(addressLine2: v)),
         ),
-        const SizedBox(height: 20),
-
-        /// City & State
-        Row(
-          children: [
-            Expanded(
-              child: AppSelect<String>(
-                label: 'City',
-                hint: 'Select city',
-                selectedValue: city,
-                items: const [
-                  DropdownMenuItem(value: 'Chennai', child: Text('Chennai')),
-                  DropdownMenuItem(
-                    value: 'Bangalore',
-                    child: Text('Bangalore'),
-                  ),
-                  DropdownMenuItem(value: 'Mumbai', child: Text('Mumbai')),
-                ],
-                onChanged: (v) => setState(() => city = v),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppSelect<String>(
-                label: 'State',
-                hint: 'Select state',
-                selectedValue: state,
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Tamil Nadu',
-                    child: Text('Tamil Nadu'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Karnataka',
-                    child: Text('Karnataka'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Maharashtra',
-                    child: Text('Maharashtra'),
-                  ),
-                ],
-                onChanged: (v) => setState(() => state = v),
-              ),
-            ),
-          ],
+        const SizedBox(height: 16),
+        AppInput(
+          label: 'City',
+          hint: 'Enter city',
+          controller: cityCtrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(city: v)),
         ),
-
-        const SizedBox(height: 20),
-
-        /// Country & Pin Code
-        Row(
-          children: [
-            Expanded(
-              child: AppSelect<String>(
-                label: 'Country',
-                hint: 'Select country',
-                selectedValue: country,
-                items: const [
-                  DropdownMenuItem(value: 'India', child: Text('India')),
-                  DropdownMenuItem(value: 'USA', child: Text('USA')),
-                ],
-                onChanged: (v) => setState(() => country = v),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppInput(
-                label: 'Pin Code',
-                hint: '600000',
-                controller: pinCode,
-                keyboardType: TextInputType.number,
-              ),
-            ),
-          ],
+        const SizedBox(height: 16),
+        AppInput(
+          label: 'State',
+          hint: 'Enter state',
+          controller: stateCtrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(state: v)),
         ),
-
-        const SizedBox(height: 40),
+        const SizedBox(height: 16),
+        AppInput(
+          label: 'Country',
+          hint: 'Enter country',
+          controller: countryCtrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(country: v)),
+        ),
+        const SizedBox(height: 16),
+        AppInput(
+          label: 'Pin Code',
+          hint: 'Enter pin code',
+          controller: pinCodeCtrl,
+          keyboardType: TextInputType.number,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(pinCode: v)),
+        ),
       ],
     );
   }

@@ -267,35 +267,36 @@ class NotificationService {
     if (kDebugMode) {
       print('Notification tapped: ${response.payload}');
     }
-
     // TODO: Navigate to specific screen based on payload
   }
 
-  /// Subscribe to a topic
-  Future<void> subscribeToTopic(String topic) async {
-    try {
-      await _firebaseMessaging.subscribeToTopic(topic);
-      if (kDebugMode) {
-        print('Subscribed to topic: $topic');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error subscribing to topic: $e');
-      }
-    }
-  }
+  /// Show a test local notification
+  Future<void> showTestNotification() async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'high_importance_channel',
+      'High Importance Notifications',
+      channelDescription: 'This channel is used for important notifications.',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+    );
 
-  /// Unsubscribe from a topic
-  Future<void> unsubscribeFromTopic(String topic) async {
-    try {
-      await _firebaseMessaging.unsubscribeFromTopic(topic);
-      if (kDebugMode) {
-        print('Unsubscribed from topic: $topic');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error unsubscribing from topic: $e');
-      }
-    }
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _localNotifications.show(
+      0,
+      'Test Notification',
+      'This is a local test notification to verify it works!',
+      details,
+    );
   }
 }

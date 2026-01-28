@@ -1,69 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/widgets/app_input.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/providers/profile_setup_provider.dart';
 import '../../../../core/widgets/app_verified_info_tile.dart';
 
-class StepVerification extends StatelessWidget {
-  final instagramCtrl = TextEditingController();
-  final linkedinCtrl = TextEditingController();
-  final facebookCtrl = TextEditingController();
-  final xCtrl = TextEditingController();
+class StepVerification extends StatefulWidget {
+  const StepVerification({super.key});
+
+  @override
+  State<StepVerification> createState() => _StepVerificationState();
+}
+
+class _StepVerificationState extends State<StepVerification> {
+  late TextEditingController instaCtrl;
+  late TextEditingController lnCtrl;
+  late TextEditingController fbCtrl;
+  late TextEditingController xCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = Provider.of<ProfileSetupProvider>(context, listen: false).draftProfile;
+    instaCtrl = TextEditingController(text: p?.instagram ?? '');
+    lnCtrl = TextEditingController(text: p?.linkedin ?? '');
+    fbCtrl = TextEditingController(text: p?.facebook ?? '');
+    xCtrl = TextEditingController(text: p?.x ?? '');
+  }
+
+  @override
+  void dispose() {
+    instaCtrl.dispose();
+    lnCtrl.dispose();
+    fbCtrl.dispose();
+    xCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final profileProvider = Provider.of<ProfileSetupProvider>(context);
+    final user = authProvider.currentUser;
+
     return ListView(
-      padding: const EdgeInsets.only(bottom: 40),
       children: [
         const Text(
-          'Verification & Contact Info',
+          'Verification & Socials',
           style: TextStyle(
-            color: AppColors.white,
+            color: Colors.white,
             fontSize: 24,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 24),
 
-        /// ✅ Phone (read-only)
-        const VerifiedInfoTile(label: 'Phone number', value: '+91 76870 87698'),
+        // Display Auth Verification Status
+        if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
+          AppVerifiedInfoTile(
+            label: "Phone Number",
+            value: user.phoneNumber!,
+            isVerified: user.isVerified,
+          )
+        else
+          AppVerifiedInfoTile(
+            label: "Email Address",
+            value: user?.email ?? "Not setup",
+            isVerified: user?.isVerified ?? false,
+          ),
 
-        const SizedBox(height: 20),
-
-        /// ✅ Email (read-only)
-        const VerifiedInfoTile(label: 'Email', value: 'guyhawkins@email.com'),
-
-        const SizedBox(height: 28),
-
-        /// 🔗 Social Inputs
+        const SizedBox(height: 32),
+        const Text(
+          'Social Link Connections',
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
         AppInput(
           label: 'Instagram',
-          hint: 'www.instagram.com',
-          controller: instagramCtrl,
-          keyboardType: TextInputType.url,
+          hint: 'Link to profile',
+          controller: instaCtrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(instagram: v)),
         ),
-        const SizedBox(height: 20),
-
+        const SizedBox(height: 16),
         AppInput(
           label: 'LinkedIn',
-          hint: 'www.linkedin.com',
-          controller: linkedinCtrl,
-          keyboardType: TextInputType.url,
+          hint: 'Link to profile',
+          controller: lnCtrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(linkedin: v)),
         ),
-        const SizedBox(height: 20),
-
+        const SizedBox(height: 16),
         AppInput(
           label: 'Facebook',
-          hint: 'www.facebook.com',
-          controller: facebookCtrl,
-          keyboardType: TextInputType.url,
+          hint: 'Link to profile',
+          controller: fbCtrl,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(facebook: v)),
         ),
-        const SizedBox(height: 20),
-
+        const SizedBox(height: 16),
         AppInput(
-          label: 'X',
-          hint: 'www.x.com',
+          label: 'X (Twitter)',
+          hint: 'Link to profile',
           controller: xCtrl,
-          keyboardType: TextInputType.url,
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(x: v)),
         ),
       ],
     );

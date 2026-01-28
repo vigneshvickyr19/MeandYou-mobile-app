@@ -8,16 +8,21 @@ class InterestItem {
   InterestItem({required this.label, required this.icon});
 }
 
-class InterestChipSelector extends StatefulWidget {
-  final ValueChanged<List<String>> onSelectionChanged;
+class AppInterestSelector extends StatefulWidget {
+  final List<String> selectedInterests;
+  final ValueChanged<List<String>> onChanged;
 
-  const InterestChipSelector({super.key, required this.onSelectionChanged});
+  const AppInterestSelector({
+    super.key,
+    required this.selectedInterests,
+    required this.onChanged,
+  });
 
   @override
-  State<InterestChipSelector> createState() => _InterestChipSelectorState();
+  State<AppInterestSelector> createState() => _AppInterestSelectorState();
 }
 
-class _InterestChipSelectorState extends State<InterestChipSelector> {
+class _AppInterestSelectorState extends State<AppInterestSelector> {
   final List<InterestItem> _items = [
     InterestItem(label: 'Game', icon: Icons.sports_esports),
     InterestItem(label: 'Singing', icon: Icons.mic),
@@ -31,7 +36,13 @@ class _InterestChipSelectorState extends State<InterestChipSelector> {
     InterestItem(label: 'Reading', icon: Icons.menu_book),
   ];
 
-  final Set<String> _selected = {};
+  late Set<String> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = Set.from(widget.selectedInterests);
+  }
 
   void _toggle(String label) {
     setState(() {
@@ -41,73 +52,51 @@ class _InterestChipSelectorState extends State<InterestChipSelector> {
         _selected.add(label);
       }
     });
-    widget.onSelectionChanged(_selected.toList());
+    widget.onChanged(_selected.toList());
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = _items[index];
-          final isSelected = _selected.contains(item.label);
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: _items.map((item) {
+        final isSelected = _selected.contains(item.label);
 
-          return GestureDetector(
-            onTap: () => _toggle(item.label),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.darkOverlay : AppColors.black,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.greyDark,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    item.icon,
-                    size: 18,
-                    color: isSelected ? AppColors.primary : AppColors.greyLight,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (isSelected) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      height: 20,
-                      width: 20,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.greyDark,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        size: 14,
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ],
-                ],
+        return GestureDetector(
+          onTap: () => _toggle(item.label),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.darkOverlay : AppColors.black,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.greyDark,
               ),
             ),
-          );
-        },
-      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  item.icon,
+                  size: 18,
+                  color: isSelected ? AppColors.primary : AppColors.greyLight,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  item.label,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

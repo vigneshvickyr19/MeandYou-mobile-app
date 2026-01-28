@@ -1,148 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/widgets/app_select.dart';
-import '../../../../core/widgets/app_toggle_switch.dart';
+import '../../../../core/providers/profile_setup_provider.dart';
 
-class StepLifestyle extends StatefulWidget {
-  @override
-  State<StepLifestyle> createState() => _StepLifestyleState();
-}
-
-class _StepLifestyleState extends State<StepLifestyle> {
-  String drinkingFrequency = 'never';
-  String drinkingChoice = 'yes';
-
-  String? exercise;
-  String? diet;
-  String? pets;
-  String? religion;
-  String? language;
+class StepLifestyle extends StatelessWidget {
+  const StepLifestyle({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = Provider.of<ProfileSetupProvider>(context);
+    final profile = profileProvider.draftProfile;
+
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
         const Text(
-          'Lifestyle Preferences',
+          'Lifestyle',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Lorem ipsum dolor sit amet consectetur proin habitasse lacus senectus bibendum nibh egestas.',
-          style: TextStyle(color: Colors.white60),
-        ),
-
         const SizedBox(height: 24),
-
-        /// Drinking Frequency
+        AppSelect<String>(
+          label: 'Smoking',
+          hint: 'Select option',
+          selectedValue: profile?.smoking,
+          items: const [
+            DropdownMenuItem(value: 'Non-smoker', child: Text('Non-smoker')),
+            DropdownMenuItem(value: 'Smoker', child: Text('Smoker')),
+            DropdownMenuItem(value: 'Social smoker', child: Text('Social smoker')),
+          ],
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(smoking: v)),
+        ),
+        const SizedBox(height: 16),
         AppSelect<String>(
           label: 'Drinking',
           hint: 'Select option',
-          selectedValue: drinkingFrequency,
+          selectedValue: profile?.drinking,
           items: const [
-            DropdownMenuItem(value: 'never', child: Text('Never')),
-            DropdownMenuItem(
-              value: 'occasionally',
-              child: Text('Occasionally'),
-            ),
-            DropdownMenuItem(value: 'often', child: Text('Often')),
+            DropdownMenuItem(value: 'Non-drinker', child: Text('Non-drinker')),
+            DropdownMenuItem(value: 'Social drinker', child: Text('Social drinker')),
+            DropdownMenuItem(value: 'Frequent drinker', child: Text('Frequent drinker')),
           ],
-          onChanged: (v) => setState(() => drinkingFrequency = v!),
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(drinking: v)),
         ),
-
-        const SizedBox(height: 20),
-
-        /// Drinking Yes / No Toggle
-        AppToggleSwitch(
-          title: 'Drinking',
-          selectedValue: drinkingChoice,
-          options: const [
-            AppToggleOption(label: 'Yes', value: 'yes'),
-            AppToggleOption(label: 'No', value: 'no'),
-          ],
-          onChanged: (v) => setState(() => drinkingChoice = v),
-        ),
-
-        const SizedBox(height: 20),
-
-        /// Exercise
+        const SizedBox(height: 16),
         AppSelect<String>(
           label: 'Exercise',
-          hint: 'Select activity level',
-          selectedValue: exercise,
+          hint: 'Select option',
+          selectedValue: profile?.exercise,
           items: const [
-            DropdownMenuItem(value: 'active', child: Text('Active')),
-            DropdownMenuItem(value: 'moderate', child: Text('Moderate')),
-            DropdownMenuItem(value: 'lazy', child: Text('Lazy')),
+            DropdownMenuItem(value: 'Active', child: Text('Active')),
+            DropdownMenuItem(value: 'Sometimes', child: Text('Sometimes')),
+            DropdownMenuItem(value: 'Never', child: Text('Never')),
           ],
-          onChanged: (v) => setState(() => exercise = v),
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(exercise: v)),
         ),
-
-        const SizedBox(height: 20),
-
-        /// Diet
+        const SizedBox(height: 16),
         AppSelect<String>(
           label: 'Diet',
-          hint: 'Select diet',
-          selectedValue: diet,
+          hint: 'Select option',
+          selectedValue: profile?.diet,
           items: const [
-            DropdownMenuItem(value: 'veg', child: Text('Vegetarian')),
-            DropdownMenuItem(value: 'non-veg', child: Text('Non-Vegetarian')),
-            DropdownMenuItem(value: 'vegan', child: Text('Vegan')),
+            DropdownMenuItem(value: 'Vegetarian', child: Text('Vegetarian')),
+            DropdownMenuItem(value: 'Non-Vegetarian', child: Text('Non-Vegetarian')),
+            DropdownMenuItem(value: 'Vegan', child: Text('Vegan')),
           ],
-          onChanged: (v) => setState(() => diet = v),
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(diet: v)),
         ),
-
-        const SizedBox(height: 20),
-
-        /// Pets
+        const SizedBox(height: 16),
         AppSelect<String>(
           label: 'Pets',
-          hint: 'Select preference',
-          selectedValue: pets,
+          hint: 'Select option',
+          selectedValue: profile?.pets,
           items: const [
-            DropdownMenuItem(value: 'cat', child: Text('Cat lover')),
-            DropdownMenuItem(value: 'dog', child: Text('Dog lover')),
-            DropdownMenuItem(value: 'none', child: Text('No pets')),
+            DropdownMenuItem(value: 'Dog lover', child: Text('Dog lover')),
+            DropdownMenuItem(value: 'Cat lover', child: Text('Cat lover')),
+            DropdownMenuItem(value: 'No pets', child: Text('No pets')),
           ],
-          onChanged: (v) => setState(() => pets = v),
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(pets: v)),
         ),
-
-        const SizedBox(height: 20),
-
-        /// Religion (Optional)
+        const SizedBox(height: 16),
         AppSelect<String>(
           label: 'Religion (Optional)',
-          hint: '-',
-          selectedValue: religion,
+          hint: 'Select religion',
+          selectedValue: profile?.religion,
           items: const [
-            DropdownMenuItem(value: 'hindu', child: Text('Hindu')),
-            DropdownMenuItem(value: 'christian', child: Text('Christian')),
-            DropdownMenuItem(value: 'muslim', child: Text('Muslim')),
+            DropdownMenuItem(value: 'Christian', child: Text('Christian')),
+            DropdownMenuItem(value: 'Muslim', child: Text('Muslim')),
+            DropdownMenuItem(value: 'Hindu', child: Text('Hindu')),
+            DropdownMenuItem(value: 'None', child: Text('None')),
           ],
-          onChanged: (v) => setState(() => religion = v),
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(religion: v)),
         ),
-
-        const SizedBox(height: 20),
-
-        /// Language
+        const SizedBox(height: 16),
         AppSelect<String>(
           label: 'Language',
           hint: 'Select language',
-          selectedValue: language,
+          selectedValue: profile?.language,
           items: const [
-            DropdownMenuItem(value: 'english', child: Text('English')),
-            DropdownMenuItem(value: 'tamil', child: Text('Tamil')),
-            DropdownMenuItem(value: 'hindi', child: Text('Hindi')),
+            DropdownMenuItem(value: 'English', child: Text('English')),
+            DropdownMenuItem(value: 'Spanish', child: Text('Spanish')),
+            DropdownMenuItem(value: 'French', child: Text('French')),
           ],
-          onChanged: (v) => setState(() => language = v),
+          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(language: v)),
         ),
-
-        const SizedBox(height: 40),
       ],
     );
   }

@@ -1,8 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:me_and_you/features/chat/presentation/pages/chat_page.dart';
-import 'package:me_and_you/features/profile/presentation/pages/profile_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/get_started_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -15,13 +11,17 @@ import '../../features/profile-setup/presentation/pages/profile_setup_page.dart'
 import '../../features/linkes/presentation/pages/like_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/auth/presentation/pages/auth_wrapper.dart';
 import '../constants/app_routes.dart';
+import '../../features/auth/presentation/pages/phone_login_page.dart';
 
 class AppRouter {
   static Map<String, WidgetBuilder> get routes => {
         AppRoutes.splash: (_) => const SplashPage(),
+        AppRoutes.authWrapper: (_) => const AuthWrapper(),
         AppRoutes.getStarted: (_) => const GetStartedPage(),
         AppRoutes.login: (_) => const LoginPage(),
+        AppRoutes.phoneLogin: (_) => const PhoneLoginPage(),
         AppRoutes.signUp: (_) => const SignUpPage(),
         AppRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
         AppRoutes.verifyCode: (_) => const VerifyCodePage(),
@@ -74,6 +74,12 @@ class AppRouter {
           settings: settings,
         );
 
+      case AppRoutes.authWrapper:
+        return MaterialPageRoute(
+          builder: (_) => const AuthWrapper(),
+          settings: settings,
+        );
+
       case AppRoutes.getStarted:
         return MaterialPageRoute(
           builder: (_) => const GetStartedPage(),
@@ -83,6 +89,12 @@ class AppRouter {
       case AppRoutes.login:
         return MaterialPageRoute(
           builder: (_) => const LoginPage(),
+          settings: settings,
+        );
+
+      case AppRoutes.phoneLogin:
+        return MaterialPageRoute(
+          builder: (_) => const PhoneLoginPage(),
           settings: settings,
         );
 
