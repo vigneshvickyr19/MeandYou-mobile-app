@@ -50,17 +50,16 @@ class DeepLinkService {
   // Helper to extract path from URI consistently
   String _getPathFromUri(Uri uri) {
     // If it's meandyou://profile, host is 'profile' and path is empty
-    // If it's meandyou:///profile, host is empty and path is '/profile'
-    
+
     if (uri.path.isNotEmpty) {
       return uri.path;
     }
-    
+
     // Fallback to host if path is empty (e.g. meandyou://profile)
     if (uri.host.isNotEmpty && uri.host != 'meandyou') {
       return '/${uri.host}';
     }
-    
+
     return '/';
   }
 
@@ -81,7 +80,7 @@ class DeepLinkService {
 
     // Extract parameters from the path
     final params = DeepLinkRoutes.extractParams(path);
-    
+
     // Get the app route
     final appRoute = DeepLinkRoutes.getAppRoute(path);
 
@@ -117,38 +116,32 @@ class DeepLinkService {
 
     // Handle profile route
     if (route == AppRoutes.profile) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.profile,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.profile, (route) => false);
       return;
     }
 
     // Handle chat route
     if (route == AppRoutes.chat) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.chat,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.chat, (route) => false);
       return;
     }
 
     // Handle likes route
     if (route == AppRoutes.likes) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.likes,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.likes, (route) => false);
       return;
     }
 
     // For routes without parameters or special handling
     // Navigate and clear stack for main routes
     if (_isMainRoute(route)) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        route,
-        (route) => false,
-      );
+      Navigator.of(context).pushNamedAndRemoveUntil(route, (route) => false);
     } else {
       Navigator.of(context).pushNamed(route);
     }
@@ -166,10 +159,9 @@ class DeepLinkService {
     final context = _navigatorKey?.currentContext;
     if (context == null) return;
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.home,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
   }
 
   // Dispose the service
@@ -177,4 +169,3 @@ class DeepLinkService {
     _linkSubscription?.cancel();
   }
 }
-

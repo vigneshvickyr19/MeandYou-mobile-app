@@ -43,7 +43,9 @@ class UserModel {
       'phoneNumber': phoneNumber,
       'isProfileComplete': isProfileComplete,
       'isVerified': isVerified,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
       'fcmToken': fcmToken,
       'voipToken': voipToken,

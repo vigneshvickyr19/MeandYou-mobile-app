@@ -17,21 +17,21 @@ import '../../features/auth/presentation/pages/phone_login_page.dart';
 
 class AppRouter {
   static Map<String, WidgetBuilder> get routes => {
-        AppRoutes.splash: (_) => const SplashPage(),
-        AppRoutes.authWrapper: (_) => const AuthWrapper(),
-        AppRoutes.getStarted: (_) => const GetStartedPage(),
-        AppRoutes.login: (_) => const LoginPage(),
-        AppRoutes.phoneLogin: (_) => const PhoneLoginPage(),
-        AppRoutes.signUp: (_) => const SignUpPage(),
-        AppRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
-        AppRoutes.verifyCode: (_) => const VerifyCodePage(),
-        AppRoutes.createPassword: (_) => const CreatePasswordPage(),
-        AppRoutes.profileSetupPage: (_) => const ProfileSetupPage(),
-        AppRoutes.home: (_) => const HomeShellPage(),
-        AppRoutes.chat: (_) => const HomeShellPage(initialTabIndex: 2),
-        AppRoutes.profile: (_) => const HomeShellPage(initialTabIndex: 3),
-        AppRoutes.likes: (_) => const HomeShellPage(initialTabIndex: 1),
-      };
+    AppRoutes.splash: (_) => const SplashPage(),
+    AppRoutes.authWrapper: (_) => const AuthWrapper(),
+    AppRoutes.getStarted: (_) => const GetStartedPage(),
+    AppRoutes.login: (_) => const LoginPage(),
+    AppRoutes.phoneLogin: (_) => const PhoneLoginPage(),
+    AppRoutes.signUp: (_) => const SignUpPage(),
+    AppRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
+    AppRoutes.verifyCode: (_) => const VerifyCodePage(),
+    AppRoutes.createPassword: (_) => const CreatePasswordPage(),
+    AppRoutes.profileSetupPage: (_) => const ProfileSetupPage(),
+    AppRoutes.home: (_) => const HomeShellPage(),
+    AppRoutes.chat: (_) => const HomeShellPage(initialTabIndex: 2),
+    AppRoutes.profile: (_) => const HomeShellPage(initialTabIndex: 3),
+    AppRoutes.likes: (_) => const HomeShellPage(initialTabIndex: 1),
+  };
 
   // Generate route with support for deep linking parameters
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -40,33 +40,26 @@ class AppRouter {
     switch (settings.name) {
       case AppRoutes.home:
         return MaterialPageRoute(
-          builder: (_) => HomeShellPage(
-            initialTabIndex: args?['tabIndex'] as int?,
-          ),
+          builder: (_) =>
+              HomeShellPage(initialTabIndex: args?['tabIndex'] as int?),
           settings: settings,
         );
 
       case AppRoutes.profile:
         return MaterialPageRoute(
-          builder: (_) => HomeShellPage(
-            initialTabIndex: 3,
-          ),
+          builder: (_) => HomeShellPage(initialTabIndex: 3),
           settings: settings,
         );
 
       case AppRoutes.chat:
         return MaterialPageRoute(
-          builder: (_) => HomeShellPage(
-            initialTabIndex: 2,
-          ),
+          builder: (_) => HomeShellPage(initialTabIndex: 2),
           settings: settings,
         );
 
       case AppRoutes.likes:
         return MaterialPageRoute(
-          builder: (_) => HomeShellPage(
-            initialTabIndex: 1,
-          ),
+          builder: (_) => HomeShellPage(initialTabIndex: 1),
           settings: settings,
         );
 
@@ -135,4 +128,3 @@ class AppRouter {
     }
   }
 }
-
