@@ -9,9 +9,11 @@ class AuthProvider extends ChangeNotifier {
 
   UserModel? _currentUser;
   bool _isLoading = false;
+  bool _isInitializing = true;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
+  bool get isInitializing => _isInitializing;
   bool get isAuthenticated => _currentUser != null;
 
   AuthProvider() {
@@ -20,26 +22,33 @@ class AuthProvider extends ChangeNotifier {
 
   void _init() {
     _userRepository.authStateChanges.listen((User? user) async {
-      if (user != null) {
-        _currentUser = await _userRepository.getUserAccount(user.uid);
-        if (_currentUser == null) {
-          // Fallback: Create new user if not found in DB
-          final newUser = UserModel(
-            id: user.uid,
-            email: user.email ?? '',
-            phoneNumber: user.phoneNumber,
-            isProfileComplete: false,
-            isVerified: user.emailVerified || (user.phoneNumber != null),
-            createdAt: DateTime.now(),
-          );
-          await _userRepository.updateUserAccount(newUser); // Save to DB
-          _currentUser = newUser;
+      try {
+        if (user != null) {
+          _currentUser = await _userRepository.getUserAccount(user.uid);
+          if (_currentUser == null) {
+            // Fallback: Create new user if not found in DB
+            final newUser = UserModel(
+              id: user.uid,
+              email: user.email ?? '',
+              phoneNumber: user.phoneNumber,
+              isProfileComplete: false,
+              isVerified: user.emailVerified || (user.phoneNumber != null),
+              createdAt: DateTime.now(),
+            );
+            await _userRepository.updateUserAccount(newUser); // Save to DB
+            _currentUser = newUser;
+          }
+          await _updateFcmToken();
+        } else {
+          _currentUser = null;
         }
-        await _updateFcmToken();
-      } else {
+      } catch (e) {
+        debugPrint("Error during AuthProvider initialization: $e");
         _currentUser = null;
+      } finally {
+        _isInitializing = false;
+        notifyListeners();
       }
-      notifyListeners();
     });
   }
 

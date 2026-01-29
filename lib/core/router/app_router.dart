@@ -51,6 +51,16 @@ class AppRouter {
           settings: settings,
         );
 
+      case AppRoutes.otherProfile:
+        final userId = args?['userId'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => ProfilePage(
+            key: ValueKey(userId ?? 'own_profile'),
+            userId: userId,
+          ),
+          settings: settings,
+        );
+
       case AppRoutes.chat:
         return MaterialPageRoute(
           builder: (_) => HomeShellPage(initialTabIndex: 2),

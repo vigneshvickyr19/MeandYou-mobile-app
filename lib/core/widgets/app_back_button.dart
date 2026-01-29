@@ -5,16 +5,19 @@ class AppBackButton extends StatelessWidget {
   /// If routeName is null → Navigator.pop()
   /// If routeName is provided → Navigator.pushReplacementNamed()
   final String? routeName;
+  final VoidCallback? onTap;
 
-  const AppBackButton({super.key, this.routeName});
+  const AppBackButton({super.key, this.routeName, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (routeName != null) {
+        if (onTap != null) {
+          onTap!();
+        } else if (routeName != null) {
           Navigator.pushReplacementNamed(context, routeName!);
-        } else {
+        } else if (Navigator.canPop(context)) {
           Navigator.pop(context);
         }
       },

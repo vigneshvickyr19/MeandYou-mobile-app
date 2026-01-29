@@ -12,10 +12,7 @@ import 'home_page.dart';
 class HomeShellPage extends StatefulWidget {
   final int? initialTabIndex;
 
-  const HomeShellPage({
-    super.key,
-    this.initialTabIndex,
-  });
+  const HomeShellPage({super.key, this.initialTabIndex});
 
   @override
   State<HomeShellPage> createState() => _HomeShellPageState();
@@ -28,10 +25,10 @@ class _HomeShellPageState extends State<HomeShellPage> {
   void initState() {
     super.initState();
     _controller = HomeNavigationController();
-    
+
     // Set initial tab index from deep link if provided
-    if (widget.initialTabIndex != null && 
-        widget.initialTabIndex! >= 0 && 
+    if (widget.initialTabIndex != null &&
+        widget.initialTabIndex! >= 0 &&
         widget.initialTabIndex! < 4) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _controller.changeTab(widget.initialTabIndex!);
@@ -51,21 +48,30 @@ class _HomeShellPageState extends State<HomeShellPage> {
       value: _controller,
       child: Consumer<HomeNavigationController>(
         builder: (_, controller, child) {
-          return Scaffold(
-            backgroundColor: AppColors.black,
-            appBar: const HomeAppBar(),
-            body: IndexedStack(
-              index: controller.index,
-              children: const [
-                HomePage(),
-                LikePage(),
-                ChatPage(),
-                ProfilePage(),
-              ],
-            ),
-            bottomNavigationBar: CustomBottomNav(
-              currentIndex: controller.index,
-              onChanged: controller.changeTab,
+          return PopScope(
+            canPop: controller.index == 0,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+              if (controller.index != 0) {
+                controller.changeTab(0);
+              }
+            },
+            child: Scaffold(
+              backgroundColor: AppColors.black,
+              // appBar: const HomeAppBar(),
+              body: IndexedStack(
+                index: controller.index,
+                children: const [
+                  HomePage(),
+                  LikePage(),
+                  ChatPage(),
+                  ProfilePage(isTab: true),
+                ],
+              ),
+              bottomNavigationBar: CustomBottomNav(
+                currentIndex: controller.index,
+                onChanged: controller.changeTab,
+              ),
             ),
           );
         },
@@ -73,4 +79,3 @@ class _HomeShellPageState extends State<HomeShellPage> {
     );
   }
 }
-
