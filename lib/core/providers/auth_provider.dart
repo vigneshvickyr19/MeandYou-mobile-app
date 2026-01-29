@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -34,6 +35,7 @@ class AuthProvider extends ChangeNotifier {
            await _userRepository.updateUserAccount(newUser); // Save to DB
            _currentUser = newUser;
         }
+        await _updateFcmToken();
       } else {
         _currentUser = null;
       }
@@ -46,6 +48,7 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.signInWithEmail(email, password);
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -62,6 +65,7 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -72,6 +76,7 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.signInWithGoogle();
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -121,6 +126,7 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.verifyAndLoginOtp(verificationId, smsCode);
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -163,6 +169,32 @@ class AuthProvider extends ChangeNotifier {
       await _userRepository.saveUserLocation(_currentUser!.id, lat, lng);
     } catch (e) {
       debugPrint("Error updating location: $e");
+    }
+  }
+
+  Future<void> _updateFcmToken() async {
+    if (_currentUser == null) return;
+    
+    // Update FCM Token
+    final token = NotificationService.instance.fcmToken;
+    if (token != null) {
+      try {
+        await _userRepository.updateFcmToken(_currentUser!.id, token);
+        debugPrint("FCM Token updated for user: ${_currentUser!.id}");
+      } catch (e) {
+        debugPrint("Error updating FCM token: $e");
+      }
+    }
+
+    // Update VoIP Token (iOS only)
+    final voipToken = await NotificationService.instance.getVoIPToken();
+    if (voipToken != null) {
+      try {
+        await _userRepository.updateVoipToken(_currentUser!.id, voipToken);
+        debugPrint("VoIP Token updated for user: ${_currentUser!.id}");
+      } catch (e) {
+        debugPrint("Error updating VoIP token: $e");
+      }
     }
   }
 }

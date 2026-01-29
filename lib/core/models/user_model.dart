@@ -8,6 +8,8 @@ class UserModel {
   final bool isVerified;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? fcmToken;
+  final String? voipToken;
 
   UserModel({
     required this.id,
@@ -17,6 +19,8 @@ class UserModel {
     this.isVerified = false,
     this.createdAt,
     this.updatedAt,
+    this.fcmToken,
+    this.voipToken,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -28,6 +32,8 @@ class UserModel {
       isVerified: data['isVerified'] ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      fcmToken: data['fcmToken'],
+      voipToken: data['voipToken'],
     );
   }
 
@@ -39,6 +45,8 @@ class UserModel {
       'isVerified': isVerified,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
+      'fcmToken': fcmToken,
+      'voipToken': voipToken,
     };
   }
 
@@ -47,6 +55,8 @@ class UserModel {
     String? phoneNumber,
     bool? isProfileComplete,
     bool? isVerified,
+    String? fcmToken,
+    String? voipToken,
   }) {
     return UserModel(
       id: id,
@@ -56,6 +66,8 @@ class UserModel {
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      fcmToken: fcmToken ?? this.fcmToken,
+      voipToken: voipToken ?? this.voipToken,
     );
   }
 }

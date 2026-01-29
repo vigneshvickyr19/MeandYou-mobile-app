@@ -27,31 +27,31 @@ class _HomePageState extends State<HomePage> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+    try {
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         return;
       }
-    }
-    
-    if (permission == LocationPermission.deniedForever) {
-      return;
-    } 
 
-    try {
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      } 
+
       Position position = await Geolocator.getCurrentPosition();
       if (mounted) {
          final authProvider = Provider.of<AuthProvider>(context, listen: false);
          await authProvider.updateLocation(position.latitude, position.longitude);
       }
     } catch (e) {
-      debugPrint("Error getting location: $e");
+      debugPrint("Location error: $e");
     }
   }
 

@@ -4,6 +4,7 @@ import 'core/constants/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/deep_link_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/profile_setup_provider.dart';
 
@@ -21,9 +22,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize deep link service after first frame
+    // Initialize services after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _deepLinkService.initialize(_navigatorKey);
+      NotificationService.instance.setNavigatorKey(_navigatorKey);
     });
   }
 

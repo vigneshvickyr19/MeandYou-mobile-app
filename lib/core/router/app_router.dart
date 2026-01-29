@@ -28,9 +28,9 @@ class AppRouter {
         AppRoutes.createPassword: (_) => const CreatePasswordPage(),
         AppRoutes.profileSetupPage: (_) => const ProfileSetupPage(),
         AppRoutes.home: (_) => const HomeShellPage(),
-        AppRoutes.chat: (_) => const ChatPage(),
-        AppRoutes.profile: (_) => const ProfilePage(),
-        AppRoutes.likes: (_) => const LikePage(),
+        AppRoutes.chat: (_) => const HomeShellPage(initialTabIndex: 2),
+        AppRoutes.profile: (_) => const HomeShellPage(initialTabIndex: 3),
+        AppRoutes.likes: (_) => const HomeShellPage(initialTabIndex: 1),
       };
 
   // Generate route with support for deep linking parameters
@@ -48,23 +48,25 @@ class AppRouter {
 
       case AppRoutes.profile:
         return MaterialPageRoute(
-          builder: (_) => ProfilePage(
-            userId: args?['userId'] as String?,
+          builder: (_) => HomeShellPage(
+            initialTabIndex: 3,
           ),
           settings: settings,
         );
 
       case AppRoutes.chat:
         return MaterialPageRoute(
-          builder: (_) => ChatPage(
-            chatId: args?['chatId'] as String?,
+          builder: (_) => HomeShellPage(
+            initialTabIndex: 2,
           ),
           settings: settings,
         );
 
       case AppRoutes.likes:
         return MaterialPageRoute(
-          builder: (_) => const LikePage(),
+          builder: (_) => HomeShellPage(
+            initialTabIndex: 1,
+          ),
           settings: settings,
         );
 

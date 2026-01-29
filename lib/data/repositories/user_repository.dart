@@ -139,4 +139,14 @@ class UserRepository {
   Future<void> saveUserLocation(String userId, double lat, double lng) async {
     await _dbService.saveUserLocation(userId, lat, lng);
   }
+
+  // Update FCM Token
+  Future<void> updateFcmToken(String userId, String token) async {
+    await _dbService.updateUserField(userId, {'fcmToken': token});
+  }
+
+  // Update VoIP Token
+  Future<void> updateVoipToken(String userId, String token) async {
+    await _dbService.updateUserField(userId, {'voipToken': token});
+  }
 }

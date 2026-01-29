@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../../data/repositories/user_repository.dart';
+import '../services/notification_service.dart';
 
 class ProfileSetupProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -94,10 +95,23 @@ class ProfileSetupProvider extends ChangeNotifier {
       await _userRepository.saveProfileSetup(_draftProfile!);
       
       // 2. Update User Account status
+      final String? fcmToken = NotificationService.instance.fcmToken;
       UserModel updatedUser = currentUser.copyWith(
         isProfileComplete: true,
+        fcmToken: fcmToken,
       );
       await _userRepository.updateUserAccount(updatedUser);
+      
+      // Also ensure FCM token is saved separately if available
+      if (fcmToken != null) {
+        await _userRepository.updateFcmToken(currentUser.id, fcmToken);
+      }
+
+      // Also ensure VoIP token is saved separately for iOS if available
+      final String? voipToken = await NotificationService.instance.getVoIPToken();
+      if (voipToken != null) {
+        await _userRepository.updateVoipToken(currentUser.id, voipToken);
+      }
       
     } catch (e) {
       debugPrint("Error completing profile: $e");
