@@ -26,7 +26,7 @@ class DeepLinkService {
     try {
       final uri = await _appLinks.getInitialLink();
       if (uri != null) {
-        _processDeepLink(uri.toString());
+        handleLink(uri.toString());
       }
     } catch (e) {
       debugPrint('Error handling initial link: $e');
@@ -38,7 +38,7 @@ class DeepLinkService {
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri? uri) {
         if (uri != null) {
-          _processDeepLink(uri.toString());
+          handleLink(uri.toString());
         }
       },
       onError: (err) {
@@ -47,24 +47,40 @@ class DeepLinkService {
     );
   }
 
+  // Helper to extract path from URI consistently
+  String _getPathFromUri(Uri uri) {
+    // If it's meandyou://profile, host is 'profile' and path is empty
+
+    if (uri.path.isNotEmpty) {
+      return uri.path;
+    }
+
+    // Fallback to host if path is empty (e.g. meandyou://profile)
+    if (uri.host.isNotEmpty && uri.host != 'meandyou') {
+      return '/${uri.host}';
+    }
+
+    return '/';
+  }
+
   // Process deep link and navigate to appropriate route
-  void _processDeepLink(String link) {
+  void handleLink(String link) {
     debugPrint('Processing deep link: $link');
 
     final uri = Uri.parse(link);
     
     // Only process custom scheme links (meandyou://)
-    // Ignore http/https URLs (web platform localhost, etc.)
     if (uri.scheme != 'meandyou') {
       debugPrint('Ignoring non-deep-link URL with scheme: ${uri.scheme}');
       return;
     }
 
-    final path = uri.path;
+    final path = _getPathFromUri(uri);
+    debugPrint('Extracted path for routing: $path');
 
     // Extract parameters from the path
     final params = DeepLinkRoutes.extractParams(path);
-    
+
     // Get the app route
     final appRoute = DeepLinkRoutes.getAppRoute(path);
 
@@ -80,9 +96,10 @@ class DeepLinkService {
 
   // Navigate to the specified route with parameters
   void _navigateToRoute(String route, Map<String, String> params) {
+    debugPrint('DeepLinkService: Navigating to $route with params $params');
     final context = _navigatorKey?.currentContext;
     if (context == null) {
-      debugPrint('Navigator context is null');
+      debugPrint('DeepLinkService: Navigator context is null');
       return;
     }
 
@@ -97,31 +114,34 @@ class DeepLinkService {
       return;
     }
 
-    // Handle profile route with userId
-    if (route == AppRoutes.profile && params.containsKey('userId')) {
-      Navigator.of(context).pushNamed(
-        AppRoutes.profile,
-        arguments: {'userId': params['userId']},
-      );
+    // Handle profile route
+    if (route == AppRoutes.profile) {
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.profile, (route) => false);
       return;
     }
 
-    // Handle chat route with chatId
-    if (route == AppRoutes.chat && params.containsKey('chatId')) {
-      Navigator.of(context).pushNamed(
-        AppRoutes.chat,
-        arguments: {'chatId': params['chatId']},
-      );
+    // Handle chat route
+    if (route == AppRoutes.chat) {
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.chat, (route) => false);
+      return;
+    }
+
+    // Handle likes route
+    if (route == AppRoutes.likes) {
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.likes, (route) => false);
       return;
     }
 
     // For routes without parameters or special handling
     // Navigate and clear stack for main routes
     if (_isMainRoute(route)) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        route,
-        (route) => false,
-      );
+      Navigator.of(context).pushNamedAndRemoveUntil(route, (route) => false);
     } else {
       Navigator.of(context).pushNamed(route);
     }
@@ -139,10 +159,9 @@ class DeepLinkService {
     final context = _navigatorKey?.currentContext;
     if (context == null) return;
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.home,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
   }
 
   // Dispose the service
@@ -150,4 +169,3 @@ class DeepLinkService {
     _linkSubscription?.cancel();
   }
 }
-

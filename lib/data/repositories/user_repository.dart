@@ -17,7 +17,10 @@ class UserRepository {
     required String email,
     required String password,
   }) async {
-    UserCredential credential = await _authService.signUpWithEmail(email, password);
+    UserCredential credential = await _authService.signUpWithEmail(
+      email,
+      password,
+    );
     String uid = credential.user!.uid;
 
     UserModel newUser = UserModel(
@@ -34,7 +37,10 @@ class UserRepository {
 
   // Sign in with Email
   Future<UserModel?> signInWithEmail(String email, String password) async {
-    UserCredential credential = await _authService.signInWithEmail(email, password);
+    UserCredential credential = await _authService.signInWithEmail(
+      email,
+      password,
+    );
     return await _dbService.getUserAccount(credential.user!.uid);
   }
 
@@ -75,15 +81,15 @@ class UserRepository {
           if (user != null) {
             UserModel? existing = await _dbService.getUserAccount(user.uid);
             if (existing == null) {
-               existing = UserModel(
-                  id: user.uid,
-                  email: user.email ?? '',
-                  phoneNumber: user.phoneNumber,
-                  isProfileComplete: false,
-                  isVerified: true,
-                  createdAt: DateTime.now(),
-               );
-               await _dbService.saveUserAccount(existing);
+              existing = UserModel(
+                id: user.uid,
+                email: user.email ?? '',
+                phoneNumber: user.phoneNumber,
+                isProfileComplete: false,
+                isVerified: true,
+                createdAt: DateTime.now(),
+              );
+              await _dbService.saveUserAccount(existing);
             }
           }
           verificationCompleted(credential);
@@ -97,8 +103,14 @@ class UserRepository {
     );
   }
 
-  Future<UserModel> verifyAndLoginOtp(String verificationId, String smsCode) async {
-    UserCredential credential = await _authService.signInWithOtp(verificationId, smsCode);
+  Future<UserModel> verifyAndLoginOtp(
+    String verificationId,
+    String smsCode,
+  ) async {
+    UserCredential credential = await _authService.signInWithOtp(
+      verificationId,
+      smsCode,
+    );
     String uid = credential.user!.uid;
 
     UserModel? existing = await _dbService.getUserAccount(uid);
@@ -135,8 +147,19 @@ class UserRepository {
   Future<void> signOut() async {
     await _authService.signOut();
   }
+
   // Save Location
   Future<void> saveUserLocation(String userId, double lat, double lng) async {
     await _dbService.saveUserLocation(userId, lat, lng);
+  }
+
+  // Update FCM Token
+  Future<void> updateFcmToken(String userId, String token) async {
+    await _dbService.updateUserField(userId, {'fcmToken': token});
+  }
+
+  // Update VoIP Token
+  Future<void> updateVoipToken(String userId, String token) async {
+    await _dbService.updateUserField(userId, {'voipToken': token});
   }
 }

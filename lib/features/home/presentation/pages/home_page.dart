@@ -14,7 +14,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   void initState() {
     super.initState();
@@ -27,31 +26,34 @@ class _HomePageState extends State<HomePage> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+    try {
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         return;
       }
-    }
-    
-    if (permission == LocationPermission.deniedForever) {
-      return;
-    } 
 
-    try {
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      }
+
       Position position = await Geolocator.getCurrentPosition();
       if (mounted) {
-         final authProvider = Provider.of<AuthProvider>(context, listen: false);
-         await authProvider.updateLocation(position.latitude, position.longitude);
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.updateLocation(
+          position.latitude,
+          position.longitude,
+        );
       }
     } catch (e) {
-      debugPrint("Error getting location: $e");
+      debugPrint("Location error: $e");
     }
   }
 
@@ -93,9 +95,12 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               // Ensure we pop to the first route to clear stack or use navigator properly
               // Usually auth wrapper handles state change, so logout calls authProvider.signOut()
-               final authProvider = Provider.of<AuthProvider>(context, listen: false);
-               authProvider.signOut();
-               // The auth wrapper will redirect to login page automatically if it listens to auth state
+              final authProvider = Provider.of<AuthProvider>(
+                context,
+                listen: false,
+              );
+              authProvider.signOut();
+              // The auth wrapper will redirect to login page automatically if it listens to auth state
             },
             isEnabled: true,
           ),

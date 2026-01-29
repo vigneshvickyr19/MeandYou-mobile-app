@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
-  
+
   UserModel? _currentUser;
   bool _isLoading = false;
 
@@ -22,18 +23,19 @@ class AuthProvider extends ChangeNotifier {
       if (user != null) {
         _currentUser = await _userRepository.getUserAccount(user.uid);
         if (_currentUser == null) {
-           // Fallback: Create new user if not found in DB
-           final newUser = UserModel(
-             id: user.uid,
-             email: user.email ?? '',
-             phoneNumber: user.phoneNumber,
-             isProfileComplete: false,
-             isVerified: user.emailVerified || (user.phoneNumber != null),
-             createdAt: DateTime.now(),
-           );
-           await _userRepository.updateUserAccount(newUser); // Save to DB
-           _currentUser = newUser;
+          // Fallback: Create new user if not found in DB
+          final newUser = UserModel(
+            id: user.uid,
+            email: user.email ?? '',
+            phoneNumber: user.phoneNumber,
+            isProfileComplete: false,
+            isVerified: user.emailVerified || (user.phoneNumber != null),
+            createdAt: DateTime.now(),
+          );
+          await _userRepository.updateUserAccount(newUser); // Save to DB
+          _currentUser = newUser;
         }
+        await _updateFcmToken();
       } else {
         _currentUser = null;
       }
@@ -46,6 +48,7 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.signInWithEmail(email, password);
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -62,6 +65,7 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -72,6 +76,7 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.signInWithGoogle();
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -79,10 +84,10 @@ class AuthProvider extends ChangeNotifier {
 
   // --- Login with Phone ---
   Future<void> loginWithPhone(
-      String phoneNumber,
-      Function(String, int?) codeSent, {
-      Function(String)? onError,
-      VoidCallback? onAutoVerify,
+    String phoneNumber,
+    Function(String, int?) codeSent, {
+    Function(String)? onError,
+    VoidCallback? onAutoVerify,
   }) async {
     _setLoading(true);
     try {
@@ -96,8 +101,12 @@ class AuthProvider extends ChangeNotifier {
           _setLoading(false);
           if (onError != null) {
             String msg = e.message ?? 'Verification failed';
-            if (e.code == 'invalid-phone-number') msg = "Invalid phone number format.";
-            if (e.code == 'too-many-requests') msg = "Too many attempts. Try again later.";
+            if (e.code == 'invalid-phone-number') {
+              msg = "Invalid phone number format.";
+            }
+            if (e.code == 'too-many-requests') {
+              msg = "Too many attempts. Try again later.";
+            }
             onError(msg);
           }
         },
@@ -120,7 +129,11 @@ class AuthProvider extends ChangeNotifier {
   Future<void> verifyOtp(String verificationId, String smsCode) async {
     _setLoading(true);
     try {
-      _currentUser = await _userRepository.verifyAndLoginOtp(verificationId, smsCode);
+      _currentUser = await _userRepository.verifyAndLoginOtp(
+        verificationId,
+        smsCode,
+      );
+      await _updateFcmToken();
     } finally {
       _setLoading(false);
     }
@@ -157,12 +170,39 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+
   Future<void> updateLocation(double lat, double lng) async {
     if (_currentUser == null) return;
     try {
       await _userRepository.saveUserLocation(_currentUser!.id, lat, lng);
     } catch (e) {
       debugPrint("Error updating location: $e");
+    }
+  }
+
+  Future<void> _updateFcmToken() async {
+    if (_currentUser == null) return;
+
+    // Update FCM Token
+    final token = NotificationService.instance.fcmToken;
+    if (token != null) {
+      try {
+        await _userRepository.updateFcmToken(_currentUser!.id, token);
+        debugPrint("FCM Token updated for user: ${_currentUser!.id}");
+      } catch (e) {
+        debugPrint("Error updating FCM token: $e");
+      }
+    }
+
+    // Update VoIP Token (iOS only)
+    final voipToken = await NotificationService.instance.getVoIPToken();
+    if (voipToken != null) {
+      try {
+        await _userRepository.updateVoipToken(_currentUser!.id, voipToken);
+        debugPrint("VoIP Token updated for user: ${_currentUser!.id}");
+      } catch (e) {
+        debugPrint("Error updating VoIP token: $e");
+      }
     }
   }
 }
