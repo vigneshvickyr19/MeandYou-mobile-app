@@ -23,16 +23,22 @@ class HomeService {
     });
   }
 
-  // Get users with distance filter (ready for future implementation)
+  // Get users from profileSetup collection
   Stream<List<UserModel>> getUsersNearby(
     String currentUserId, {
     double? maxDistance,
     double? userLat,
     double? userLng,
   }) {
-    // For now, return all users
-    // TODO: Implement geohash-based filtering
-    return getUsers(currentUserId);
+    return _firestore
+        .collection(FirebaseConstants.profileSetup)
+        .where(FieldPath.documentId, isNotEqualTo: currentUserId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+          .toList();
+    });
   }
 
   // Like a user

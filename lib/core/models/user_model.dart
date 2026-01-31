@@ -14,6 +14,17 @@ class UserModel {
   final String? fullName;
   final String? profileImageUrl;
   final bool isOnline;
+  final int? age;
+  final double? latitude;
+  final double? longitude;
+  final String? address;
+  final String? geohash;
+  final List<String> interests;
+  final Map<String, dynamic>? preferences;
+  final List<String> blockedUsers;
+  final List<String> swipedUsers;
+  final String? gender;
+  final DateTime? lastLocationUpdate;
 
   UserModel({
     required this.id,
@@ -28,6 +39,17 @@ class UserModel {
     this.fullName,
     this.profileImageUrl,
     this.isOnline = false,
+    this.age,
+    this.latitude,
+    this.longitude,
+    this.address,
+    this.geohash,
+    this.interests = const [],
+    this.preferences,
+    this.blockedUsers = const [],
+    this.swipedUsers = const [],
+    this.gender,
+    this.lastLocationUpdate,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -44,6 +66,19 @@ class UserModel {
       fullName: data[FirebaseConstants.fullName],
       profileImageUrl: data[FirebaseConstants.profileImageUrl],
       isOnline: data[FirebaseConstants.isOnline] ?? false,
+      age: data[FirebaseConstants.age] is int 
+          ? data[FirebaseConstants.age] 
+          : int.tryParse(data[FirebaseConstants.age]?.toString() ?? ''),
+      latitude: (data[FirebaseConstants.latitude] as num?)?.toDouble(),
+      longitude: (data[FirebaseConstants.longitude] as num?)?.toDouble(),
+      address: data[FirebaseConstants.address],
+      geohash: data[FirebaseConstants.geohash],
+      interests: List<String>.from(data[FirebaseConstants.interests] ?? []),
+      preferences: data[FirebaseConstants.preferences] as Map<String, dynamic>?,
+      blockedUsers: List<String>.from(data[FirebaseConstants.blockedUsers] ?? []),
+      swipedUsers: List<String>.from(data[FirebaseConstants.swipedUsers] ?? []),
+      gender: data[FirebaseConstants.gender],
+      lastLocationUpdate: (data[FirebaseConstants.lastLocationUpdate] as Timestamp?)?.toDate(),
     );
   }
 
@@ -62,6 +97,19 @@ class UserModel {
       FirebaseConstants.fullName: fullName,
       FirebaseConstants.profileImageUrl: profileImageUrl,
       FirebaseConstants.isOnline: isOnline,
+      FirebaseConstants.age: age,
+      FirebaseConstants.latitude: latitude,
+      FirebaseConstants.longitude: longitude,
+      FirebaseConstants.address: address,
+      FirebaseConstants.geohash: geohash,
+      FirebaseConstants.interests: interests,
+      FirebaseConstants.preferences: preferences,
+      FirebaseConstants.blockedUsers: blockedUsers,
+      FirebaseConstants.swipedUsers: swipedUsers,
+      FirebaseConstants.gender: gender,
+      FirebaseConstants.lastLocationUpdate: lastLocationUpdate != null
+          ? Timestamp.fromDate(lastLocationUpdate!)
+          : null,
     };
   }
 
@@ -75,6 +123,17 @@ class UserModel {
     String? fullName,
     String? profileImageUrl,
     bool? isOnline,
+    int? age,
+    double? latitude,
+    double? longitude,
+    String? address,
+    String? geohash,
+    List<String>? interests,
+    Map<String, dynamic>? preferences,
+    List<String>? blockedUsers,
+    List<String>? swipedUsers,
+    String? gender,
+    DateTime? lastLocationUpdate,
   }) {
     return UserModel(
       id: id,
@@ -89,6 +148,17 @@ class UserModel {
       fullName: fullName ?? this.fullName,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       isOnline: isOnline ?? this.isOnline,
+      age: age ?? this.age,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      address: address ?? this.address,
+      geohash: geohash ?? this.geohash,
+      interests: interests ?? this.interests,
+      preferences: preferences ?? this.preferences,
+      blockedUsers: blockedUsers ?? this.blockedUsers,
+      swipedUsers: swipedUsers ?? this.swipedUsers,
+      gender: gender ?? this.gender,
+      lastLocationUpdate: lastLocationUpdate ?? this.lastLocationUpdate,
     );
   }
 }

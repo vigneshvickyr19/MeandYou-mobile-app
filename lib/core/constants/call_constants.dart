@@ -15,6 +15,7 @@ class CallSignalPayload {
   final String callId;
   final String callerId;
   final String callerName;
+  final String calleeId;
   final CallType callType;
   final CallAction action;
 
@@ -22,6 +23,7 @@ class CallSignalPayload {
     required this.callId,
     required this.callerId,
     required this.callerName,
+    required this.calleeId,
     required this.callType,
     required this.action,
   });
@@ -31,6 +33,7 @@ class CallSignalPayload {
       callId: data['callId'] ?? '',
       callerId: data['callerId'] ?? '',
       callerName: data['callerName'] ?? '',
+      calleeId: data['calleeId'] ?? '',
       callType: _parseCallType(data['callType']),
       action: _parseCallAction(data['action']),
     );

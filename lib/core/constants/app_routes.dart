@@ -12,6 +12,8 @@ class AppRoutes {
   static const profile = '/profile';
   static const otherProfile = '/other_profile';
   static const chat = '/chat';
+  static const String chatDetail = '/chat-detail';
+  static const call = '/call';
   static const likes = '/likes';
   static const String phoneLogin = '/phone-login';
 }

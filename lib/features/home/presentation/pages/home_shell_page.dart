@@ -6,7 +6,6 @@ import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../linkes/presentation/pages/like_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 import '../controllers/home_navigation_controller.dart';
-import '../widgets/home_app_bar.dart';
 import 'home_page.dart';
 
 class HomeShellPage extends StatefulWidget {
@@ -58,23 +57,63 @@ class _HomeShellPageState extends State<HomeShellPage> {
             },
             child: Scaffold(
               backgroundColor: AppColors.black,
-              // appBar: const HomeAppBar(),
-              body: IndexedStack(
-                index: controller.index,
-                children: const [
-                  HomePage(),
-                  LikePage(),
-                  ChatPage(),
-                  ProfilePage(isTab: true),
+              // Use Stack to overlay bottom nav on content
+              body: Stack(
+                children: [
+                  // Full-screen content (100% height, renders behind bottom nav)
+                  SizedBox(
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: IndexedStack(
+                      index: controller.index,
+                      children: const [
+                        HomePage(),
+                        LikePage(),
+                        ChatPage(),
+                        ProfilePage(isTab: true),
+                      ],
+                    ),
+                  ),
+                  
+                  // Floating bottom navigation (absolute positioned at bottom)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: _buildFloatingBottomNav(controller),
+                  ),
                 ],
-              ),
-              bottomNavigationBar: CustomBottomNav(
-                currentIndex: controller.index,
-                onChanged: controller.changeTab,
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFloatingBottomNav(HomeNavigationController controller) {
+    return Container(
+      // Add internal SafeArea padding for home indicator
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom,
+      ),
+      // Gradient background for better visibility
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            AppColors.black.withValues(alpha: 0.95),
+            AppColors.black.withValues(alpha: 0.8),
+            AppColors.black.withValues(alpha: 0.4),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.5, 0.8, 1.0],
+        ),
+      ),
+      child: CustomBottomNav(
+        currentIndex: controller.index,
+        onChanged: controller.changeTab,
       ),
     );
   }

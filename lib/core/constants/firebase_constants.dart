@@ -5,6 +5,7 @@ class FirebaseConstants {
   static const String currentLocations = 'current_locations';
   static const String chats = 'chats';
   static const String messages = 'messages';
+  static const String notifications = 'notifications';
 
   // Field Names
   static const String lastMessageAt = 'lastMessageAt';
@@ -46,4 +47,16 @@ class FirebaseConstants {
   static const String fromUserId = 'fromUserId';
   static const String toUserId = 'toUserId';
   static const String isMutual = 'isMutual';
+  static const String age = 'age';
+  static const String address = 'address';
+  static const String geohash = 'geohash';
+  static const String interests = 'interests';
+  static const String preferences = 'preferences';
+  static const String blockedUsers = 'blockedUsers';
+  static const String swipedUsers = 'swipedUsers';
+  static const String lastLocationUpdate = 'lastLocationUpdate';
+  static const String gender = 'gender';
+  static const String lookingFor = 'lookingFor';
+  static const String minAge = 'minAge';
+  static const String maxAge = 'maxAge';
 }

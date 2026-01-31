@@ -163,7 +163,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           color: AppColors.white,
                           size: 22,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          _controller.initiateCall('VIDEO');
+                        },
                       ),
                       IconButton(
                         icon: const Icon(
@@ -171,7 +173,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           color: AppColors.white,
                           size: 22,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          _controller.initiateCall('AUDIO');
+                        },
                       ),
                       const SizedBox(width: 8),
                     ],

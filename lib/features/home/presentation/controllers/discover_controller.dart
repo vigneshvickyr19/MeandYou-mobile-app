@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../data/services/home_service.dart';
-import '../../data/models/like_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/database_service.dart';
+import '../../../../core/services/notification_api_service.dart';
+import '../../../../core/services/notification_payload_builder.dart';
+import '../../../notifications/data/services/notification_storage_service.dart';
+import '../../../notifications/data/models/notification_model.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../../chat/data/models/message_model.dart';
 
 class DiscoverController extends ChangeNotifier {
   final HomeService _homeService = HomeService();
   final ChatRepository _chatRepository = ChatRepository();
+  final DatabaseService _databaseService = DatabaseService();
+  final NotificationApiService _notificationApiService = NotificationApiService.instance;
+  final NotificationStorageService _notificationStorageService = NotificationStorageService();
 
   List<UserModel> _users = [];
   List<UserModel> _likedUsers = [];
@@ -21,8 +27,6 @@ class DiscoverController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   UserModel? get matchedUser => _matchedUser;
   bool get showMatchDialog => _showMatchDialog;
-
-  final DatabaseService _databaseService = DatabaseService();
 
   void loadUsers(String currentUserId) {
     _isLoading = true;
@@ -54,6 +58,20 @@ class DiscoverController extends ChangeNotifier {
       if (isMatch) {
         _matchedUser = user;
         _showMatchDialog = true;
+        
+        // Send match notification
+        await _sendProfileNotification(
+          currentUserId: currentUserId,
+          targetUser: user,
+          interactionType: 'match',
+        );
+      } else {
+        // Send like notification
+        await _sendProfileNotification(
+          currentUserId: currentUserId,
+          targetUser: user,
+          interactionType: 'like',
+        );
       }
       
       notifyListeners();
@@ -105,5 +123,72 @@ class DiscoverController extends ChangeNotifier {
     // TODO: Calculate real distance based on user location
     // For now, return random distance for UI
     return (20 + (user.id.hashCode % 80)).toDouble();
+  }
+
+  /// Send profile interaction notification using payload builder
+  Future<void> _sendProfileNotification({
+    required String currentUserId,
+    required UserModel targetUser,
+    required String interactionType,
+  }) async {
+    try {
+      // Check if target user has FCM token
+      if (targetUser.fcmToken == null || targetUser.fcmToken!.isEmpty) {
+        print('Cannot send notification: Target user has no FCM token');
+        return;
+      }
+
+      // Get current user details
+      final currentUser = await _databaseService.getUserById(currentUserId);
+      if (currentUser == null) {
+        print('Cannot send notification: Current user not found');
+        return;
+      }
+
+      final senderName = currentUser.fullName ?? 'Someone';
+
+      // Build notification payload using the builder
+      final payload = NotificationPayloadBuilder.buildProfileNotification(
+        profileId: currentUserId,
+        senderId: currentUserId,
+        senderName: senderName,
+        interactionType: interactionType,
+      );
+
+      // Validate payload
+      if (!NotificationPayloadBuilder.validatePayload(payload)) {
+        print('Invalid notification payload');
+        return;
+      }
+
+      // Extract title and body
+      final titleBody = NotificationPayloadBuilder.extractTitleAndBody(payload);
+
+      // Send notification
+      await _notificationApiService.sendNotification(
+        deviceToken: targetUser.fcmToken!,
+        title: titleBody['title']!,
+        body: titleBody['body']!,
+        data: payload,
+      );
+
+      // Store notification in Firestore for history
+      await _notificationStorageService.sendNotification(
+        receiverId: targetUser.id,
+        senderId: currentUserId,
+        senderName: senderName,
+        senderPhotoUrl: currentUser.profileImageUrl,
+        type: interactionType == 'match' 
+            ? NotificationType.match 
+            : NotificationType.like,
+        title: titleBody['title']!,
+        message: titleBody['body']!,
+        metadata: payload,
+      );
+
+      print('Profile notification sent and stored successfully');
+    } catch (e) {
+      print('Error sending profile notification: $e');
+    }
   }
 }

@@ -10,7 +10,9 @@ import '../../features/home/presentation/pages/home_shell_page.dart';
 import '../../features/profile-setup/presentation/pages/profile_setup_page.dart';
 import '../../features/linkes/presentation/pages/like_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../models/user_model.dart';
 import '../../features/auth/presentation/pages/auth_wrapper.dart';
 import '../constants/app_routes.dart';
 import '../../features/auth/presentation/pages/phone_login_page.dart';
@@ -66,6 +68,20 @@ class AppRouter {
           builder: (_) => HomeShellPage(initialTabIndex: 2),
           settings: settings,
         );
+
+      case AppRoutes.chatDetail:
+        final chatRoomId = args?['chatRoomId'] as String?;
+        final otherUser = args?['otherUser'] as UserModel?;
+        if (chatRoomId != null && otherUser != null) {
+          return MaterialPageRoute(
+            builder: (_) => ChatDetailPage(
+              chatRoomId: chatRoomId,
+              otherUser: otherUser,
+            ),
+            settings: settings,
+          );
+        }
+        return null;
 
       case AppRoutes.likes:
         return MaterialPageRoute(
@@ -132,6 +148,7 @@ class AppRouter {
           builder: (_) => const ProfileSetupPage(),
           settings: settings,
         );
+
 
       default:
         return null;

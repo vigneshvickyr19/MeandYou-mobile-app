@@ -8,12 +8,21 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import '../../../../core/services/database_service.dart';
+import '../../../../core/services/notification_api_service.dart';
+import '../../../../core/services/notification_payload_builder.dart';
+import '../../../notifications/data/services/notification_storage_service.dart';
+import '../../../notifications/data/models/notification_model.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatDetailController extends ChangeNotifier {
   final ChatRepository _chatRepository = ChatRepository();
   final ImagePicker _imagePicker = ImagePicker();
   final AudioRecorder _audioRecorder = AudioRecorder();
-  
+  final DatabaseService _databaseService = DatabaseService();
+  final NotificationApiService _notificationApiService = NotificationApiService.instance;
+  final NotificationStorageService _notificationStorageService = NotificationStorageService();
+
   bool _isRecording = false;
 
   List<MessageModel> _messages = [];
@@ -137,8 +146,6 @@ class ChatDetailController extends ChangeNotifier {
         );
   }
 
-
-
   Future<void> startRecording() async {
     try {
       if (await _audioRecorder.hasPermission()) {
@@ -184,12 +191,6 @@ class ChatDetailController extends ChangeNotifier {
     final fileName = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     final ref = FirebaseStorage.instance.ref().child('chat_audio').child(fileName);
     
-    // Create a temporary message for optimistic UI (optional, but requested "Show sending animation")
-    // For now we will rely on the UI showing a spinner or "Sending..." state if we want, 
-    // but the user requirement "Show sending animation while the audio uploads" 
-    // implies we should probably be in a "sending" state. 
-    // Since this is Future<void>, the UI calling this can show a loader.
-    
     try {
       final uploadTask = ref.putFile(File(path));
       await uploadTask;
@@ -209,6 +210,12 @@ class ChatDetailController extends ChangeNotifier {
       );
       
       await _chatRepository.sendMessage(message);
+
+      // Send notification for voice message
+      await _sendChatNotification(
+        messageType: 'voice',
+        messagePreview: '',
+      );
     } catch (e) {
       debugPrint("Error sending voice message: $e");
       rethrow;
@@ -247,11 +254,126 @@ class ChatDetailController extends ChangeNotifier {
 
     try {
       await _chatRepository.sendMessage(message);
+
+      // Send notification with proper message type
+      String messageType;
+      String messagePreview;
+      int? imageCount;
+
+      if (imagesToSend.isNotEmpty) {
+        messageType = 'image';
+        messagePreview = '';
+        imageCount = imagesToSend.length;
+      } else {
+        messageType = 'text';
+        messagePreview = content.trim();
+      }
+
+      await _sendChatNotification(
+        messageType: messageType,
+        messagePreview: messagePreview,
+        imageCount: imageCount,
+      );
     } catch (e) {
       _optimisticMessages.removeWhere((m) => m.id == tempId);
       _needsRebuildCache = true;
       notifyListeners();
       rethrow;
+    }
+  }
+
+  /// Send chat notification using payload builder
+  Future<void> _sendChatNotification({
+    required String messageType,
+    required String messagePreview,
+    int? imageCount,
+  }) async {
+    try {
+      final otherUser = await _databaseService.getUserById(_otherUserId);
+      if (otherUser == null || otherUser.fcmToken == null) {
+        debugPrint('Cannot send notification: User offline or no token');
+        return;
+      }
+
+      // Fetch current user to get their name
+      final currentUser = await _databaseService.getUserById(_currentUserId);
+      final senderName = currentUser?.fullName ?? 'Someone';
+
+      // Build notification payload using the builder
+      final payload = NotificationPayloadBuilder.buildChatNotification(
+        chatId: _chatRoomId,
+        senderId: _currentUserId,
+        senderName: senderName,
+        senderPhotoUrl: currentUser?.profileImageUrl,
+        messagePreview: messagePreview,
+        messageType: messageType,
+        imageCount: imageCount,
+      );
+
+      // Validate payload
+      if (!NotificationPayloadBuilder.validatePayload(payload)) {
+        debugPrint('Invalid notification payload');
+        return;
+      }
+
+      // Extract title and body
+      final titleBody = NotificationPayloadBuilder.extractTitleAndBody(payload);
+
+      // Send notification
+      await _notificationApiService.sendNotification(
+        deviceToken: otherUser.fcmToken!,
+        title: titleBody['title']!,
+        body: titleBody['body']!,
+        data: payload,
+      );
+
+      // Store notification in Firestore for history
+      await _notificationStorageService.sendNotification(
+        receiverId: _otherUserId,
+        senderId: _currentUserId,
+        senderName: senderName,
+        senderPhotoUrl: currentUser?.profileImageUrl,
+        type: NotificationType.message,
+        title: titleBody['title']!,
+        message: titleBody['body']!,
+        metadata: {
+          'chatId': _chatRoomId,
+          ...payload,
+        },
+      );
+
+      debugPrint('Chat notification sent and stored successfully');
+    } catch (e) {
+      debugPrint('Error sending/storing chat notification: $e');
+      // Don't rethrow - notification failure shouldn't break message sending
+    }
+  }
+
+  Future<void> initiateCall(String callType) async {
+    try {
+      final otherUser = await _databaseService.getUserById(_otherUserId);
+      
+      if (otherUser != null && otherUser.fcmToken != null) {
+        final currentUser = await _databaseService.getUserById(_currentUserId);
+        final senderName = currentUser?.fullName ?? 'User';
+        final callId =const Uuid().v4();
+
+        await _notificationApiService.sendCallSignal(
+          deviceToken: otherUser.fcmToken!,
+          callId: callId,
+          callerId: _currentUserId,
+          callerName: senderName,
+          calleeId: _otherUserId,
+          callType: callType,
+          action: 'START',
+        );
+        debugPrint("Call signal sent successfully");
+        // TODO: Navigate to outgoing call UI
+      } else {
+        debugPrint("Cannot call: User offline or no token");
+      }
+    } catch (e) {
+      debugPrint("Error initiating call: $e");
     }
   }
 
@@ -317,6 +439,12 @@ class ChatDetailController extends ChangeNotifier {
 
   Future<void> addReaction(String messageId, String reaction) async {
     await _chatRepository.addReaction(messageId, reaction);
+    
+    // Send notification for reaction
+    await _sendChatNotification(
+      messageType: 'reaction',
+      messagePreview: '',
+    );
   }
 
   String getDateLabel(DateTime date) {

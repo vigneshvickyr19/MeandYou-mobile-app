@@ -1,228 +1,266 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_routes.dart';
-import '../../../../core/models/user_model.dart';
-import 'distance_badge.dart';
+import '../../../matching/domain/entities/nearby_match_entity.dart';
 
 class ProfilePreviewCard extends StatelessWidget {
-  final UserModel user;
-  final double distance;
+  final NearbyMatchEntity match;
   final VoidCallback onClose;
-  final VoidCallback onSayHello;
   final VoidCallback onViewProfile;
+  final VoidCallback onSayHello;
 
   const ProfilePreviewCard({
     super.key,
-    required this.user,
-    required this.distance,
+    required this.match,
     required this.onClose,
-    required this.onSayHello,
     required this.onViewProfile,
+    required this.onSayHello,
   });
 
-  int _calculateAge() {
-    // TODO: Calculate from user.dateOfBirth when available
-    return 26; // Placeholder
+  String _formatDistance(double distanceInKm) {
+    if (distanceInKm < 1) {
+      return '${(distanceInKm * 1000).toInt()}m';
+    }
+    return '${distanceInKm.toStringAsFixed(1)}km';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.5),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Close Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: onClose,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: AppColors.white,
-                    size: 20,
-                  ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Main Card with Glassmorphism
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 80, 24, 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
+                  ),
+                ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Name, Age and Distance
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${match.fullName}, ${match.age}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ),
+                      // Distance Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.near_me,
+                              size: 14,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDistance(match.distance),
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Location Label (e.g., "Near by Starbucks")
+                  if (match.address != null && match.address!.isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          color: Colors.white.withOpacity(0.5),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            match.address!,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  
+                  const SizedBox(height: 8),
+
+                  // Full Address (if available)
+                  if (match.address != null && match.address!.isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.place_outlined,
+                          color: Colors.white.withOpacity(0.4),
+                          size: 14,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            match.address!,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  // View Profile Button (Primary Orange)
+                  GestureDetector(
+                    onTap: onViewProfile,
+                    child: Container(
+                      width: double.infinity,
+                      height: 52,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFE85D04).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        'View Profile',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
-          // Profile Image
-          Container(
-            width: 120,
-            height: 120,
+        ),
+
+        // Floating Avatar (Large)
+        Positioned(
+          top: -50,
+          left: 24,
+          child: Container(
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
               border: Border.all(
-                color: const Color(0xFFE85D04),
-                width: 3,
+                color: const Color(0xFF1A1A1A),
+                width: 5,
               ),
             ),
             child: ClipOval(
-              child: user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty
+              child: match.profileImageUrl != null
                   ? Image.network(
-                      user.profileImageUrl!,
+                      match.profileImageUrl!,
                       fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Colors.grey[800],
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white24,
+                          size: 45,
+                        ),
+                      ),
                     )
                   : Container(
                       color: Colors.grey[800],
                       child: const Icon(
                         Icons.person,
-                        size: 60,
                         color: Colors.white24,
+                        size: 45,
                       ),
                     ),
             ),
           ),
-          const SizedBox(height: 16),
-          // Online Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: user.isOnline ? const Color(0xFF4CAF50) : Colors.grey,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                user.isOnline ? 'Online' : 'Offline',
-                style: TextStyle(
-                  color: AppColors.white.withOpacity(0.6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Name and Age
-          Text(
-            '${user.fullName ?? 'Unknown'}, ${_calculateAge()}',
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Distance
-          DistanceBadge(distance: distance),
-          const SizedBox(height: 12),
-          // Location
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_on_outlined,
-                color: AppColors.white.withOpacity(0.6),
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  'Near to Westbourne, Woodholme',
-                  style: TextStyle(
-                    color: AppColors.white.withOpacity(0.6),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Address
-          Text(
-            '2972 Westheimer Rd. Santa Ana, Illinois 85486',
-            style: TextStyle(
-              color: AppColors.white.withOpacity(0.4),
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: _buildButton(
-                  label: 'Say Hello',
-                  onTap: onSayHello,
-                  isPrimary: false,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildButton(
-                  label: 'View Profile',
-                  onTap: onViewProfile,
-                  isPrimary: true,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+        ),
 
-  Widget _buildButton({
-    required String label,
-    required VoidCallback onTap,
-    required bool isPrimary,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          gradient: isPrimary
-              ? const LinearGradient(
-                  colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],
-                )
-              : null,
-          color: isPrimary ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: isPrimary
-              ? null
-              : Border.all(
-                  color: AppColors.white.withOpacity(0.3),
-                  width: 1,
-                ),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+        // Close Icon (X button)
+        Positioned(
+          top: 12,
+          right: 12,
+          child: GestureDetector(
+            onTap: onClose,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.close,
+                color: Colors.white.withOpacity(0.6),
+                size: 18,
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

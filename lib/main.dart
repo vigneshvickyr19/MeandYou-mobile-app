@@ -5,6 +5,7 @@ import 'core/services/firebase_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/profile_setup_provider.dart';
+import 'package:me_and_you/features/notifications/presentation/controllers/notification_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProfileSetupProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationController()),
       ],
       child: const MyApp(),
     ),

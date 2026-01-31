@@ -16,4 +16,5 @@ class AppImages {
   static const lovelyIcon = 'assets/images/lovely.svg';
   static const messageIcon = 'assets/images/messages.svg';
   static const profileIcon = 'assets/images/profile.svg';
+  static const notificationIcon = 'assets/images/notification_icon.svg';
 }

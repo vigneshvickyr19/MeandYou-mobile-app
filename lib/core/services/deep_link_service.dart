@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
 import '../constants/deep_link_routes.dart';
 import '../constants/app_routes.dart';
+import '../constants/notification_constants.dart';
+import '../models/notification_payload_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DeepLinkService {
   static final DeepLinkService _instance = DeepLinkService._internal();
@@ -65,7 +68,7 @@ class DeepLinkService {
 
   // Process deep link and navigate to appropriate route
   void handleLink(String link) {
-    debugPrint('Processing deep link: $link');
+    debugPrint('DeepLinkService: Processing deep link: $link');
 
     final uri = Uri.parse(link);
     
@@ -78,10 +81,8 @@ class DeepLinkService {
     final path = _getPathFromUri(uri);
     debugPrint('Extracted path for routing: $path');
 
-    // Extract parameters from the path
+    // Extract parameters using existing helper
     final params = DeepLinkRoutes.extractParams(path);
-
-    // Get the app route
     final appRoute = DeepLinkRoutes.getAppRoute(path);
 
     if (appRoute == null) {
@@ -89,69 +90,94 @@ class DeepLinkService {
       _navigateToFallback();
       return;
     }
+    
+    // Construct a payload model for consistency
+    final Map<String, dynamic> data = {
+       NotificationConstants.keyRoute: appRoute,
+       ...params
+    };
+    
+    // Standardize param keys for our model if needed (mapped in DeepLinkRoutes or here)
+    // For example if params has 'id', we determine if it's userId or chatId based on route
+    if (appRoute == AppRoutes.otherProfile && params.containsKey('id')) {
+      data[NotificationConstants.keyProfileId] = params['id'];
+    } else if (appRoute == AppRoutes.chat && params.containsKey('id')) {
+       data[NotificationConstants.keyChatId] = params['id'];
+       data[NotificationConstants.keyRoomId] = params['id'];
+    }
 
-    // Navigate based on the route
-    _navigateToRoute(appRoute, params);
+    final payload = NotificationPayloadModel.fromMap(data);
+    _navigateToPayload(payload);
+  }
+  
+  /// Handle a notification payload (Push Notification)
+  void handleNotificationPayload(Map<String, dynamic> data) {
+     debugPrint('DeepLinkService: Handling notification payload: $data');
+     final payload = NotificationPayloadModel.fromMap(data);
+     _navigateToPayload(payload);
   }
 
-  // Navigate to the specified route with parameters
-  void _navigateToRoute(String route, Map<String, String> params) {
-    debugPrint('DeepLinkService: Navigating to $route with params $params');
+  // Unified navigation using Payload Model
+  void _navigateToPayload(NotificationPayloadModel payload) {
+    debugPrint('DeepLinkService: Navigating to ${payload.targetRoute} with args ${payload.targetArguments}');
     final context = _navigatorKey?.currentContext;
+    
     if (context == null) {
       debugPrint('DeepLinkService: Navigator context is null');
       return;
     }
-
-    // Handle home route with tab index
-    if (route == AppRoutes.home && params.containsKey('tabIndex')) {
-      final tabIndex = int.tryParse(params['tabIndex'] ?? '0') ?? 0;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.home,
-        (route) => false,
-        arguments: {'tabIndex': tabIndex},
-      );
-      return;
+    
+    // Ensure user is authenticated for protected routes
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null && _isProtectedRoute(payload.targetRoute)) {
+       debugPrint('DeepLinkService: User not logged in, redirecting to login');
+       Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (r) => false);
+       return;
     }
 
-    // Handle profile route
-    if (route == AppRoutes.profile) {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.profile, (route) => false);
-      return;
-    }
-
-    // Handle chat route
-    if (route == AppRoutes.chat) {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.chat, (route) => false);
-      return;
-    }
-
-    // Handle likes route
-    if (route == AppRoutes.likes) {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.likes, (route) => false);
-      return;
-    }
-
-    // For routes without parameters or special handling
-    // Navigate and clear stack for main routes
-    if (_isMainRoute(route)) {
-      Navigator.of(context).pushNamedAndRemoveUntil(route, (route) => false);
-    } else {
-      Navigator.of(context).pushNamed(route);
+    try {
+      if (payload.targetRoute == AppRoutes.home) {
+         // Handle home tab index if present
+         int tabIndex = 0;
+         if (payload.originalData.containsKey('tabIndex')) {
+            tabIndex = int.tryParse(payload.originalData['tabIndex'].toString()) ?? 0;
+         }
+         Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home, 
+            (r) => false, 
+            arguments: {'tabIndex': tabIndex}
+         );
+      } 
+      else if (_isCleanStackRoute(payload.targetRoute)) {
+         Navigator.of(context).pushNamedAndRemoveUntil(
+           payload.targetRoute, 
+           (r) => false,
+           arguments: payload.targetArguments
+         );
+      } else {
+         Navigator.of(context).pushNamed(
+           payload.targetRoute,
+           arguments: payload.targetArguments
+         );
+      }
+    } catch (e) {
+      debugPrint('DeepLinkService: Navigation error: $e');
+      _navigateToFallback();
     }
   }
 
   // Check if route is a main route that should clear the stack
-  bool _isMainRoute(String route) {
+  bool _isCleanStackRoute(String route) {
     return route == AppRoutes.home ||
         route == AppRoutes.login ||
         route == AppRoutes.getStarted;
+  }
+  
+  bool _isProtectedRoute(String route) {
+    return route != AppRoutes.login && 
+           route != AppRoutes.signUp && 
+           route != AppRoutes.getStarted &&
+           route != AppRoutes.splash;
   }
 
   // Navigate to fallback route for invalid links
