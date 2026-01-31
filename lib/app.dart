@@ -15,13 +15,14 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final DeepLinkService _deepLinkService = DeepLinkService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Initialize services after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _deepLinkService.initialize(_navigatorKey);
@@ -31,25 +32,42 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _deepLinkService.dispose();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.currentUser != null) {
+      if (state == AppLifecycleState.resumed) {
+        authProvider.setOnlineStatus(true);
+      } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+        authProvider.setOnlineStatus(false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ProfileSetupProvider()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        navigatorKey: _navigatorKey,
-        initialRoute: AppRoutes.splash,
-        theme: AppTheme.darkTheme,
-        routes: AppRouter.routes,
-        onGenerateRoute: AppRouter.onGenerateRoute,
-      ),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        // Handle initial online status once authenticated
+        if (authProvider.currentUser != null && authProvider.currentUser!.isOnline == false) {
+          authProvider.setOnlineStatus(true);
+        }
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          navigatorKey: _navigatorKey,
+          initialRoute: AppRoutes.splash,
+          theme: AppTheme.darkTheme,
+          routes: AppRouter.routes,
+          onGenerateRoute: AppRouter.onGenerateRoute,
+        );
+      },
     );
   }
 }

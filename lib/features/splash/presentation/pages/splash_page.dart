@@ -30,10 +30,13 @@ class _SplashPageState extends State<SplashPage> {
     // We use context.read because we don't need to listen here
     final authProvider = context.read<AuthProvider>();
     
-    // Function to wait for isInitializing to become false
+    // Function to wait for isInitializing to become false with a max timeout
     Future<void> waitForAuth() async {
-      while (authProvider.isInitializing) {
+      int attempts = 0;
+      const maxAttempts = 50; // 5 seconds (50 * 100ms)
+      while (authProvider.isInitializing && attempts < maxAttempts) {
         await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
       }
     }
 

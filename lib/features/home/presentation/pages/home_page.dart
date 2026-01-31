@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/providers/auth_provider.dart';
-import '../../../../core/services/notification_service.dart';
+import '../widgets/segmented_tab_header.dart';
+import 'nearby_tab.dart';
+import 'discover_tab.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +15,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _selectedTabIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -59,53 +62,34 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 40),
-          const Text(
-            "Welcome to the App! dating App",
-            style: TextStyle(
-              color: AppColors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Sticky Header
+            SegmentedTabHeader(
+              selectedIndex: _selectedTabIndex,
+              onTabChanged: (index) {
+                setState(() {
+                  _selectedTabIndex = index;
+                });
+              },
+              onNotificationTap: () {
+                // TODO: Navigate to notifications
+              },
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            "This is your home page after signing in. You can add more content here.",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-          const Spacer(),
-          AppButton(
-            text: "Test Notification",
-            onPressed: () {
-              NotificationService.instance.showTestNotification();
-            },
-            isEnabled: true,
-            type: AppButtonType.transparent,
-          ),
-          const SizedBox(height: 12),
-          AppButton(
-            text: "Log Out",
-            onPressed: () {
-              // Ensure we pop to the first route to clear stack or use navigator properly
-              // Usually auth wrapper handles state change, so logout calls authProvider.signOut()
-              final authProvider = Provider.of<AuthProvider>(
-                context,
-                listen: false,
-              );
-              authProvider.signOut();
-              // The auth wrapper will redirect to login page automatically if it listens to auth state
-            },
-            isEnabled: true,
-          ),
-          const SizedBox(height: 24),
-        ],
+            // Tab Content
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _selectedTabIndex == 0
+                    ? const NearbyTab(key: ValueKey('nearby'))
+                    : const DiscoverTab(key: ValueKey('discover')),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

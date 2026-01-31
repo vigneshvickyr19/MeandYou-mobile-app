@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../constants/firebase_constants.dart';
 
 class UserModel {
   final String id;
@@ -10,6 +11,9 @@ class UserModel {
   final DateTime? updatedAt;
   final String? fcmToken;
   final String? voipToken;
+  final String? fullName;
+  final String? profileImageUrl;
+  final bool isOnline;
 
   UserModel({
     required this.id,
@@ -21,34 +25,43 @@ class UserModel {
     this.updatedAt,
     this.fcmToken,
     this.voipToken,
+    this.fullName,
+    this.profileImageUrl,
+    this.isOnline = false,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
     return UserModel(
       id: documentId,
-      email: data['email'] ?? '',
-      phoneNumber: data['phoneNumber'],
-      isProfileComplete: data['isProfileComplete'] ?? false,
-      isVerified: data['isVerified'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
-      fcmToken: data['fcmToken'],
-      voipToken: data['voipToken'],
+      email: data[FirebaseConstants.email] ?? '',
+      phoneNumber: data[FirebaseConstants.phoneNumber],
+      isProfileComplete: data[FirebaseConstants.isProfileComplete] ?? false,
+      isVerified: data[FirebaseConstants.isVerified] ?? false,
+      createdAt: (data[FirebaseConstants.createdAt] as Timestamp?)?.toDate(),
+      updatedAt: (data[FirebaseConstants.updatedAt] as Timestamp?)?.toDate(),
+      fcmToken: data[FirebaseConstants.fcmToken],
+      voipToken: data[FirebaseConstants.voipToken],
+      fullName: data[FirebaseConstants.fullName],
+      profileImageUrl: data[FirebaseConstants.profileImageUrl],
+      isOnline: data[FirebaseConstants.isOnline] ?? false,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'email': email,
-      'phoneNumber': phoneNumber,
-      'isProfileComplete': isProfileComplete,
-      'isVerified': isVerified,
-      'createdAt': createdAt != null
+      FirebaseConstants.email: email,
+      FirebaseConstants.phoneNumber: phoneNumber,
+      FirebaseConstants.isProfileComplete: isProfileComplete,
+      FirebaseConstants.isVerified: isVerified,
+      FirebaseConstants.createdAt: createdAt != null
           ? Timestamp.fromDate(createdAt!)
           : FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-      'fcmToken': fcmToken,
-      'voipToken': voipToken,
+      FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+      FirebaseConstants.fcmToken: fcmToken,
+      FirebaseConstants.voipToken: voipToken,
+      FirebaseConstants.fullName: fullName,
+      FirebaseConstants.profileImageUrl: profileImageUrl,
+      FirebaseConstants.isOnline: isOnline,
     };
   }
 
@@ -59,6 +72,9 @@ class UserModel {
     bool? isVerified,
     String? fcmToken,
     String? voipToken,
+    String? fullName,
+    String? profileImageUrl,
+    bool? isOnline,
   }) {
     return UserModel(
       id: id,
@@ -70,6 +86,9 @@ class UserModel {
       updatedAt: DateTime.now(),
       fcmToken: fcmToken ?? this.fcmToken,
       voipToken: voipToken ?? this.voipToken,
+      fullName: fullName ?? this.fullName,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      isOnline: isOnline ?? this.isOnline,
     );
   }
 }

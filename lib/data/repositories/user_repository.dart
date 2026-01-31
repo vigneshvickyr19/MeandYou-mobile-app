@@ -162,4 +162,9 @@ class UserRepository {
   Future<void> updateVoipToken(String userId, String token) async {
     await _dbService.updateUserField(userId, {'voipToken': token});
   }
+
+  // Update Online Status
+  Future<void> updateOnlineStatus(String userId, bool isOnline) async {
+    await _dbService.updateOnlineStatus(userId, isOnline);
+  }
 }

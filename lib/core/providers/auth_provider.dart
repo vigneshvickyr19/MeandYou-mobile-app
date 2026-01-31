@@ -189,6 +189,17 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> setOnlineStatus(bool isOnline) async {
+    if (_currentUser == null) return;
+    try {
+      await _userRepository.updateOnlineStatus(_currentUser!.id, isOnline);
+      _currentUser = _currentUser!.copyWith(isOnline: isOnline);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error setting online status: $e");
+    }
+  }
+
   Future<void> _updateFcmToken() async {
     if (_currentUser == null) return;
 
