@@ -155,10 +155,11 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
 
                       // Use ChatRepository to get or create a real room ID
                       final chatRepository = ChatRepository();
-                      final chatRoomId = await chatRepository.getOrCreateChatRoom(
-                        authProvider.currentUser!.id,
-                        controller.selectedMatch!.id,
-                      );
+                      final chatRoomId = await chatRepository
+                          .getOrCreateChatRoom(
+                            authProvider.currentUser!.id,
+                            controller.selectedMatch!.id,
+                          );
 
                       final otherUser = UserModel(
                         id: controller.selectedMatch!.id,
@@ -292,8 +293,18 @@ class TopographicWavePainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
     // 2. Animated Radial Gradients (Cinematic Lighting)
-    _drawRadialGlow(canvas, size, 0.4, const Color(0xFFE85D04).withOpacity(0.08));
-    _drawRadialGlow(canvas, size, -0.3, const Color(0xFF3B82F6).withOpacity(0.05));
+    _drawRadialGlow(
+      canvas,
+      size,
+      0.4,
+      const Color(0xFFE85D04).withOpacity(0.08),
+    );
+    _drawRadialGlow(
+      canvas,
+      size,
+      -0.3,
+      const Color(0xFF3B82F6).withOpacity(0.05),
+    );
 
     // 3. Gradient colors for the waves
     final gradientColors = [
@@ -317,11 +328,19 @@ class TopographicWavePainter extends CustomPainter {
       final progress = layer / numLayers;
       final animOffset = animationValue * 100;
 
-      final colorIndex = (layer / (numLayers / gradientColors.length)).floor() % gradientColors.length;
+      final colorIndex =
+          (layer / (numLayers / gradientColors.length)).floor() %
+          gradientColors.length;
       final nextColorIndex = (colorIndex + 1) % gradientColors.length;
-      final colorProgress = (layer % (numLayers / gradientColors.length)) / (numLayers / gradientColors.length);
+      final colorProgress =
+          (layer % (numLayers / gradientColors.length)) /
+          (numLayers / gradientColors.length);
 
-      final color = Color.lerp(gradientColors[colorIndex], gradientColors[nextColorIndex], colorProgress)!;
+      final color = Color.lerp(
+        gradientColors[colorIndex],
+        gradientColors[nextColorIndex],
+        colorProgress,
+      )!;
 
       paint.color = color.withOpacity(0.08 + (progress * 0.05));
 
@@ -331,7 +350,7 @@ class TopographicWavePainter extends CustomPainter {
       for (double x = -50; x <= size.width + 50; x += 10) {
         final y1 = math.sin((x + animOffset) * 0.006 + layer * 0.3) * 35;
         final y2 = math.sin((x - animOffset * 0.4) * 0.01 + layer * 0.2) * 25;
-        
+
         final baseY = (layer * baseSpacing) + (size.height * 0.05);
         final y = baseY + y1 + y2;
 
@@ -346,10 +365,21 @@ class TopographicWavePainter extends CustomPainter {
     }
   }
 
-  void _drawRadialGlow(Canvas canvas, Size size, double offsetMult, Color color) {
+  void _drawRadialGlow(
+    Canvas canvas,
+    Size size,
+    double offsetMult,
+    Color color,
+  ) {
     final center = Offset(
-      size.width / 2 + math.sin(animationValue * 2 * math.pi * 0.5 + offsetMult) * size.width * 0.2,
-      size.height / 2 + math.cos(animationValue * 2 * math.pi * 0.3 + offsetMult) * size.height * 0.2,
+      size.width / 2 +
+          math.sin(animationValue * 2 * math.pi * 0.5 + offsetMult) *
+              size.width *
+              0.2,
+      size.height / 2 +
+          math.cos(animationValue * 2 * math.pi * 0.3 + offsetMult) *
+              size.height *
+              0.2,
     );
 
     final paint = Paint()

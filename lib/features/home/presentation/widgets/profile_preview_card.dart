@@ -230,7 +230,9 @@ class ProfilePreviewCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFE85D04).withValues(alpha: 0.3),
+                                  color: const Color(
+                                    0xFFE85D04,
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
