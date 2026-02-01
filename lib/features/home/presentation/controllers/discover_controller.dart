@@ -19,16 +19,18 @@ class DiscoverController extends ChangeNotifier {
   final HomeService _homeService = HomeService();
   final ChatRepository _chatRepository = ChatRepository();
   final DatabaseService _databaseService = DatabaseService();
-  final NotificationApiService _notificationApiService = NotificationApiService.instance;
-  final NotificationStorageService _notificationStorageService = NotificationStorageService();
-  
+  final NotificationApiService _notificationApiService =
+      NotificationApiService.instance;
+  final NotificationStorageService _notificationStorageService =
+      NotificationStorageService();
+
   // Use matching repository for better match data
-  final GetNearbyMatchesUseCase _getNearbyMatchesUseCase = GetNearbyMatchesUseCase(
-    MatchingRepositoryImpl(),
-  );
-  
+  final GetNearbyMatchesUseCase _getNearbyMatchesUseCase =
+      GetNearbyMatchesUseCase(MatchingRepositoryImpl());
+
   // Use the same usecase as Nearby tab to fetch full profile with location
-  final GetCurrentUserProfileUseCase _getCurrentUserProfileUseCase = GetCurrentUserProfileUseCase();
+  final GetCurrentUserProfileUseCase _getCurrentUserProfileUseCase =
+      GetCurrentUserProfileUseCase();
 
   List<NearbyMatchEntity> _matches = [];
   final List<NearbyMatchEntity> _likedMatches = [];
@@ -51,11 +53,15 @@ class DiscoverController extends ChangeNotifier {
       // Get full profile from profileSetup collection (includes location data)
       // This is the same approach used by Nearby tab
       final fullProfile = await _getCurrentUserProfileUseCase(currentUser);
-      
+
       // Check if user has location data
-      if (fullProfile.latitude == null || fullProfile.longitude == null || fullProfile.geohash == null) {
+      if (fullProfile.latitude == null ||
+          fullProfile.longitude == null ||
+          fullProfile.geohash == null) {
         if (kDebugMode) {
-          debugPrint('[DiscoverTab] User location data is missing. Latitude: ${fullProfile.latitude}, Longitude: ${fullProfile.longitude}, Geohash: ${fullProfile.geohash}');
+          debugPrint(
+            '[DiscoverTab] User location data is missing. Latitude: ${fullProfile.latitude}, Longitude: ${fullProfile.longitude}, Geohash: ${fullProfile.geohash}',
+          );
         }
         _isLoading = false;
         notifyListeners();
@@ -63,33 +69,38 @@ class DiscoverController extends ChangeNotifier {
       }
 
       if (kDebugMode) {
-        debugPrint('[DiscoverTab] Full profile loaded with location: lat=${fullProfile.latitude}, lng=${fullProfile.longitude}, geohash=${fullProfile.geohash}');
+        debugPrint(
+          '[DiscoverTab] Full profile loaded with location: lat=${fullProfile.latitude}, lng=${fullProfile.longitude}, geohash=${fullProfile.geohash}',
+        );
       }
 
       // Start listening to matches with full profile
       _getNearbyMatchesUseCase(
         currentUser: fullProfile,
         radiusInKm: 10.0, // 10km radius (same as Nearby tab)
-      ).listen((matches) async {
-        _matches = matches;
-        _isLoading = false;
-        notifyListeners();
-        
-        if (kDebugMode) {
-          debugPrint('[DiscoverTab] Loaded ${matches.length} matches');
-        }
+      ).listen(
+        (matches) async {
+          _matches = matches;
+          _isLoading = false;
+          notifyListeners();
 
-        // Proactively fetch location for the first 3 matches
-        for (int i = 0; i < math.min(3, _matches.length); i++) {
-          await fetchLocationForMatch(_matches[i]);
-        }
-      }, onError: (error) {
-        _isLoading = false;
-        notifyListeners();
-        if (kDebugMode) {
-          debugPrint('[DiscoverTab] Error loading matches: $error');
-        }
-      });
+          if (kDebugMode) {
+            debugPrint('[DiscoverTab] Loaded ${matches.length} matches');
+          }
+
+          // Proactively fetch location for the first 3 matches
+          for (int i = 0; i < math.min(3, _matches.length); i++) {
+            await fetchLocationForMatch(_matches[i]);
+          }
+        },
+        onError: (error) {
+          _isLoading = false;
+          notifyListeners();
+          if (kDebugMode) {
+            debugPrint('[DiscoverTab] Error loading matches: $error');
+          }
+        },
+      );
     } catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -102,15 +113,15 @@ class DiscoverController extends ChangeNotifier {
   Future<void> likeUser(String currentUserId, NearbyMatchEntity match) async {
     try {
       final isMatch = await _homeService.likeUser(currentUserId, match.id);
-      
+
       // Remove match from list
       _matches.removeWhere((m) => m.id == match.id);
       _likedMatches.add(match);
-      
+
       if (isMatch) {
         _matchedUser = match;
         _showMatchDialog = true;
-        
+
         // Send match notification
         await _sendProfileNotification(
           currentUserId: currentUserId,
@@ -127,7 +138,7 @@ class DiscoverController extends ChangeNotifier {
           interactionType: 'like',
         );
       }
-      
+
       notifyListeners();
     } catch (e) {
       if (kDebugMode) {
@@ -145,7 +156,7 @@ class DiscoverController extends ChangeNotifier {
   /// Fetch readable location name for a match if not already present
   Future<void> fetchLocationForMatch(NearbyMatchEntity match) async {
     // If we already have area/landmark, no need to fetch again
-    if ((match.area != null && match.area!.isNotEmpty) || 
+    if ((match.area != null && match.area!.isNotEmpty) ||
         (match.landmark != null && match.landmark!.isNotEmpty)) {
       return;
     }
@@ -222,7 +233,7 @@ class DiscoverController extends ChangeNotifier {
       if (targetUser == null) {
         return;
       }
-      
+
       // Check if target user has FCM token
       if (targetUser.fcmToken == null || targetUser.fcmToken!.isEmpty) {
         return;
@@ -266,8 +277,8 @@ class DiscoverController extends ChangeNotifier {
         senderId: currentUserId,
         senderName: senderName,
         senderPhotoUrl: currentUser.profileImageUrl,
-        type: interactionType == 'match' 
-            ? NotificationType.match 
+        type: interactionType == 'match'
+            ? NotificationType.match
             : NotificationType.like,
         title: titleBody['title']!,
         message: titleBody['body']!,

@@ -21,9 +21,14 @@ class NearbyController extends ChangeNotifier {
     GetNearbyMatchesUseCase? getNearbyMatchesUseCase,
     UpdateLocationUseCase? updateLocationUseCase,
     GetCurrentUserProfileUseCase? getCurrentUserProfileUseCase,
-  })  : _getNearbyMatchesUseCase = getNearbyMatchesUseCase ?? GetNearbyMatchesUseCase(MatchingRepositoryImpl()),
-        _updateLocationUseCase = updateLocationUseCase ?? UpdateLocationUseCase(MatchingRepositoryImpl()),
-        _getCurrentUserProfileUseCase = getCurrentUserProfileUseCase ?? GetCurrentUserProfileUseCase();
+  }) : _getNearbyMatchesUseCase =
+           getNearbyMatchesUseCase ??
+           GetNearbyMatchesUseCase(MatchingRepositoryImpl()),
+       _updateLocationUseCase =
+           updateLocationUseCase ??
+           UpdateLocationUseCase(MatchingRepositoryImpl()),
+       _getCurrentUserProfileUseCase =
+           getCurrentUserProfileUseCase ?? GetCurrentUserProfileUseCase();
 
   List<NearbyMatchEntity> _users = [];
   List<NearbyMatchEntity> get users => _users;
@@ -39,7 +44,7 @@ class NearbyController extends ChangeNotifier {
 
   StreamSubscription? _matchesSubscription;
   StreamSubscription? _locationSubscription;
-  
+
   UserModel? _currentUser;
   Position? _lastPosition;
 
@@ -50,7 +55,7 @@ class NearbyController extends ChangeNotifier {
 
     // 1. Get full profile from profileSetup
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
-    
+
     _startMatchesSubscription();
     _startLocationUpdates(_currentUser!.id);
   }
@@ -59,20 +64,24 @@ class NearbyController extends ChangeNotifier {
     if (_currentUser == null) {
       return;
     }
-    
+
     _matchesSubscription?.cancel();
-    _matchesSubscription = _getNearbyMatchesUseCase(
-      currentUser: _currentUser!,
-      radiusInKm: 10.0,
-    ).listen((matches) {
-      _users = matches;
-      _isLoading = false;
-      notifyListeners();
-    }, onError: (error) {
-      _isLoading = false;
-      notifyListeners();
-      debugPrint('Error loading nearby matches: $error');
-    });
+    _matchesSubscription =
+        _getNearbyMatchesUseCase(
+          currentUser: _currentUser!,
+          radiusInKm: 10.0,
+        ).listen(
+          (matches) {
+            _users = matches;
+            _isLoading = false;
+            notifyListeners();
+          },
+          onError: (error) {
+            _isLoading = false;
+            notifyListeners();
+            debugPrint('Error loading nearby matches: $error');
+          },
+        );
   }
 
   void _startLocationUpdates(String userId) async {
@@ -89,14 +98,15 @@ class NearbyController extends ChangeNotifier {
     }
 
     _locationSubscription?.cancel();
-    _locationSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 100,
-      ),
-    ).listen((Position position) {
-      _onLocationChanged(userId, position);
-    });
+    _locationSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            distanceFilter: 100,
+          ),
+        ).listen((Position position) {
+          _onLocationChanged(userId, position);
+        });
   }
 
   void _onLocationChanged(String userId, Position position) {
@@ -107,12 +117,15 @@ class NearbyController extends ChangeNotifier {
         position.latitude,
         position.longitude,
       );
-      
+
       if (distance < 500) return;
     }
 
     _lastPosition = position;
-    final String geohash = GeoHasher().encode(position.longitude, position.latitude);
+    final String geohash = GeoHasher().encode(
+      position.longitude,
+      position.latitude,
+    );
 
     // Update local user and restart subscription
     if (_currentUser != null) {
@@ -155,13 +168,13 @@ class NearbyController extends ChangeNotifier {
           area: locationData['area'],
           fullAddress: locationData['fullAddress'],
         );
-        
+
         // Also update in the list for persistence during this session
         final index = _users.indexWhere((u) => u.id == match.id);
         if (index != -1) {
           _users[index] = _selectedMatch!;
         }
-        
+
         notifyListeners();
       } else {
         notifyListeners();
@@ -177,11 +190,11 @@ class NearbyController extends ChangeNotifier {
   Offset getUserPosition(int index, Size size) {
     final double centerX = size.width / 2;
     final double centerY = size.height / 2;
-    
+
     // Distribute users in a radial pattern
     final double radius = (size.width * 0.25) + (index % 3 * 30);
     final double angle = (index * (2 * math.pi / 5)) + (math.pi / 6);
-    
+
     return Offset(
       centerX + radius * math.cos(angle),
       centerY + radius * math.sin(angle),

@@ -18,8 +18,6 @@ class ProfilePreviewCard extends StatelessWidget {
     required this.onSayHello,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -86,7 +84,9 @@ class ProfilePreviewCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              LocationFormatter.getDistanceString(match.distance),
+                              LocationFormatter.getDistanceString(
+                                match.distance,
+                              ),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 13,
@@ -100,7 +100,10 @@ class ProfilePreviewCard extends StatelessWidget {
                   ),
                   // Location Section (Clickable)
                   GestureDetector(
-                    onTap: () => LocationService.openMap(match.latitude, match.longitude),
+                    onTap: () => LocationService.openMap(
+                      match.latitude,
+                      match.longitude,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -110,7 +113,9 @@ class ProfilePreviewCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE85D04).withValues(alpha: 0.1),
+                                color: const Color(
+                                  0xFFE85D04,
+                                ).withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -122,7 +127,8 @@ class ProfilePreviewCard extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                match.landmark ?? LocationFormatter.getLocationName(match),
+                                match.landmark ??
+                                    LocationFormatter.getLocationName(match),
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 14,
@@ -195,7 +201,9 @@ class ProfilePreviewCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFE85D04).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFE85D04,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -233,10 +241,7 @@ class ProfilePreviewCard extends StatelessWidget {
                   spreadRadius: 2,
                 ),
               ],
-              border: Border.all(
-                color: const Color(0xFF1A1A1A),
-                width: 5,
-              ),
+              border: Border.all(color: const Color(0xFF1A1A1A), width: 5),
             ),
             child: ClipOval(
               child: match.profileImageUrl != null

@@ -15,87 +15,95 @@ class MatchingRepositoryImpl implements MatchingRepository {
   }) {
     // 1. Calculate Geohash Range
     final String userGeohash = currentUser.geohash ?? '';
-    
+
     if (userGeohash.isEmpty) {
       return Stream.value([]);
     }
 
     // We'll use a safer approach for the prefix
-    final String precisionPrefix = userGeohash.length >= 4 
-        ? userGeohash.substring(0, 4) 
+    final String precisionPrefix = userGeohash.length >= 4
+        ? userGeohash.substring(0, 4)
         : userGeohash;
     return _firestore
         .collection(FirebaseConstants.profileSetup)
         .where('geohash', isGreaterThanOrEqualTo: precisionPrefix)
         .where('geohash', isLessThanOrEqualTo: '$precisionPrefix\uf8ff')
         .snapshots()
-        .map((snapshot) {      
-      final List<NearbyMatchEntity> matches = [];
+        .map((snapshot) {
+          final List<NearbyMatchEntity> matches = [];
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        final String userId = doc.id;
-        final String userName = data[FirebaseConstants.fullName] ?? 'Unknown';
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final String userId = doc.id;
+            final String userName =
+                data[FirebaseConstants.fullName] ?? 'Unknown';
 
-        // Exclude self
-        if (userId == currentUser.id) {
-          continue;
-        }
+            // Exclude self
+            if (userId == currentUser.id) {
+              continue;
+            }
 
-        // Exclude blocked or swiped users
-        if (currentUser.blockedUsers.contains(userId)) {
-          continue;
-        }
-        if (currentUser.swipedUsers.contains(userId)) {
-          continue;
-        }
+            // Exclude blocked or swiped users
+            if (currentUser.blockedUsers.contains(userId)) {
+              continue;
+            }
+            if (currentUser.swipedUsers.contains(userId)) {
+              continue;
+            }
 
-        final double lat = (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
-        final double lng = (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
+            final double lat =
+                (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
+            final double lng =
+                (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
 
-        // Calculate distance
-        final double distance = _calculateDistance(
-          currentUser.latitude ?? 0,
-          currentUser.longitude ?? 0,
-          lat,
-          lng,
-        );
+            // Calculate distance
+            final double distance = _calculateDistance(
+              currentUser.latitude ?? 0,
+              currentUser.longitude ?? 0,
+              lat,
+              lng,
+            );
 
-        // Filter by radius
-        if (distance > radiusInKm) {
-          continue;
-        }
+            // Filter by radius
+            if (distance > radiusInKm) {
+              continue;
+            }
 
-        // Calculate match percentage
-        final double matchPercentage = _calculateMatchPercentage(
-          currentUser,
-          data,
-          distance,
-          radiusInKm,
-        );
+            // Calculate match percentage
+            final double matchPercentage = _calculateMatchPercentage(
+              currentUser,
+              data,
+              distance,
+              radiusInKm,
+            );
 
+            matches.add(
+              NearbyMatchEntity(
+                id: userId,
+                fullName: userName,
+                profileImageUrl: data[FirebaseConstants.profileImageUrl],
+                distance: distance,
+                matchPercentage: matchPercentage,
+                address: data[FirebaseConstants.address],
+                landmark: data['landmark'],
+                area: data['area'],
+                fullAddress: data[FirebaseConstants.address],
+                age: data[FirebaseConstants.age] ?? 18,
+                latitude: lat,
+                longitude: lng,
+                interests: List<String>.from(
+                  data[FirebaseConstants.interests] ?? [],
+                ),
+              ),
+            );
+          }
 
-        matches.add(NearbyMatchEntity(
-          id: userId,
-          fullName: userName,
-          profileImageUrl: data[FirebaseConstants.profileImageUrl],
-          distance: distance,
-          matchPercentage: matchPercentage,
-          address: data[FirebaseConstants.address],
-          landmark: data['landmark'],
-          area: data['area'],
-          fullAddress: data[FirebaseConstants.address],
-          age: data[FirebaseConstants.age] ?? 18,
-          latitude: lat,
-          longitude: lng,
-          interests: List<String>.from(data[FirebaseConstants.interests] ?? []),
-        ));
-      }
-
-      // Sort by match percentage
-      matches.sort((a, b) => b.matchPercentage.compareTo(a.matchPercentage));
-      return matches;
-    });
+          // Sort by match percentage
+          matches.sort(
+            (a, b) => b.matchPercentage.compareTo(a.matchPercentage),
+          );
+          return matches;
+        });
   }
 
   @override
@@ -123,9 +131,15 @@ class MatchingRepositoryImpl implements MatchingRepository {
         .update(updateData);
   }
 
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         math.cos((lat2 - lat1) * p) / 2 +
         math.cos(lat1 * p) *
             math.cos(lat2 * p) *
@@ -142,9 +156,13 @@ class MatchingRepositoryImpl implements MatchingRepository {
   ) {
     double score = 0;
     // 1. Interests (40%)
-    final otherInterests = List<String>.from(otherData[FirebaseConstants.interests] ?? []);
+    final otherInterests = List<String>.from(
+      otherData[FirebaseConstants.interests] ?? [],
+    );
     if (currentUser.interests.isNotEmpty) {
-      final common = currentUser.interests.where((i) => otherInterests.contains(i)).length;
+      final common = currentUser.interests
+          .where((i) => otherInterests.contains(i))
+          .length;
       final interestScore = (common / currentUser.interests.length) * 40;
       score += interestScore;
     }

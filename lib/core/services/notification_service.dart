@@ -106,11 +106,13 @@ class NotificationService {
     _navigatorKey = key;
     // Also pass it to DeepLinkService to ensure it has the key
     DeepLinkService().initialize(key);
-    
+
     // Check if we have an initial message to process
     if (_initialMessage != null) {
       if (kDebugMode) {
-        print('NotificationService: Processing initial message after navigator set');
+        print(
+          'NotificationService: Processing initial message after navigator set',
+        );
       }
       _handleNotificationOpenedApp(_initialMessage!);
       _initialMessage = null;
@@ -218,7 +220,9 @@ class NotificationService {
     _firebaseMessaging.getInitialMessage().then((message) {
       if (message != null) {
         if (kDebugMode) {
-          print('NotificationService: Found initial message from terminated state');
+          print(
+            'NotificationService: Found initial message from terminated state',
+          );
         }
         // If navigator is already set, handle it now, otherwise store for later
         if (_navigatorKey?.currentState != null) {

@@ -7,7 +7,7 @@ import '../controllers/discover_controller.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
 
 /// Discover Tab - iOS-style carousel with smooth animations
-/// 
+///
 /// Features:
 /// - PageView carousel with center card dominant
 /// - Left and right cards partially visible (peek effect)
@@ -23,7 +23,8 @@ class DiscoverTab extends StatefulWidget {
   State<DiscoverTab> createState() => _DiscoverTabState();
 }
 
-class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStateMixin {
+class _DiscoverTabState extends State<DiscoverTab>
+    with SingleTickerProviderStateMixin {
   late DiscoverController _controller;
   late PageController _pageController;
   int _currentPage = 0;
@@ -37,14 +38,14 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
       viewportFraction: 0.78, // Show peek of adjacent cards
       initialPage: 0,
     );
-    
+
     // Listen to page changes for smooth animations
     _pageController.addListener(() {
       setState(() {
         _currentPageValue = _pageController.page ?? 0.0;
       });
     });
-    
+
     // Load users after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
@@ -61,16 +62,14 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
     super.dispose();
   }
 
-
-
   /// Handle like action - API call only when heart icon is tapped
   void _handleLike(NearbyMatchEntity match) async {
     final authProvider = context.read<AuthProvider>();
     final currentUserId = authProvider.currentUser?.id ?? '';
-    
+
     // Call API to like user
     await _controller.likeUser(currentUserId, match);
-    
+
     // Animate to next card
     if (_currentPage < _controller.matches.length - 1) {
       _pageController.animateToPage(
@@ -110,11 +109,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0A0A0A),
-            Color(0xFF151515),
-            Color(0xFF1A1A1A),
-          ],
+          colors: [Color(0xFF0A0A0A), Color(0xFF151515), Color(0xFF1A1A1A)],
           stops: [0.0, 0.5, 1.0],
         ),
       ),
@@ -154,10 +149,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
         return Center(
           child: Transform.scale(
             scale: scale,
-            child: Opacity(
-              opacity: opacity,
-              child: child,
-            ),
+            child: Opacity(opacity: opacity, child: child),
           ),
         );
       },
@@ -194,20 +186,20 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
                 children: [
                   // Profile image
                   _buildProfileImage(match),
-                  
+
                   // Gradient overlay for text readability
                   _buildGradientOverlay(),
-                  
+
                   // Profile info at bottom
                   _buildProfileInfo(match),
                 ],
               ),
             ),
           ),
-          
+
           // Distance badge (top-right)
           if (isActive) _buildDistanceBadge(match),
-          
+
           // Action buttons (bottom) - only show for active card
           if (isActive) _buildActionButtons(match),
         ],
@@ -288,7 +280,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
             ),
           ),
           const SizedBox(height: 8),
-          
+
           // Location
           Row(
             children: [
@@ -343,11 +335,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.near_me,
-              color: Colors.white,
-              size: 14,
-            ),
+            Icon(Icons.near_me, color: Colors.white, size: 14),
             const SizedBox(width: 4),
             Text(
               LocationFormatter.getDistanceString(match.distance),
@@ -382,7 +370,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
             onTap: () {
               // Just remove from list, no API call
               _controller.dislikeUser(match);
-              
+
               // Animate to next card
               if (_currentPage < _controller.matches.length - 1) {
                 _pageController.animateToPage(
@@ -393,9 +381,9 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
               }
             },
           ),
-          
+
           const SizedBox(width: 24),
-          
+
           // Like button - API call happens here
           _buildActionButton(
             icon: Icons.favorite,
@@ -433,11 +421,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: iconSize,
-        ),
+        child: Icon(icon, color: Colors.white, size: iconSize),
       ),
     );
   }
@@ -449,10 +433,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0A0A0A),
-            Color(0xFF1A1A1A),
-          ],
+          colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
         ),
       ),
       child: Center(
@@ -485,10 +466,7 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0A0A0A),
-            Color(0xFF1A1A1A),
-          ],
+          colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
         ),
       ),
       child: Center(
@@ -544,7 +522,10 @@ class _DiscoverTabState extends State<DiscoverTab> with SingleTickerProviderStat
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],

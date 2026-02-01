@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage>
   String _getUserLocationName() {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.currentUser;
-    
+
     if (user?.address != null && user!.address!.isNotEmpty) {
       final parts = user.address!.split(',');
       if (parts.length >= 2) {
@@ -249,9 +249,7 @@ class _HomePageState extends State<HomePage>
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const NotificationsPage(),
-            ),
+            MaterialPageRoute(builder: (context) => const NotificationsPage()),
           );
         },
         borderRadius: BorderRadius.circular(12),
