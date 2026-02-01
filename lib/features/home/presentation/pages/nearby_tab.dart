@@ -169,7 +169,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
                             controller.selectedMatch!.profileImageUrl,
                       );
 
-                      if (mounted) {
+                      if (context.mounted) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -297,13 +297,13 @@ class TopographicWavePainter extends CustomPainter {
       canvas,
       size,
       0.4,
-      const Color(0xFFE85D04).withOpacity(0.08),
+      const Color(0xFFE85D04).withValues(alpha: 0.08),
     );
     _drawRadialGlow(
       canvas,
       size,
       -0.3,
-      const Color(0xFF3B82F6).withOpacity(0.05),
+      const Color(0xFF3B82F6).withValues(alpha: 0.05),
     );
 
     // 3. Gradient colors for the waves
@@ -342,7 +342,7 @@ class TopographicWavePainter extends CustomPainter {
         colorProgress,
       )!;
 
-      paint.color = color.withOpacity(0.08 + (progress * 0.05));
+      paint.color = color.withValues(alpha: 0.08 + (progress * 0.05));
 
       final path = Path();
       bool firstPoint = true;

@@ -74,21 +74,6 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     );
   }
 
-  Widget _buildBackgroundGlow() {
-    return Container(
-      width: widget.size * 2.2,
-      height: widget.size * 2.2,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            const Color(0xFFE85D04).withOpacity(0.15 * _glowController.value),
-            Colors.transparent,
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildPulseRing(int index) {
     final delay = index * 0.5;
@@ -102,36 +87,13 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: const Color(0xFFE85D04).withOpacity(opacity),
+          color: const Color(0xFFE85D04).withValues(alpha: opacity),
           width: 1.5,
         ),
       ),
     );
   }
 
-  Widget _buildRotatingRing() {
-    return Transform.rotate(
-      angle: _rotationController.value * 2 * math.pi,
-      child: Container(
-        width: widget.size * 1.2,
-        height: widget.size * 1.2,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.transparent, width: 3),
-        ),
-        child: CustomPaint(
-          painter: GradientRingPainter(
-            gradientColors: [
-              const Color(0xFFE85D04),
-              const Color(0xFFFF8C42),
-              const Color(0xFFE85D04).withOpacity(0.2),
-            ],
-            strokeWidth: 3,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildMainGlow() {
     final glowSize = widget.size * (1.1 + _glowController.value * 0.05);
@@ -142,7 +104,7 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE85D04).withOpacity(0.3),
+            color: const Color(0xFFE85D04).withValues(alpha: 0.3),
             blurRadius: 25,
             spreadRadius: 2,
           ),
@@ -161,7 +123,7 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
         border: Border.all(color: Colors.black, width: 3),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -185,9 +147,9 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFFE85D04).withOpacity(0.3),
+                    const Color(0xFFE85D04).withValues(alpha: 0.3),
                     Colors.transparent,
-                    const Color(0xFF000000).withOpacity(0.4),
+                    const Color(0xFF000000).withValues(alpha: 0.4),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                 ).createShader(rect);
@@ -212,7 +174,7 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
         decoration: BoxDecoration(
           gradient: RadialGradient(
             colors: [
-              const Color(0xFFFF8C42).withOpacity(0.4),
+              const Color(0xFFFF8C42).withValues(alpha: 0.4),
               Colors.transparent,
             ],
             radius: 0.8,
@@ -227,7 +189,7 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       color: const Color(0xFF2A2A2A),
       child: Icon(
         Icons.person,
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         size: widget.size * 0.5,
       ),
     );

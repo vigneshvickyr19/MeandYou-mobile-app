@@ -98,9 +98,9 @@ class _HomePageState extends State<HomePage>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppColors.black.withOpacity(0.8),
-            AppColors.black.withOpacity(0.6),
-            AppColors.black.withOpacity(0.3),
+            AppColors.black.withValues(alpha: 0.8),
+            AppColors.black.withValues(alpha: 0.6),
+            AppColors.black.withValues(alpha: 0.3),
             Colors.transparent,
           ],
           stops: const [0.0, 0.5, 0.8, 1.0],
@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage>
               Text(
                 'Discover',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
@@ -183,14 +183,14 @@ class _HomePageState extends State<HomePage>
                   Icon(
                     Icons.location_on,
                     size: 14,
-                    color: AppColors.white.withOpacity(0.5),
+                    color: AppColors.white.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
                       _getUserLocationName(),
                       style: TextStyle(
-                        color: AppColors.white.withOpacity(0.5),
+                        color: AppColors.white.withValues(alpha: 0.5),
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -203,7 +203,7 @@ class _HomePageState extends State<HomePage>
                   Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 16,
-                    color: AppColors.white.withOpacity(0.5),
+                    color: AppColors.white.withValues(alpha: 0.5),
                   ),
                 ],
               ),
@@ -233,17 +233,17 @@ class _HomePageState extends State<HomePage>
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.08),
+            color: AppColors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: AppColors.white.withOpacity(0.1),
+              color: AppColors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
           child: Center(
             child: Icon(
               Icons.notifications_outlined,
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
               size: 24,
             ),
           ),

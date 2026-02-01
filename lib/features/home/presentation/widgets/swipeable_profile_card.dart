@@ -136,7 +136,7 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                     spreadRadius: -5,
@@ -207,7 +207,7 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
         child: Icon(
           Icons.person_rounded,
           size: 120,
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
         ),
       ),
     );
@@ -221,9 +221,9 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            Colors.black.withOpacity(0.0),
-            Colors.black.withOpacity(0.4),
-            Colors.black.withOpacity(0.85),
+            Colors.black.withValues(alpha: 0.0),
+            Colors.black.withValues(alpha: 0.4),
+            Colors.black.withValues(alpha: 0.85),
           ],
           stops: const [0.0, 0.4, 0.7, 1.0],
         ),
@@ -238,15 +238,15 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             width: 0.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -257,14 +257,14 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
           children: [
             Icon(
               Icons.location_on_rounded,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               size: 14,
             ),
             const SizedBox(width: 4),
             Text(
               _getDistanceText(),
               style: TextStyle(
-                color: Colors.white.withOpacity(0.95),
+                color: Colors.white.withValues(alpha: 0.95),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.2,
@@ -310,7 +310,7 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
               Text(
                 '$age',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 28,
                   fontWeight: FontWeight.w400,
                   letterSpacing: -0.3,
@@ -325,14 +325,14 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
               Icon(
                 Icons.location_on,
                 size: 16,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   widget.locationName,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.65),
+                    color: Colors.white.withValues(alpha: 0.65),
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.1,
@@ -364,8 +364,8 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
             },
             gradient: LinearGradient(
               colors: [
-                Colors.black.withOpacity(0.6),
-                Colors.black.withOpacity(0.4),
+                Colors.black.withValues(alpha: 0.6),
+                Colors.black.withValues(alpha: 0.4),
               ],
             ),
             size: 56,
@@ -402,7 +402,7 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 15,
               offset: const Offset(0, 6),
             ),
@@ -426,8 +426,8 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
         decoration: BoxDecoration(
           border: Border.all(
             color: isLikeDirection
-                ? Colors.green.withOpacity(indicatorOpacity * 0.8)
-                : Colors.red.withOpacity(indicatorOpacity * 0.8),
+                ? Colors.green.withValues(alpha: indicatorOpacity * 0.8)
+                : Colors.red.withValues(alpha: indicatorOpacity * 0.8),
             width: 4,
           ),
           borderRadius: BorderRadius.circular(24),
@@ -439,13 +439,13 @@ class _SwipeableProfileCardState extends State<SwipeableProfileCard>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: isLikeDirection
-                    ? Colors.green.withOpacity(indicatorOpacity * 0.3)
-                    : Colors.red.withOpacity(indicatorOpacity * 0.3),
+                    ? Colors.green.withValues(alpha: indicatorOpacity * 0.3)
+                    : Colors.red.withValues(alpha: indicatorOpacity * 0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isLikeDirection
-                      ? Colors.green.withOpacity(indicatorOpacity)
-                      : Colors.red.withOpacity(indicatorOpacity),
+                      ? Colors.green.withValues(alpha: indicatorOpacity)
+                      : Colors.red.withValues(alpha: indicatorOpacity),
                   width: 3,
                 ),
               ),
