@@ -15,6 +15,7 @@ class DeepLinkService {
   late AppLinks _appLinks;
   StreamSubscription? _linkSubscription;
   GlobalKey<NavigatorState>? _navigatorKey;
+  NotificationPayloadModel? _pendingPayload;
 
   // Initialize deep link service with navigator key
   void initialize(GlobalKey<NavigatorState> navigatorKey) {
@@ -22,6 +23,13 @@ class DeepLinkService {
     _appLinks = AppLinks();
     _handleIncomingLinks();
     _handleInitialLink();
+
+    // Process pending payload if anyone was waiting
+    if (_pendingPayload != null) {
+      debugPrint('DeepLinkService: Processing pending payload after initialization');
+      _navigateToPayload(_pendingPayload!);
+      _pendingPayload = null;
+    }
   }
 
   // Handle initial link when app is opened via deep link
@@ -125,7 +133,8 @@ class DeepLinkService {
     final context = _navigatorKey?.currentContext;
 
     if (context == null) {
-      debugPrint('DeepLinkService: Navigator context is null');
+      debugPrint('DeepLinkService: Navigator context is null, queuing payload');
+      _pendingPayload = payload;
       return;
     }
 

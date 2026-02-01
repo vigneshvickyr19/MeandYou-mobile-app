@@ -59,6 +59,8 @@ dependencies:
   firebase_storage: ^12.4.10
   dio: ^5.9.1
   dart_geohash: ^2.1.0
+  geocoding: ^4.0.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

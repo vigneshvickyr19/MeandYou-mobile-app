@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../../core/utils/location_formatter.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
 
 class ProfilePreviewCard extends StatelessWidget {
@@ -15,13 +17,6 @@ class ProfilePreviewCard extends StatelessWidget {
     required this.onViewProfile,
     required this.onSayHello,
   });
-
-  String _formatDistance(double distanceInKm) {
-    if (distanceInKm < 1) {
-      return '${(distanceInKm * 1000).toInt()}m';
-    }
-    return '${distanceInKm.toStringAsFixed(1)}km';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +84,9 @@ class ProfilePreviewCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              _formatDistance(match.distance),
+                              LocationFormatter.getDistanceString(
+                                match.distance,
+                              ),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 13,
@@ -101,57 +98,92 @@ class ProfilePreviewCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  // Location Label (e.g., "Near by Starbucks")
-                  if (match.address != null && match.address!.isNotEmpty)
-                    Row(
+                  // Location Section (Clickable)
+                  GestureDetector(
+                    onTap: () => LocationService.openMap(
+                      match.latitude,
+                      match.longitude,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          color: Colors.white.withValues(alpha: 0.5),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            match.address!,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.5),
-                              fontSize: 14,
+                        // Near by Landmark / Place
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFE85D04,
+                                ).withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.near_me_outlined,
+                                color: Color(0xFFE85D04),
+                                size: 14,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                match.landmark ??
+                                    LocationFormatter.getLocationName(match),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 8),
+
+                        // City / Area
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.white24,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                match.area ?? 'Nearby',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Full Address (Optional/Secondary)
+                        if (match.fullAddress != null) ...[
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 22),
+                            child: Text(
+                              match.fullAddress!,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                fontSize: 11,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                  
-                  const SizedBox(height: 8),
-
-                  // Full Address (if available)
-                  if (match.address != null && match.address!.isNotEmpty)
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.place_outlined,
-                          color: Colors.white.withValues(alpha: 0.4),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            match.address!,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              fontSize: 12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -169,7 +201,9 @@ class ProfilePreviewCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFE85D04).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFE85D04,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -207,17 +241,14 @@ class ProfilePreviewCard extends StatelessWidget {
                   spreadRadius: 2,
                 ),
               ],
-              border: Border.all(
-                color: const Color(0xFF1A1A1A),
-                width: 5,
-              ),
+              border: Border.all(color: const Color(0xFF1A1A1A), width: 5),
             ),
             child: ClipOval(
               child: match.profileImageUrl != null
                   ? Image.network(
                       match.profileImageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
+                      errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey[800],
                         child: const Icon(
                           Icons.person,
