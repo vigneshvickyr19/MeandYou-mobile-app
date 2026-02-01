@@ -66,8 +66,8 @@ class UserModel {
       fullName: data[FirebaseConstants.fullName],
       profileImageUrl: data[FirebaseConstants.profileImageUrl],
       isOnline: data[FirebaseConstants.isOnline] ?? false,
-      age: data[FirebaseConstants.age] is int 
-          ? data[FirebaseConstants.age] 
+      age: data[FirebaseConstants.age] is int
+          ? data[FirebaseConstants.age]
           : int.tryParse(data[FirebaseConstants.age]?.toString() ?? ''),
       latitude: (data[FirebaseConstants.latitude] as num?)?.toDouble(),
       longitude: (data[FirebaseConstants.longitude] as num?)?.toDouble(),
@@ -75,10 +75,13 @@ class UserModel {
       geohash: data[FirebaseConstants.geohash],
       interests: List<String>.from(data[FirebaseConstants.interests] ?? []),
       preferences: data[FirebaseConstants.preferences] as Map<String, dynamic>?,
-      blockedUsers: List<String>.from(data[FirebaseConstants.blockedUsers] ?? []),
+      blockedUsers: List<String>.from(
+        data[FirebaseConstants.blockedUsers] ?? [],
+      ),
       swipedUsers: List<String>.from(data[FirebaseConstants.swipedUsers] ?? []),
       gender: data[FirebaseConstants.gender],
-      lastLocationUpdate: (data[FirebaseConstants.lastLocationUpdate] as Timestamp?)?.toDate(),
+      lastLocationUpdate:
+          (data[FirebaseConstants.lastLocationUpdate] as Timestamp?)?.toDate(),
     );
   }
 

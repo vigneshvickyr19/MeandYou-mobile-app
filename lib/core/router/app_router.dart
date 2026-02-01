@@ -72,10 +72,8 @@ class AppRouter {
         final otherUser = args?['otherUser'] as UserModel?;
         if (chatRoomId != null && otherUser != null) {
           return MaterialPageRoute(
-            builder: (_) => ChatDetailPage(
-              chatRoomId: chatRoomId,
-              otherUser: otherUser,
-            ),
+            builder: (_) =>
+                ChatDetailPage(chatRoomId: chatRoomId, otherUser: otherUser),
             settings: settings,
           );
         }
@@ -146,7 +144,6 @@ class AppRouter {
           builder: (_) => const ProfileSetupPage(),
           settings: settings,
         );
-
 
       default:
         return null;

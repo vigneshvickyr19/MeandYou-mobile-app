@@ -118,8 +118,8 @@ class ProfileSetupProvider extends ChangeNotifier {
       final String? fcmToken = NotificationService.instance.fcmToken;
       UserModel updatedUser = currentUser.copyWith(
         fullName: _draftProfile!.fullName,
-        profileImageUrl: _draftProfile!.photos?.isNotEmpty == true 
-            ? _draftProfile!.photos!.first 
+        profileImageUrl: _draftProfile!.photos?.isNotEmpty == true
+            ? _draftProfile!.photos!.first
             : null,
         isProfileComplete: true,
         fcmToken: fcmToken,

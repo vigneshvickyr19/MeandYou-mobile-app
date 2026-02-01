@@ -39,12 +39,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentUser != null) {
       if (state == AppLifecycleState.resumed) {
         authProvider.setOnlineStatus(true);
-      } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      } else if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.detached) {
         authProvider.setOnlineStatus(false);
       }
     }
@@ -55,7 +56,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         // Handle initial online status once authenticated
-        if (authProvider.currentUser != null && authProvider.currentUser!.isOnline == false) {
+        if (authProvider.currentUser != null &&
+            authProvider.currentUser!.isOnline == false) {
           authProvider.setOnlineStatus(true);
         }
         return MaterialApp(

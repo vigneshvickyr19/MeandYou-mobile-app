@@ -1,14 +1,6 @@
-enum CallAction {
-  start,
-  end,
-  decline,
-  missed,
-}
+enum CallAction { start, end, decline, missed }
 
-enum CallType {
-  audio,
-  video,
-}
+enum CallType { audio, video }
 
 class CallSignalPayload {
   final String type = 'CALL_SIGNAL';

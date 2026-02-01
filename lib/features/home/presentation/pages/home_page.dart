@@ -12,7 +12,8 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -32,7 +33,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     // Get screen dimensions
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
-    
+
     return Scaffold(
       backgroundColor: AppColors.black,
       // Remove SafeArea to allow full-screen content
@@ -45,13 +46,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             child: TabBarView(
               controller: _tabController,
               physics: const NeverScrollableScrollPhysics(),
-              children: const [
-                NearbyTab(),
-                DiscoverTab(),
-              ],
+              children: const [NearbyTab(), DiscoverTab()],
             ),
           ),
-          
+
           // Floating header overlay (absolute positioned at top)
           Positioned(
             top: 0,
@@ -97,7 +95,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               controller: _tabController,
             ),
           ),
-          
+
           // Right: Notification Icon
           Positioned(
             right: 0,
