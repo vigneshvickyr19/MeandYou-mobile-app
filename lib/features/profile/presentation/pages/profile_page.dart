@@ -49,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
               backgroundColor: AppColors.black,
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
-                leading: const AppBackButton(),
+                leading: const Center(child: AppBackButton()),
               ),
               body: const Center(
                 child: Text(
@@ -71,8 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     stretch: true,
                     backgroundColor: AppColors.black,
                     automaticallyImplyLeading: false,
-                    leading: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                    leading: Center(
                       child: AppBackButton(
                         onTap: widget.isTab
                           ? () => context.read<HomeNavigationController>().changeTab(0)

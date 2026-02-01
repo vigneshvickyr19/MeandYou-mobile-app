@@ -5,6 +5,7 @@ import '../../../../core/providers/auth_provider.dart';
 import '../widgets/pill_tab_switcher.dart';
 import 'nearby_tab.dart';
 import 'discover_tab.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../notifications/presentation/pages/notifications_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -156,33 +157,8 @@ class _HomePageState extends State<HomePage>
       key: const ValueKey('discover_header'),
       children: [
         // Left: Back arrow
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              _tabController.animateTo(0); // Go back to Nearby
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: AppColors.white.withOpacity(0.9),
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
+        AppBackButton(
+          onTap: () => _tabController.animateTo(0), // Go back to Nearby
         ),
 
         // Center: Location name with "Discover" title
@@ -252,13 +228,13 @@ class _HomePageState extends State<HomePage>
             MaterialPageRoute(builder: (context) => const NotificationsPage()),
           );
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         child: Container(
           width: 48,
           height: 48,
           decoration: BoxDecoration(
             color: AppColors.white.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: AppColors.white.withOpacity(0.1),
               width: 1,

@@ -8,7 +8,7 @@ class EmailOtpService {
   static Future<void> sendOtp(String email) async {
     // In a real app, this would call a Cloud Function or an API
     // to send an email via SendGrid, Mailgun, etc.
-    String code = (100000 + Random().nextInt(900000)).toString();
+    String code = "123456";
     _otpStorage[email] = code;
     
     debugPrint('--- MOCK EMAIL OTP ---');

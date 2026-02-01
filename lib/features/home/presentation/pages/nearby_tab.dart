@@ -7,7 +7,9 @@ import '../../../matching/presentation/controllers/nearby_controller.dart';
 import '../../../chat/presentation/pages/chat_detail_page.dart';
 import '../../../../core/models/user_model.dart';
 import '../widgets/profile_preview_card.dart';
+import '../widgets/premium_animated_avatar.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
+import '../../../../data/repositories/chat_repository.dart';
 import 'dart:math' as math;
 
 class NearbyTab extends StatefulWidget {
@@ -17,8 +19,7 @@ class NearbyTab extends StatefulWidget {
   State<NearbyTab> createState() => _NearbyTabState();
 }
 
-class _NearbyTabState extends State<NearbyTab>
-    with SingleTickerProviderStateMixin {
+class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
   late NearbyController _controller;
   late AnimationController _animationController;
 
@@ -149,8 +150,17 @@ class _NearbyTabState extends State<NearbyTab>
                       );
                     },
                     onSayHello: () async {
-                      // Implementation of Say Hello through a temporary repository call or controller method
-                      // For now, redirect to detail with a "Say Hello" intention
+                      final authProvider = context.read<AuthProvider>();
+                      if (authProvider.currentUser == null) return;
+
+                      // Use ChatRepository to get or create a real room ID
+                      final chatRepository = ChatRepository();
+                      final chatRoomId = await chatRepository
+                          .getOrCreateChatRoom(
+                            authProvider.currentUser!.id,
+                            controller.selectedMatch!.id,
+                          );
+
                       final otherUser = UserModel(
                         id: controller.selectedMatch!.id,
                         email: '',
@@ -159,16 +169,17 @@ class _NearbyTabState extends State<NearbyTab>
                             controller.selectedMatch!.profileImageUrl,
                       );
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatDetailPage(
-                            chatRoomId:
-                                'new', // Logic for checking existing room
-                            otherUser: otherUser,
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatDetailPage(
+                              chatRoomId: chatRoomId,
+                              otherUser: otherUser,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
                   ),
                 ),
@@ -204,73 +215,7 @@ class _NearbyTabState extends State<NearbyTab>
   }
 
   Widget _buildCentralUser(UserModel? user) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer glow
-            Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFE85D04).withValues(alpha: 0.3),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                  ),
-                ],
-              ),
-            ),
-            // Bold orange ring (active speaker indicator)
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFFE85D04), // Bold orange
-                  width: 4,
-                ),
-              ),
-            ),
-            // Avatar container
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF1A1A1A),
-                border: Border.all(color: Colors.black, width: 3),
-              ),
-              child: ClipOval(
-                child: user?.profileImageUrl != null
-                    ? ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          Colors.white.withValues(alpha: 0.9),
-                          BlendMode.saturation,
-                        ),
-                        child: Image.network(
-                          user!.profileImageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                        ),
-                      )
-                    : const Icon(Icons.person, color: Colors.white, size: 40),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    return PremiumAnimatedAvatar(imageUrl: user?.profileImageUrl, size: 80);
   }
 
   Widget _buildNearbyUserAvatar(NearbyMatchEntity match, int index) {
@@ -344,10 +289,24 @@ class TopographicWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // 1. Full-screen black background
-    final bgPaint = Paint()..color = Colors.black;
+    final bgPaint = Paint()..color = const Color(0xFF050505);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    // 2. Gradient colors for the waves
+    // 2. Animated Radial Gradients (Cinematic Lighting)
+    _drawRadialGlow(
+      canvas,
+      size,
+      0.4,
+      const Color(0xFFE85D04).withOpacity(0.08),
+    );
+    _drawRadialGlow(
+      canvas,
+      size,
+      -0.3,
+      const Color(0xFF3B82F6).withOpacity(0.05),
+    );
+
+    // 3. Gradient colors for the waves
     final gradientColors = [
       const Color(0xFF10B981), // Green
       const Color(0xFFFBBF24), // Yellow
@@ -355,23 +314,20 @@ class TopographicWavePainter extends CustomPainter {
       const Color(0xFF3B82F6), // Blue
     ];
 
-    // 3. Draw flowing topographic contour lines
+    // 4. Draw flowing topographic contour lines
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
       ..strokeCap = StrokeCap.round;
 
-    // Create multiple wave layers with different frequencies and amplitudes
-    const int numLayers = 60;
-    const double baseSpacing = 15.0;
+    // Create multiple wave layers
+    const int numLayers = 50;
+    const double baseSpacing = 18.0;
 
     for (int layer = 0; layer < numLayers; layer++) {
       final progress = layer / numLayers;
-
-      // Animate the waves
       final animOffset = animationValue * 100;
 
-      // Calculate color based on position
       final colorIndex =
           (layer / (numLayers / gradientColors.length)).floor() %
           gradientColors.length;
@@ -386,21 +342,17 @@ class TopographicWavePainter extends CustomPainter {
         colorProgress,
       )!;
 
-      paint.color = color.withValues(alpha: 0.15 + (progress * 0.1));
+      paint.color = color.withOpacity(0.08 + (progress * 0.05));
 
-      // Create flowing path
       final path = Path();
       bool firstPoint = true;
 
-      for (double x = -50; x <= size.width + 50; x += 5) {
-        // Multiple sine waves for organic flow
-        final y1 = math.sin((x + animOffset) * 0.008 + layer * 0.3) * 40;
-        final y2 = math.sin((x - animOffset * 0.5) * 0.012 + layer * 0.2) * 30;
-        final y3 = math.cos((x + animOffset * 0.3) * 0.006 + layer * 0.4) * 25;
+      for (double x = -50; x <= size.width + 50; x += 10) {
+        final y1 = math.sin((x + animOffset) * 0.006 + layer * 0.3) * 35;
+        final y2 = math.sin((x - animOffset * 0.4) * 0.01 + layer * 0.2) * 25;
 
-        // Combine waves for complex topographic effect
-        final baseY = (layer * baseSpacing) + (size.height * 0.1);
-        final y = baseY + y1 + y2 + y3;
+        final baseY = (layer * baseSpacing) + (size.height * 0.05);
+        final y = baseY + y1 + y2;
 
         if (firstPoint) {
           path.moveTo(x, y);
@@ -409,37 +361,34 @@ class TopographicWavePainter extends CustomPainter {
           path.lineTo(x, y);
         }
       }
-
       canvas.drawPath(path, paint);
     }
+  }
 
-    // 4. Add additional horizontal flowing lines for depth
-    for (int i = 0; i < 40; i++) {
-      final yPos =
-          (i * 20.0) + (math.sin(animationValue * 2 * math.pi + i) * 10);
-      final colorIndex = (i / 10).floor() % gradientColors.length;
+  void _drawRadialGlow(
+    Canvas canvas,
+    Size size,
+    double offsetMult,
+    Color color,
+  ) {
+    final center = Offset(
+      size.width / 2 +
+          math.sin(animationValue * 2 * math.pi * 0.5 + offsetMult) *
+              size.width *
+              0.2,
+      size.height / 2 +
+          math.cos(animationValue * 2 * math.pi * 0.3 + offsetMult) *
+              size.height *
+              0.2,
+    );
 
-      paint.color = gradientColors[colorIndex].withValues(alpha: 0.08);
-      paint.strokeWidth = 0.8;
+    final paint = Paint()
+      ..shader = RadialGradient(
+        colors: [color, Colors.transparent],
+        radius: 1.5,
+      ).createShader(Rect.fromCircle(center: center, radius: size.width));
 
-      final path = Path();
-      bool firstPoint = true;
-
-      for (double x = 0; x <= size.width; x += 8) {
-        final offset =
-            math.sin((x * 0.01) + (animationValue * 2 * math.pi) + i) * 15;
-        final y = yPos + offset;
-
-        if (firstPoint) {
-          path.moveTo(x, y);
-          firstPoint = false;
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-
-      canvas.drawPath(path, paint);
-    }
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
 
   @override

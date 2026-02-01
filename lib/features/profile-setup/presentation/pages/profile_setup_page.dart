@@ -5,6 +5,7 @@ import '../../../../core/providers/profile_setup_provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_progress_bar.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../widgets/step_1_basic_identity.dart';
 import '../widgets/step_2_photos.dart';
 import '../widgets/step_3_location.dart';
@@ -67,25 +68,8 @@ class ProfileSetupPage extends StatelessWidget {
                     /// TOP BAR
                     Row(
                       children: [
-                        GestureDetector(
+                        AppBackButton(
                           onTap: () => controller.handleBack(context),
-                          child: Container(
-                            height: 32,
-                            width: 32,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [AppColors.primary, AppColors.secondary],
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_back_ios_new,
-                              color: AppColors.black,
-                              size: 18,
-                            ),
-                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(child: AppProgressBar(progress: profileProvider.progress)),
