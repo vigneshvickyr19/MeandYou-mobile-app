@@ -74,7 +74,6 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
     );
   }
 
-
   Widget _buildPulseRing(int index) {
     final delay = index * 0.5;
     final progress = (_pulseController.value + delay) % 1.0;
@@ -93,7 +92,6 @@ class _PremiumAnimatedAvatarState extends State<PremiumAnimatedAvatar>
       ),
     );
   }
-
 
   Widget _buildMainGlow() {
     final glowSize = widget.size * (1.1 + _glowController.value * 0.05);
