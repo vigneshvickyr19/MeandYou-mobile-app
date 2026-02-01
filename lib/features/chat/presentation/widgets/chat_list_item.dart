@@ -21,7 +21,7 @@ class ChatListItem extends StatelessWidget {
   String _formatTime(DateTime time) {
     final hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
     final period = time.hour >= 12 ? 'PM' : 'AM';
-    return '${hour}:${time.minute.toString().padLeft(2, '0')} $period';
+    return '$hour:${time.minute.toString().padLeft(2, '0')} $period';
   }
 
   String _getLastMessagePreview() {
@@ -70,7 +70,7 @@ class ChatListItem extends StatelessWidget {
     return Icon(
       isSeen ? Icons.done_all_rounded : Icons.done_rounded,
       size: 16,
-      color: isSeen ? AppColors.info : AppColors.white.withOpacity(0.3),
+      color: isSeen ? AppColors.info : AppColors.white.withValues(alpha: 0.3),
     );
   }
 
@@ -115,7 +115,7 @@ class ChatListItem extends StatelessWidget {
                       Text(
                         _formatTime(chatRoom.lastMessageTime),
                         style: TextStyle(
-                          color: AppColors.white.withOpacity(0.4),
+                          color: AppColors.white.withValues(alpha: 0.4),
                           fontSize: 11,
                         ),
                       ),
@@ -130,7 +130,7 @@ class ChatListItem extends StatelessWidget {
                           style: TextStyle(
                             color: isTyping 
                                 ? AppColors.primary 
-                                : AppColors.white.withOpacity(0.6),
+                                : AppColors.white.withValues(alpha: 0.6),
                             fontSize: 14,
                             fontStyle: isTyping ? FontStyle.italic : FontStyle.normal,
                           ),

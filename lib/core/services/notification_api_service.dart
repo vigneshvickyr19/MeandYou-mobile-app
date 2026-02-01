@@ -25,10 +25,7 @@ class NotificationApiService {
     Map<String, dynamic>? data,
   }) async {
     try {
-      if (kDebugMode) {
-        print('Sending notification to $deviceToken');
-      }
-      final response = await _dio.post(
+      await _dio.post(
         '/api/notifications/send',
         data: {
           'deviceToken': deviceToken,
@@ -37,12 +34,9 @@ class NotificationApiService {
           'data': data ?? {},
         },
       );
-      if (kDebugMode) {
-        print('Notification sent: ${response.statusCode}');
-      }
     } catch (e) {
       if (kDebugMode) {
-        print('Error sending notification: $e');
+        debugPrint('Error sending notification: $e');
       }
       rethrow;
     }
@@ -60,9 +54,9 @@ class NotificationApiService {
   }) async {
     try {
       if (kDebugMode) {
-        print('Sending call signal ($action) to $deviceToken');
+        debugPrint('Sending call signal ($action) to $deviceToken');
       }
-      final response = await _dio.post(
+      await _dio.post(
         '/api/calls/signal',
         data: {
           'deviceToken': deviceToken,
@@ -74,12 +68,9 @@ class NotificationApiService {
           'action': action,
         },
       );
-      if (kDebugMode) {
-        print('Call signal sent: ${response.statusCode}');
-      }
     } catch (e) {
       if (kDebugMode) {
-        print('Error sending call signal: $e');
+        debugPrint('Error sending call signal: $e');
       }
       rethrow;
     }

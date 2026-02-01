@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../data/services/home_service.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/database_service.dart';
@@ -17,7 +17,7 @@ class DiscoverController extends ChangeNotifier {
   final NotificationStorageService _notificationStorageService = NotificationStorageService();
 
   List<UserModel> _users = [];
-  List<UserModel> _likedUsers = [];
+  final List<UserModel> _likedUsers = [];
   bool _isLoading = false;
   UserModel? _matchedUser;
   bool _showMatchDialog = false;
@@ -76,7 +76,9 @@ class DiscoverController extends ChangeNotifier {
       
       notifyListeners();
     } catch (e) {
-      print('Error liking user: $e');
+      if (kDebugMode) {
+        debugPrint('Error liking user: $e');
+      }
     }
   }
 
@@ -113,9 +115,7 @@ class DiscoverController extends ChangeNotifier {
       await _chatRepository.sendMessage(message);
 
       return chatRoomId;
-    } catch (e) {
-      print('Error sending hello: $e');
-      rethrow;
+    } catch (e) {      rethrow;
     }
   }
 
@@ -133,16 +133,12 @@ class DiscoverController extends ChangeNotifier {
   }) async {
     try {
       // Check if target user has FCM token
-      if (targetUser.fcmToken == null || targetUser.fcmToken!.isEmpty) {
-        print('Cannot send notification: Target user has no FCM token');
-        return;
+      if (targetUser.fcmToken == null || targetUser.fcmToken!.isEmpty) {        return;
       }
 
       // Get current user details
       final currentUser = await _databaseService.getUserById(currentUserId);
-      if (currentUser == null) {
-        print('Cannot send notification: Current user not found');
-        return;
+      if (currentUser == null) {        return;
       }
 
       final senderName = currentUser.fullName ?? 'Someone';
@@ -156,9 +152,7 @@ class DiscoverController extends ChangeNotifier {
       );
 
       // Validate payload
-      if (!NotificationPayloadBuilder.validatePayload(payload)) {
-        print('Invalid notification payload');
-        return;
+      if (!NotificationPayloadBuilder.validatePayload(payload)) {        return;
       }
 
       // Extract title and body
@@ -185,10 +179,10 @@ class DiscoverController extends ChangeNotifier {
         message: titleBody['body']!,
         metadata: payload,
       );
-
-      print('Profile notification sent and stored successfully');
     } catch (e) {
-      print('Error sending profile notification: $e');
+      if (kDebugMode) {
+        debugPrint('Error sending profile notification: $e');
+      }
     }
   }
 }

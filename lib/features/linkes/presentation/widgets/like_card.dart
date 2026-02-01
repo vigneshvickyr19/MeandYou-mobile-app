@@ -32,7 +32,7 @@ class _LikeCardState extends State<LikeCard> with SingleTickerProviderStateMixin
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _isExpanded ? AppColors.primary.withOpacity(0.5) : Colors.transparent,
+          color: _isExpanded ? AppColors.primary.withValues(alpha: 0.5) : Colors.transparent,
           width: 1,
         ),
       ),
@@ -56,7 +56,7 @@ class _LikeCardState extends State<LikeCard> with SingleTickerProviderStateMixin
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: AppColors.primary.withValues(alpha: 0.3),
                         width: 2,
                       ),
                     ),
@@ -91,14 +91,14 @@ class _LikeCardState extends State<LikeCard> with SingleTickerProviderStateMixin
                           children: [
                             Icon(
                               Icons.location_on_outlined,
-                              color: AppColors.white.withOpacity(0.5),
+                              color: AppColors.white.withValues(alpha: 0.5),
                               size: 14,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               'Nearby', // Placeholder for actual location
                               style: TextStyle(
-                                color: AppColors.white.withOpacity(0.5),
+                                color: AppColors.white.withValues(alpha: 0.5),
                                 fontSize: 13,
                               ),
                             ),
@@ -111,7 +111,7 @@ class _LikeCardState extends State<LikeCard> with SingleTickerProviderStateMixin
                   Text(
                     widget.likeTime,
                     style: TextStyle(
-                      color: AppColors.white.withOpacity(0.4),
+                      color: AppColors.white.withValues(alpha: 0.4),
                       fontSize: 12,
                     ),
                   ),
@@ -169,7 +169,7 @@ class _LikeCardState extends State<LikeCard> with SingleTickerProviderStateMixin
                   colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],
                 )
               : null,
-          color: isPrimary ? null : Colors.white.withOpacity(0.05),
+          color: isPrimary ? null : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: isPrimary ? null : Border.all(color: Colors.white10),
         ),

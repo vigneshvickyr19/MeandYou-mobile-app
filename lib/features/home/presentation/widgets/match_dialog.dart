@@ -40,7 +40,7 @@ class MatchDialog extends StatelessWidget {
                       top: (index ~/ 3) * 80.0,
                       child: Icon(
                         Icons.favorite,
-                        color: const Color(0xFFE85D04).withOpacity(0.3),
+                        color: const Color(0xFFE85D04).withValues(alpha: 0.3),
                         size: 24,
                       ),
                     );
@@ -87,7 +87,7 @@ class MatchDialog extends StatelessWidget {
             Text(
               'Lorem ipsum dolor sit amet consectetur arcu',
               style: TextStyle(
-                color: AppColors.white.withOpacity(0.6),
+                color: AppColors.white.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -124,7 +124,7 @@ class MatchDialog extends StatelessWidget {
         color: const Color(0xFFE85D04),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE85D04).withOpacity(0.3),
+            color: const Color(0xFFE85D04).withValues(alpha: 0.3),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -170,7 +170,7 @@ class MatchDialog extends StatelessWidget {
           border: isPrimary
               ? null
               : Border.all(
-                  color: AppColors.white.withOpacity(0.3),
+                  color: AppColors.white.withValues(alpha: 0.3),
                   width: 1,
                 ),
         ),

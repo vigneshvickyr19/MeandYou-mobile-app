@@ -10,7 +10,7 @@ class ChatListController extends ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
 
   List<ChatRoomModel> _chatRooms = [];
-  List<UserModel> _chatUsers = [];
+  final List<UserModel> _chatUsers = [];
   bool _isLoading = false;
   bool _isSearching = false;
   String _searchQuery = '';
@@ -95,21 +95,7 @@ class ChatListController extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
-  void _updateChatUsersList() {
-    // Reconstruct _chatUsers based on current _chatRooms and _userCache
-    // This ensures the order matches the chatRooms
-    _chatUsers = [];
-    // We'll use a local ID for filtering but basically we want the list of users for existing rooms
-    for (var room in _chatRooms) {
-      // Find the participant that isn't the room's primary filter (not strictly currentUserId here, but we'll use a generic approach)
-      // Since this is inside Controller, we might need currentUserId. 
-      // I'll assume we can get it from the chatRoom.
-    }
-    // Actually, it's easier to just notifyListeners and let the UI get user by ID
-    if (hasListeners) {
-      notifyListeners();
-    }
-  }
+
 
   void toggleSearch() {
     _isSearching = !_isSearching;
@@ -156,7 +142,7 @@ class ChatListController extends ChangeNotifier {
     if (difference.inDays == 0) {
       final hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
       final period = time.hour >= 12 ? 'PM' : 'AM';
-      return '${hour}:${time.minute.toString().padLeft(2, '0')} $period';
+      return '$hour:${time.minute.toString().padLeft(2, '0')} $period';
     } else if (difference.inDays == 1) {
       return 'Yesterday';
     } else if (difference.inDays < 7) {

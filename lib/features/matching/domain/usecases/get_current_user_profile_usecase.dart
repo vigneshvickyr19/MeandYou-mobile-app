@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/models/profile_model.dart';
 import '../../../../core/services/database_service.dart';
@@ -39,7 +40,9 @@ class GetCurrentUserProfileUseCase {
         );
       }
     } catch (e) {
-      print('Error fetching current user profile: $e');
+      if (kDebugMode) {
+        debugPrint('Error getting current user profile: $e');
+      }
     }
     return user;
   }

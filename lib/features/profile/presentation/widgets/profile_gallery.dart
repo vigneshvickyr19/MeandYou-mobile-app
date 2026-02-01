@@ -46,7 +46,7 @@ class ProfileGallery extends StatelessWidget {
                   ? Center(
                       child: Icon(
                         Icons.image,
-                        color: AppColors.white.withOpacity(0.1),
+                        color: AppColors.white.withValues(alpha: 0.1),
                       ),
                     )
                   : null,

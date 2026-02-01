@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
 
 class ProfilePreviewCard extends StatelessWidget {
@@ -38,15 +37,15 @@ class ProfilePreviewCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(24, 80, 24, 24),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 30,
                     offset: const Offset(0, 15),
                   ),
@@ -77,7 +76,7 @@ class ProfilePreviewCard extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -86,13 +85,13 @@ class ProfilePreviewCard extends StatelessWidget {
                             Icon(
                               Icons.near_me,
                               size: 14,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               _formatDistance(match.distance),
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -110,7 +109,7 @@ class ProfilePreviewCard extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.location_on_outlined,
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           size: 16,
                         ),
                         const SizedBox(width: 6),
@@ -118,7 +117,7 @@ class ProfilePreviewCard extends StatelessWidget {
                           child: Text(
                             match.address!,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 14,
                             ),
                             maxLines: 1,
@@ -136,7 +135,7 @@ class ProfilePreviewCard extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.place_outlined,
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                           size: 14,
                         ),
                         const SizedBox(width: 6),
@@ -144,7 +143,7 @@ class ProfilePreviewCard extends StatelessWidget {
                           child: Text(
                             match.address!,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 12,
                             ),
                             maxLines: 2,
@@ -170,7 +169,7 @@ class ProfilePreviewCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFE85D04).withOpacity(0.3),
+                            color: const Color(0xFFE85D04).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -203,7 +202,7 @@ class ProfilePreviewCard extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -218,7 +217,7 @@ class ProfilePreviewCard extends StatelessWidget {
                   ? Image.network(
                       match.profileImageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: Colors.grey[800],
                         child: const Icon(
                           Icons.person,
@@ -249,12 +248,12 @@ class ProfilePreviewCard extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.close,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 size: 18,
               ),
             ),

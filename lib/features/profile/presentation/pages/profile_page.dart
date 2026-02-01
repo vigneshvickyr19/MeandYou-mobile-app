@@ -112,9 +112,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  Colors.black.withOpacity(0.3),
+                                  Colors.black.withValues(alpha: 0.3),
                                   Colors.transparent,
-                                  Colors.black.withOpacity(0.8),
+                                  Colors.black.withValues(alpha: 0.8),
                                 ],
                               ),
                             ),
@@ -170,14 +170,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Icon(
                           Icons.location_on_outlined,
-                          color: AppColors.white.withOpacity(0.6),
+                          color: AppColors.white.withValues(alpha: 0.6),
                           size: 16,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           profile.city ?? 'Location not set',
                           style: TextStyle(
-                            color: AppColors.white.withOpacity(0.6),
+                            color: AppColors.white.withValues(alpha: 0.6),
                             fontSize: 14,
                           ),
                         ),
@@ -408,7 +408,7 @@ class _ProfilePageState extends State<ProfilePage> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.1),
+                  color: AppColors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(

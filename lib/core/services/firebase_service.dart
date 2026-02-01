@@ -15,9 +15,7 @@ class FirebaseService {
   /// Initialize Firebase
   Future<void> initialize() async {
     if (_initialized) {
-      if (kDebugMode) {
-        print('Firebase already initialized');
-      }
+      if (kDebugMode) {      }
       return;
     }
 
@@ -26,13 +24,9 @@ class FirebaseService {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       _initialized = true;
-      if (kDebugMode) {
-        print('Firebase initialized successfully');
-      }
+      if (kDebugMode) {      }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error initializing Firebase: $e');
-      }
+      if (kDebugMode) {      }
       rethrow;
     }
   }

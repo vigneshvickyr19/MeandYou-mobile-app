@@ -24,7 +24,7 @@ class LikeController extends ChangeNotifier {
     _homeService.getLikesReceived(currentUserId).listen((likes) async {
       final List<Map<String, dynamic>> items = [];
       
-      for (var like in likes) {
+      for (LikeModel like in likes) {
         final user = await _databaseService.getUserById(like.fromUserId);
         if (user != null) {
           items.add({

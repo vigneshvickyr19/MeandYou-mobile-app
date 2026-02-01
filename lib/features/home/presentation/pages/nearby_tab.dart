@@ -9,7 +9,6 @@ import '../../../../core/models/user_model.dart';
 import '../widgets/profile_preview_card.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 
 class NearbyTab extends StatefulWidget {
   const NearbyTab({super.key});
@@ -51,7 +50,6 @@ class _NearbyTabState extends State<NearbyTab>
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final currentUser = authProvider.currentUser;
-    final currentUserId = currentUser?.id ?? '';
 
     return ChangeNotifierProvider.value(
       value: _controller,
@@ -183,14 +181,14 @@ class _NearbyTabState extends State<NearbyTab>
                     children: [
                       Icon(
                         Icons.location_off_outlined,
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         size: 80,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Searching for people nearby...',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -220,7 +218,7 @@ class _NearbyTabState extends State<NearbyTab>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE85D04).withOpacity(0.3),
+                    color: const Color(0xFFE85D04).withValues(alpha: 0.3),
                     blurRadius: 40,
                     spreadRadius: 10,
                   ),
@@ -252,13 +250,13 @@ class _NearbyTabState extends State<NearbyTab>
                 child: user?.profileImageUrl != null
                     ? ColorFiltered(
                         colorFilter: ColorFilter.mode(
-                          Colors.white.withOpacity(0.9),
+                          Colors.white.withValues(alpha: 0.9),
                           BlendMode.saturation,
                         ),
                         child: Image.network(
                           user!.profileImageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
+                          errorBuilder: (_, _, _) => const Icon(
                             Icons.person,
                             color: Colors.white,
                             size: 40,
@@ -306,12 +304,12 @@ class _NearbyTabState extends State<NearbyTab>
               border: Border.all(
                 color: _controller.selectedMatch?.id == match.id
                     ? AppColors.primary
-                    : Colors.white.withOpacity(0.12),
+                    : Colors.white.withValues(alpha: 0.12),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 15,
                   offset: const Offset(0, 4),
                 ),
@@ -387,7 +385,7 @@ class TopographicWavePainter extends CustomPainter {
         colorProgress,
       )!;
 
-      paint.color = color.withOpacity(0.15 + (progress * 0.1));
+      paint.color = color.withValues(alpha: 0.15 + (progress * 0.1));
 
       // Create flowing path
       final path = Path();
@@ -420,7 +418,7 @@ class TopographicWavePainter extends CustomPainter {
           (i * 20.0) + (math.sin(animationValue * 2 * math.pi + i) * 10);
       final colorIndex = (i / 10).floor() % gradientColors.length;
 
-      paint.color = gradientColors[colorIndex].withOpacity(0.08);
+      paint.color = gradientColors[colorIndex].withValues(alpha: 0.08);
       paint.strokeWidth = 0.8;
 
       final path = Path();
@@ -480,7 +478,7 @@ class ConnectionLinesPainter extends CustomPainter {
         );
       } else {
         final paint = Paint()
-          ..color = Colors.white.withOpacity(0.03)
+          ..color = Colors.white.withValues(alpha: 0.03)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 0.5;
         canvas.drawLine(center, target, paint);
@@ -490,7 +488,7 @@ class ConnectionLinesPainter extends CustomPainter {
 
   void _drawSelectedLine(Canvas canvas, Offset p1, Offset p2, String distance) {
     final paint = Paint()
-      ..color = const Color(0xFFE85D04).withOpacity(0.8)
+      ..color = const Color(0xFFE85D04).withValues(alpha: 0.8)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
     const double dashWidth = 6;

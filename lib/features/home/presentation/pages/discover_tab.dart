@@ -117,13 +117,13 @@ class _DiscoverTabState extends State<DiscoverTab> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.05),
+                color: AppColors.white.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.people_outline,
                 size: 64,
-                color: AppColors.white.withOpacity(0.3),
+                color: AppColors.white.withValues(alpha: 0.3),
               ),
             ),
             const SizedBox(height: 24),
@@ -140,7 +140,7 @@ class _DiscoverTabState extends State<DiscoverTab> {
               'Check back later for new people nearby',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.white.withOpacity(0.5),
+                color: AppColors.white.withValues(alpha: 0.5),
                 fontSize: 16,
               ),
             ),

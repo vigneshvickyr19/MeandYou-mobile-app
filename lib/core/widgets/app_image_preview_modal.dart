@@ -85,10 +85,10 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         border: Border(
           bottom: BorderSide(
-            color: AppColors.white.withOpacity(0.1),
+            color: AppColors.white.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -117,7 +117,7 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
                     Text(
                       'Only first 10 will be sent',
                       style: TextStyle(
-                        color: Colors.orange.withOpacity(0.9),
+                        color: Colors.orange.withValues(alpha: 0.9),
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
@@ -160,10 +160,10 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
       height: 80,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         border: Border(
           top: BorderSide(
-            color: AppColors.white.withOpacity(0.1),
+            color: AppColors.white.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -210,10 +210,10 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
+        color: Colors.black.withValues(alpha: 0.8),
         border: Border(
           top: BorderSide(
-            color: AppColors.white.withOpacity(0.1),
+            color: AppColors.white.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -226,7 +226,7 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: AppColors.white.withOpacity(0.08),
+                  color: AppColors.white.withValues(alpha: 0.08),
                 ),
               ),
               child: TextField(
@@ -235,7 +235,7 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
                 decoration: InputDecoration(
                   hintText: 'Add a caption...',
                   hintStyle: TextStyle(
-                    color: AppColors.white.withOpacity(0.3),
+                    color: AppColors.white.withValues(alpha: 0.3),
                     fontSize: 16,
                   ),
                   border: InputBorder.none,
@@ -262,7 +262,7 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
+                    color: AppColors.primary.withValues(alpha: 0.4),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -279,7 +279,7 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
   Widget _buildSendingOverlay() {
     return FadeIn(
       child: Container(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -291,7 +291,7 @@ class _ImagePreviewModalState extends State<ImagePreviewModal> {
               Text(
                 'Sending...',
                 style: TextStyle(
-                  color: AppColors.white.withOpacity(0.8),
+                  color: AppColors.white.withValues(alpha: 0.8),
                   fontSize: 16,
                 ),
               ),

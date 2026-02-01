@@ -1,13 +1,13 @@
 enum CallAction {
-  START,
-  END,
-  DECLINE,
-  MISSED,
+  start,
+  end,
+  decline,
+  missed,
 }
 
 enum CallType {
-  AUDIO,
-  VIDEO,
+  audio,
+  video,
 }
 
 class CallSignalPayload {
@@ -42,24 +42,24 @@ class CallSignalPayload {
   static CallType _parseCallType(String? value) {
     switch (value) {
       case 'VIDEO':
-        return CallType.VIDEO;
+        return CallType.video;
       default:
-        return CallType.AUDIO;
+        return CallType.audio;
     }
   }
 
   static CallAction _parseCallAction(String? value) {
     switch (value) {
       case 'START':
-        return CallAction.START;
+        return CallAction.start;
       case 'END':
-        return CallAction.END;
+        return CallAction.end;
       case 'DECLINE':
-        return CallAction.DECLINE;
+        return CallAction.decline;
       case 'MISSED':
-        return CallAction.MISSED;
+        return CallAction.missed;
       default:
-        return CallAction.START;
+        return CallAction.start;
     }
   }
 }

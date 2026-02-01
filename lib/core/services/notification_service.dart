@@ -18,7 +18,6 @@ import '../constants/app_routes.dart';
 import 'database_service.dart';
 import 'notification_api_service.dart';
 import '../models/user_model.dart';
-import '../../data/repositories/user_repository.dart';
 
 /// Top-level function to handle background messages
 @pragma('vm:entry-point')
@@ -36,23 +35,16 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       // Already initialized or platform doesn't support
     }
     
-    if (kDebugMode) {
-      print('NotificationService: Handling background message: ${message.messageId}');
-      print('NotificationService: Data: ${message.data}');
-    }
+    if (kDebugMode) {    }
 
     if (message.data[NotificationConstants.keyType] == NotificationConstants.typeCallSignal) {
       final payload = CallSignalPayload.fromMap(message.data);
-      if (kDebugMode) {
-        print('NotificationService: Processing Call Signal Action: ${payload.action}');
-      }
+      if (kDebugMode) {      }
       // Use the instance but don't call initialize() here as it might depend on UI context
       await NotificationService.instance.handleCallSignal(payload);
     }
   } catch (e) {
-    if (kDebugMode) {
-      print('NotificationService: Error in background handler: $e');
-    }
+    if (kDebugMode) {    }
   }
 }
 
@@ -73,14 +65,10 @@ class NotificationService {
   
   String? get fcmToken => _fcmToken;
 
-  GlobalKey<NavigatorState>? _navigatorKey;
-
   /// Initialize notification service
   Future<void> initialize() async {
     if (_initialized) {
-      if (kDebugMode) {
-        print('Notification service already initialized');
-      }
+      if (kDebugMode) {      }
       return;
     }
 
@@ -101,20 +89,15 @@ class NotificationService {
       await _getToken();
 
       _initialized = true;
-      if (kDebugMode) {
-        print('Notification service initialized successfully');
-      }
+      if (kDebugMode) {      }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error initializing notification service: $e');
-      }
+      if (kDebugMode) {      }
       rethrow;
     }
   }
 
   /// Set the navigator key for navigation
   void setNavigatorKey(GlobalKey<NavigatorState> key) {
-    _navigatorKey = key;
     // Also pass it to DeepLinkService to ensure it has the key
     DeepLinkService().initialize(key);
   }
@@ -122,7 +105,7 @@ class NotificationService {
   /// Request notification permissions
   Future<void> _requestPermissions() async {
     if (kIsWeb) {
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      await _firebaseMessaging.requestPermission(
         alert: true,
         announcement: false,
         badge: true,
@@ -131,15 +114,12 @@ class NotificationService {
         provisional: false,
         sound: true,
       );
-      if (kDebugMode) {
-        print('Web notification permission status: ${settings.authorizationStatus}');
-      }
       return;
     }
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Request iOS permissions
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      await _firebaseMessaging.requestPermission(
         alert: true,
         announcement: false,
         badge: true,
@@ -149,9 +129,6 @@ class NotificationService {
         sound: true,
       );
 
-      if (kDebugMode) {
-        print('iOS notification permission status: ${settings.authorizationStatus}');
-      }
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       // Request Android 13+ notification permission
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -159,10 +136,7 @@ class NotificationService {
               AndroidFlutterLocalNotificationsPlugin>();
 
       if (androidImplementation != null) {
-        final bool? granted = await androidImplementation.requestNotificationsPermission();
-        if (kDebugMode) {
-          print('Android notification permission granted: $granted');
-        }
+        await androidImplementation.requestNotificationsPermission();
       }
     }
   }
@@ -232,9 +206,7 @@ class NotificationService {
     // Listen to token refresh
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
       _fcmToken = newToken;
-      if (kDebugMode) {
-        print('FCM Token refreshed: $newToken');
-      }
+      if (kDebugMode) {      }
       _saveTokenToFirestore(newToken);
     });
   }
@@ -245,13 +217,9 @@ class NotificationService {
     if (user != null) {
       try {
         await _databaseService.updateUserField(user.uid, {'fcmToken': token});
-        if (kDebugMode) {
-          print('FCM Token updated in Firestore for user ${user.uid}');
-        }
+        if (kDebugMode) {        }
       } catch (e) {
-        if (kDebugMode) {
-          print('Error updating FCM token in Firestore: $e');
-        }
+        if (kDebugMode) {        }
       }
     }
   }
@@ -266,16 +234,12 @@ class NotificationService {
       } else {
         _fcmToken = await _firebaseMessaging.getToken();
       }
-      if (kDebugMode) {
-        print('FCM Token: $_fcmToken');
-      }
+      if (kDebugMode) {      }
       if (_fcmToken != null) {
         await _saveTokenToFirestore(_fcmToken!);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting FCM token: $e');
-      }
+      if (kDebugMode) {      }
     }
   }
 
@@ -297,12 +261,7 @@ class NotificationService {
 
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
-    if (kDebugMode) {
-      print('Received foreground message: ${message.messageId}');
-      print('Title: ${message.notification?.title}');
-      print('Body: ${message.notification?.body}');
-      print('Data: ${message.data}');
-    }
+    if (kDebugMode) {    }
 
     // Check for call signal
     if (message.data[NotificationConstants.keyType] == NotificationConstants.typeCallSignal) {
@@ -317,19 +276,14 @@ class NotificationService {
 
   /// Handle notification opened app
   void _handleNotificationOpenedApp(RemoteMessage message) {
-    if (kDebugMode) {
-      print('Notification opened app: ${message.messageId}');
-      print('Data: ${message.data}');
-    }
+    if (kDebugMode) {    }
 
     _navigateToScreen(message.data);
   }
 
   /// Helper to navigate based on data
   void _navigateToScreen(Map<String, dynamic> data) {
-    if (kDebugMode) {
-      print('NotificationService: Delegating navigation to DeepLinkService');
-    }
+    if (kDebugMode) {    }
     DeepLinkService().handleNotificationPayload(data);
   }
 
@@ -369,18 +323,14 @@ class NotificationService {
 
   /// Handle notification tap
   void _onNotificationTapped(NotificationResponse response) {
-    if (kDebugMode) {
-      print('Notification tapped: ${response.payload}');
-    }
+    if (kDebugMode) {    }
 
     if (response.payload != null) {
       try {
         final Map<String, dynamic> data = jsonDecode(response.payload!);
         _navigateToScreen(data);
       } catch (e) {
-        if (kDebugMode) {
-          print('Error parsing notification payload: $e');
-        }
+        if (kDebugMode) {        }
       }
     }
   }
@@ -417,25 +367,21 @@ class NotificationService {
 
   /// Handle Call Signal
   Future<void> handleCallSignal(CallSignalPayload payload) async {
-    if (kDebugMode) {
-      print('NotificationService: handleCallSignal with action: ${payload.action}');
-    }
+    if (kDebugMode) {    }
     try {
       switch (payload.action) {
-        case CallAction.START:
+        case CallAction.start:
           await _showIncomingCallUi(payload);
           break;
-        case CallAction.END:
-        case CallAction.DECLINE:
-        case CallAction.MISSED:
+        case CallAction.end:
+        case CallAction.decline:
+        case CallAction.missed:
           await FlutterCallkitIncoming.endCall(payload.callId);
           await _checkAndHandleEndCallUI(payload); // Optional: close any active screens
           break;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('NotificationService: Error handling call signal: $e');
-      }
+      if (kDebugMode) {      }
     }
   }
 
@@ -451,7 +397,7 @@ class NotificationService {
       appName: 'Me And You',
       avatar: 'https://i.pravatar.cc/100', // Placeholder
       handle: payload.callerId,
-      type: payload.callType == CallType.VIDEO ? 1 : 0,
+      type: payload.callType == CallType.video ? 1 : 0,
       duration: 30000,
       textAccept: 'Accept',
       textDecline: 'Decline',
@@ -501,32 +447,27 @@ class NotificationService {
     FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
       if (event == null) return;
 
-      if (kDebugMode) {
-         print('CallKit Event: ${event.event}, Body: ${event.body}');
-      }
+      if (kDebugMode) {      }
 
       switch (event.event) {
         case Event.actionCallAccept:
-          if (kDebugMode) print('Call Accepted: ${event.body}');
-          // Navigation to call screen is needed here
+          if (kDebugMode) {
+             // Navigation to call screen is needed here
+          }
           _handleCallAccept(event);
           break;
         case Event.actionCallDecline:
-          if (kDebugMode) print('Call Declined: ${event.body}');
-          await _handleCallDecline(event);
+          if (kDebugMode)          await _handleCallDecline(event);
           break;
         case Event.actionCallEnded:
-          if (kDebugMode) print('Call Ended: ${event.body}');
-          await _handleCallDecline(event, isEnd: true); 
+          if (kDebugMode)          await _handleCallDecline(event, isEnd: true); 
           break;
         case Event.actionCallTimeout:
-          if (kDebugMode) print('Call Timeout: ${event.body}');
-           await _handleCallDecline(event, isMissed: true);
+          if (kDebugMode)           await _handleCallDecline(event, isMissed: true);
           break;
         case Event.actionCallCallback:
           // Valid only for Android when app is killed/background
-           if (kDebugMode) print('Call Callback: ${event.body}');
-            break;
+           if (kDebugMode)            break;
         default:
           break;
       }
@@ -583,9 +524,7 @@ class NotificationService {
         }
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error handling call decline: $e');
-      }
+      if (kDebugMode) {      }
     }
   }
 }

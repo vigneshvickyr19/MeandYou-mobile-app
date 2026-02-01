@@ -205,7 +205,7 @@ class MessageImageGrid extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
+              color: Colors.black.withValues(alpha: 0.6),
             ),
             child: Center(
               child: Text(
@@ -225,12 +225,12 @@ class MessageImageGrid extends StatelessWidget {
 
   Widget _buildLoadingWidget() {
     return Container(
-      color: AppColors.black.withOpacity(0.3),
+      color: AppColors.black.withValues(alpha: 0.3),
       child: Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(
-            AppColors.primary.withOpacity(0.6),
+            AppColors.primary.withValues(alpha: 0.6),
           ),
         ),
       ),
@@ -239,11 +239,11 @@ class MessageImageGrid extends StatelessWidget {
 
   Widget _buildErrorWidget() {
     return Container(
-      color: AppColors.black.withOpacity(0.3),
+      color: AppColors.black.withValues(alpha: 0.3),
       child: Center(
         child: Icon(
           Icons.broken_image_rounded,
-          color: AppColors.white.withOpacity(0.3),
+          color: AppColors.white.withValues(alpha: 0.3),
           size: 40,
         ),
       ),

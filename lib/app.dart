@@ -6,7 +6,6 @@ import 'core/theme/app_theme.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/providers/auth_provider.dart';
-import 'core/providers/profile_setup_provider.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

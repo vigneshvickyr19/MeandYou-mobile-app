@@ -127,8 +127,8 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: widget.isCurrentUser
-                    ? Colors.white.withOpacity(0.2)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -153,7 +153,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                     trackHeight: 2,
                     thumbColor: Colors.white,
                     activeTrackColor: Colors.white,
-                    inactiveTrackColor: Colors.white.withOpacity(0.3),
+                    inactiveTrackColor: Colors.white.withValues(alpha: 0.3),
                   ),
                   child: Slider(
                     value: sliderValue,
@@ -172,14 +172,14 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                       Text(
                         _formatDuration(_position),
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 10,
                         ),
                       ),
                       Text(
                         _formatDuration(displayDuration),
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 10,
                         ),
                       ),

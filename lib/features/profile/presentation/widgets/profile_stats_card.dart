@@ -20,7 +20,7 @@ class ProfileStatsCard extends StatelessWidget {
         color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.white.withOpacity(0.05),
+          color: AppColors.white.withValues(alpha: 0.05),
         ),
       ),
       child: Column(
@@ -28,7 +28,7 @@ class ProfileStatsCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: AppColors.white.withOpacity(0.7),
+              color: AppColors.white.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),

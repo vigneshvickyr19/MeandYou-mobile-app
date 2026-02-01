@@ -101,7 +101,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: AppBar(
-                    backgroundColor: AppColors.black.withOpacity(0.7),
+                    backgroundColor: AppColors.black.withValues(alpha: 0.7),
                     elevation: 0,
                     leading: IconButton(
                       icon: const Icon(
@@ -146,7 +146,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                   style: TextStyle(
                                     color: widget.otherUser.isOnline
                                         ? const Color(0xFF4CAF50)
-                                        : AppColors.white.withOpacity(0.5),
+                                        : AppColors.white.withValues(alpha: 0.5),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -207,20 +207,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 Container(
                                   padding: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: AppColors.white.withOpacity(0.05),
+                                    color: AppColors.white.withValues(alpha: 0.05),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
                                     Icons.chat_bubble_outline_rounded,
                                     size: 48,
-                                    color: AppColors.white.withOpacity(0.2),
+                                    color: AppColors.white.withValues(alpha: 0.2),
                                   ),
                                 ),
                                 const SizedBox(height: 24),
                                 Text(
                                   'No messages yet',
                                   style: TextStyle(
-                                    color: AppColors.white.withOpacity(0.8),
+                                    color: AppColors.white.withValues(alpha: 0.8),
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -229,7 +229,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 Text(
                                   'Start the conversation with ${widget.otherUser.fullName}',
                                   style: TextStyle(
-                                    color: AppColors.white.withOpacity(0.4),
+                                    color: AppColors.white.withValues(alpha: 0.4),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -309,7 +309,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.primary.withOpacity(0.6),
+                                    AppColors.primary.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
@@ -317,7 +317,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                               Text(
                                 '${widget.otherUser.fullName} is typing...',
                                 style: TextStyle(
-                                  color: AppColors.white.withOpacity(0.4),
+                                  color: AppColors.white.withValues(alpha: 0.4),
                                   fontSize: 12,
                                   fontStyle: FontStyle.italic,
                                 ),

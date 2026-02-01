@@ -218,7 +218,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         }
 
         // Mark as read after interaction (if not already read)
-        if (!notification.isRead) {
+        if (!notification.isRead && mounted) {
           context.read<NotificationController>().markAsRead(notification.id);
         }
       },

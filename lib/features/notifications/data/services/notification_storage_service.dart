@@ -35,7 +35,6 @@ class NotificationStorageService {
       await _firestore.collection(_collectionName).add(notification.toMap());
     } catch (e) {
       // Fallback to print if AppLogger fails or doesn't exist
-      print('Error storing notification: $e');
     }
   }
 
@@ -62,7 +61,9 @@ class NotificationStorageService {
           .doc(notificationId)
           .update({'isRead': true});
     } catch (e) {
-      print('Error marking notification as read: $e');
+      if (kDebugMode) {
+        debugPrint('Error marking notification as read: $e');
+      }
     }
   }
 
@@ -83,7 +84,9 @@ class NotificationStorageService {
       }
       await batch.commit();
     } catch (e) {
-      print('Error marking all notifications as read: $e');
+      if (kDebugMode) {
+        debugPrint('Error marking all notifications as read: $e');
+      }
     }
   }
 
@@ -92,7 +95,9 @@ class NotificationStorageService {
     try {
       await _firestore.collection(_collectionName).doc(notificationId).delete();
     } catch (e) {
-      print('Error deleting notification: $e');
+      if (kDebugMode) {
+        debugPrint('Error deleting notification: $e');
+      }
     }
   }
 }

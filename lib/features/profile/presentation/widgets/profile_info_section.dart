@@ -59,7 +59,7 @@ class ProfileInfoSection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: items.length,
             separatorBuilder: (context, index) => Divider(
-              color: AppColors.white.withOpacity(0.1),
+              color: AppColors.white.withValues(alpha: 0.1),
               height: 1,
               indent: 16,
               endIndent: 16,
@@ -78,7 +78,7 @@ class ProfileInfoSection extends StatelessWidget {
                           item.iconPath!,
                           width: 20,
                           height: 20,
-                          color: AppColors.white.withOpacity(0.7),
+                          color: AppColors.white.withValues(alpha: 0.7),
                         ),
                         const SizedBox(width: 12),
                       ],
@@ -88,7 +88,7 @@ class ProfileInfoSection extends StatelessWidget {
                         child: Text(
                           item.title,
                           style: TextStyle(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
@@ -112,7 +112,7 @@ class ProfileInfoSection extends StatelessWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: AppColors.white.withOpacity(0.6),
+                                      color: AppColors.white.withValues(alpha: 0.6),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -123,7 +123,7 @@ class ProfileInfoSection extends StatelessWidget {
                       const SizedBox(width: 8),
                       Icon(
                         Icons.arrow_forward_ios,
-                        color: AppColors.white.withOpacity(0.3),
+                        color: AppColors.white.withValues(alpha: 0.3),
                         size: 14,
                       ),
                     ],
@@ -141,10 +141,10 @@ class ProfileInfoSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.info.withOpacity(0.1),
+        color: AppColors.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.info.withOpacity(0.5),
+          color: AppColors.info.withValues(alpha: 0.5),
         ),
       ),
       child: Row(
@@ -207,7 +207,7 @@ class ProfileInfoSection extends StatelessWidget {
                 Text(
                   item.value,
                   style: TextStyle(
-                    color: AppColors.white.withOpacity(0.8),
+                    color: AppColors.white.withValues(alpha: 0.8),
                     fontSize: 16,
                     height: 1.5,
                   ),

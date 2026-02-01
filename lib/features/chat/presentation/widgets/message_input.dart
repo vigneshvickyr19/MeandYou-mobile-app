@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/app_image_preview_modal.dart';
 
 class MessageInput extends StatefulWidget {
   final Function(String) onSendMessage;
@@ -102,13 +101,13 @@ class _MessageInputState extends State<MessageInput> {
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.95),
+                color: const Color(0xFF1A1A1A).withValues(alpha: 0.95),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
                 border: Border.all(
-                  color: AppColors.white.withOpacity(0.1),
+                  color: AppColors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -120,7 +119,7 @@ class _MessageInputState extends State<MessageInput> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.2),
+                      color: AppColors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -180,7 +179,7 @@ class _MessageInputState extends State<MessageInput> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: gradient.colors.first.withOpacity(0.3),
+                  color: gradient.colors.first.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -192,7 +191,7 @@ class _MessageInputState extends State<MessageInput> {
           Text(
             label,
             style: TextStyle(
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -268,10 +267,10 @@ class _MessageInputState extends State<MessageInput> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.black.withOpacity(0.8),
+                color: AppColors.black.withValues(alpha: 0.8),
                 border: Border(
                   top: BorderSide(
-                    color: AppColors.white.withOpacity(0.05),
+                    color: AppColors.white.withValues(alpha: 0.05),
                     width: 1,
                   ),
                 ),
@@ -291,7 +290,7 @@ class _MessageInputState extends State<MessageInput> {
                               color: const Color(0xFF1E1E1E),
                               borderRadius: BorderRadius.circular(28),
                               border: Border.all(
-                                color: Colors.red.withOpacity(0.5), 
+                                color: Colors.red.withValues(alpha: 0.5), 
                                 width: 1,
                               ),
                             ),
@@ -314,7 +313,7 @@ class _MessageInputState extends State<MessageInput> {
                                 Text(
                                   "Recording...",
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.5),
+                                    color: Colors.white.withValues(alpha: 0.5),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -324,7 +323,7 @@ class _MessageInputState extends State<MessageInput> {
                                   child: Text(
                                     "Cancel",
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.7),
+                                      color: Colors.white.withValues(alpha: 0.7),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -341,7 +340,7 @@ class _MessageInputState extends State<MessageInput> {
                                 : Icons.emoji_emotions_rounded,
                             color: _showEmoji
                                 ? AppColors.primary
-                                : AppColors.white.withOpacity(0.6),
+                                : AppColors.white.withValues(alpha: 0.6),
                             size: 26,
                           ),
                           onPressed: () {
@@ -356,7 +355,7 @@ class _MessageInputState extends State<MessageInput> {
                         IconButton(
                           icon: Icon(
                             Icons.add_circle_rounded,
-                            color: AppColors.white.withOpacity(0.6),
+                            color: AppColors.white.withValues(alpha: 0.6),
                             size: 26,
                           ),
                           onPressed: _showMediaSheet,
@@ -370,7 +369,7 @@ class _MessageInputState extends State<MessageInput> {
                               borderRadius: BorderRadius.circular(28),
                               border: widget.showBorder
                                   ? Border.all(
-                                      color: AppColors.primary.withOpacity(0.3),
+                                      color: AppColors.primary.withValues(alpha: 0.3),
                                       width: 1,
                                     )
                                   : null,
@@ -385,7 +384,7 @@ class _MessageInputState extends State<MessageInput> {
                               decoration: InputDecoration(
                                 hintText: 'Message...',
                                 hintStyle: TextStyle(
-                                  color: AppColors.white.withOpacity(0.3),
+                                  color: AppColors.white.withValues(alpha: 0.3),
                                   fontSize: 16,
                                 ),
                                 border: InputBorder.none,
@@ -413,7 +412,7 @@ class _MessageInputState extends State<MessageInput> {
                                  shape: BoxShape.circle,
                                  boxShadow: [
                                    BoxShadow(
-                                     color: AppColors.primary.withOpacity(0.4),
+                                     color: AppColors.primary.withValues(alpha: 0.4),
                                      blurRadius: 10,
                                      offset: const Offset(0, 4),
                                    ),
@@ -447,7 +446,7 @@ class _MessageInputState extends State<MessageInput> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primary.withOpacity(0.4),
+                                    color: AppColors.primary.withValues(alpha: 0.4),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -472,7 +471,7 @@ class _MessageInputState extends State<MessageInput> {
                                 padding: const EdgeInsets.all(10), // bigger touch target
                                 child: Icon(
                                     Icons.mic_rounded,
-                                    color: AppColors.white.withOpacity(0.6),
+                                    color: AppColors.white.withValues(alpha: 0.6),
                                     size: 26,
                                 ),
                             ),
@@ -508,7 +507,7 @@ class _MessageInputState extends State<MessageInput> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 3),
                   ),
@@ -537,7 +536,7 @@ class _MessageInputState extends State<MessageInput> {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
+                          color: Colors.black.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

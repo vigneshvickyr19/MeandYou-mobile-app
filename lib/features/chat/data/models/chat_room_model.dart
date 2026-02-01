@@ -92,6 +92,7 @@ class ChatRoomModel {
     bool? isGroup,
     String? groupName,
     String? groupImage,
+    Map<String, DateTime>? lastReadAt,
   }) {
     return ChatRoomModel(
       id: id ?? this.id,

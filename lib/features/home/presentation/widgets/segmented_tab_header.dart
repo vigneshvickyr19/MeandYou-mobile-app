@@ -21,7 +21,7 @@ class SegmentedTabHeader extends StatelessWidget {
         color: AppColors.black,
         border: Border(
           bottom: BorderSide(
-            color: AppColors.white.withOpacity(0.1),
+            color: AppColors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -74,7 +74,7 @@ class SegmentedTabHeader extends StatelessWidget {
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? AppColors.white : AppColors.white.withOpacity(0.6),
+            color: isSelected ? AppColors.white : AppColors.white.withValues(alpha: 0.6),
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),

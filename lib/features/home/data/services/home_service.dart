@@ -83,9 +83,7 @@ class HomeService {
       }
 
       return false; // Like saved, no match
-    } catch (e) {
-      print('Error liking user: $e');
-      rethrow;
+    } catch (e) {      rethrow;
     }
   }
 

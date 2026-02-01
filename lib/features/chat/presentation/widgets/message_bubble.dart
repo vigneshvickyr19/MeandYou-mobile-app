@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/message_model.dart';
@@ -28,7 +27,7 @@ class MessageBubble extends StatelessWidget {
     final hour =
         time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
     final period = time.hour >= 12 ? 'pm' : 'am';
-    return '${hour}:${time.minute.toString().padLeft(2, '0')} $period';
+    return '$hour:${time.minute.toString().padLeft(2, '0')} $period';
   }
 
   Color _getBubbleColor() {
@@ -129,7 +128,7 @@ class MessageBubble extends StatelessWidget {
                     Text(
                       _formatTime(message.timestamp),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 10,
                       ),
                     ),
@@ -151,7 +150,7 @@ class MessageBubble extends StatelessWidget {
                             size: 14,
                             color: isSeen
                                 ? AppColors.info
-                                : Colors.white.withOpacity(0.4),
+                                : Colors.white.withValues(alpha: 0.4),
                           );
                         },
                       ),
@@ -168,7 +167,7 @@ class MessageBubble extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E1E1E),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -193,7 +192,7 @@ class MessageBubble extends StatelessWidget {
                       Text(
                         message.likeCount.toString(),
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 10,
                         ),
                       ),

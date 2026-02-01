@@ -126,7 +126,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.7),
+                  Colors.black.withValues(alpha: 0.7),
                   Colors.transparent,
                 ],
               ),
@@ -149,7 +149,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -184,7 +184,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -201,7 +201,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
                       decoration: BoxDecoration(
                         color: isActive
                             ? AppColors.primary
-                            : Colors.white.withOpacity(0.3),
+                            : Colors.white.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -234,7 +234,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppColors.primary,
               ),
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
             ),
           ),
           if (progress != null) ...[
@@ -242,7 +242,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
             Text(
               '${(progress * 100).toInt()}%',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -260,14 +260,14 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
         children: [
           Icon(
             Icons.broken_image_rounded,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             size: 80,
           ),
           const SizedBox(height: 16),
           Text(
             'Failed to load image',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 16,
             ),
           ),

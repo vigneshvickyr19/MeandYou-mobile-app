@@ -39,48 +39,31 @@ class NearbyController extends ChangeNotifier {
   Position? _lastPosition;
 
   Future<void> loadUsers(UserModel currentUser) async {
-    print('\n🚀 NearbyController: Loading users...');
-    print('📱 Initial User: ${currentUser.fullName} (${currentUser.id})');
-    
     _currentUser = currentUser;
     _isLoading = true;
     notifyListeners();
 
     // 1. Get full profile from profileSetup
-    print('🔄 Fetching full profile from profileSetup...');
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
     
-    print('✅ Profile loaded:');
-    print('   Name: ${_currentUser!.fullName}');
-    print('   Location: lat=${_currentUser!.latitude}, lng=${_currentUser!.longitude}');
-    print('   Geohash: ${_currentUser!.geohash}');
-    print('   Interests: ${_currentUser!.interests}');
-    print('   Gender: ${_currentUser!.gender}');
-    print('   Preferences: ${_currentUser!.preferences}');
-
     _startMatchesSubscription();
     _startLocationUpdates(_currentUser!.id);
   }
 
   void _startMatchesSubscription() {
     if (_currentUser == null) {
-      print('❌ Cannot start matches subscription: current user is null');
       return;
     }
-    
-    print('\n🎧 Starting nearby matches subscription with 10km radius...');
     
     _matchesSubscription?.cancel();
     _matchesSubscription = _getNearbyMatchesUseCase(
       currentUser: _currentUser!,
       radiusInKm: 10.0,
     ).listen((matches) {
-      print('\n📥 Received ${matches.length} matches from stream');
       _users = matches;
       _isLoading = false;
       notifyListeners();
     }, onError: (error) {
-      print('❌ Error loading nearby matches: $error');
       _isLoading = false;
       notifyListeners();
       debugPrint('Error loading nearby matches: $error');
