@@ -9,6 +9,7 @@ import '../../../../core/models/user_model.dart';
 import '../widgets/profile_preview_card.dart';
 import '../widgets/premium_animated_avatar.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
+import '../../../../data/repositories/chat_repository.dart';
 import 'dart:math' as math;
 
 class NearbyTab extends StatefulWidget {
@@ -149,8 +150,16 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
                       );
                     },
                     onSayHello: () async {
-                      // Implementation of Say Hello through a temporary repository call or controller method
-                      // For now, redirect to detail with a "Say Hello" intention
+                      final authProvider = context.read<AuthProvider>();
+                      if (authProvider.currentUser == null) return;
+
+                      // Use ChatRepository to get or create a real room ID
+                      final chatRepository = ChatRepository();
+                      final chatRoomId = await chatRepository.getOrCreateChatRoom(
+                        authProvider.currentUser!.id,
+                        controller.selectedMatch!.id,
+                      );
+
                       final otherUser = UserModel(
                         id: controller.selectedMatch!.id,
                         email: '',
@@ -159,16 +168,17 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
                             controller.selectedMatch!.profileImageUrl,
                       );
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatDetailPage(
-                            chatRoomId:
-                                'new', // Logic for checking existing room
-                            otherUser: otherUser,
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatDetailPage(
+                              chatRoomId: chatRoomId,
+                              otherUser: otherUser,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
                   ),
                 ),
