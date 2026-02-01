@@ -268,12 +268,6 @@ class _MessageInputState extends State<MessageInput> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: AppColors.black.withValues(alpha: 0.8),
-                border: Border(
-                  top: BorderSide(
-                    color: AppColors.white.withValues(alpha: 0.05),
-                    width: 1,
-                  ),
-                ),
               ),
               child: Column(
                 children: [
@@ -289,10 +283,6 @@ class _MessageInputState extends State<MessageInput> {
                             decoration: BoxDecoration(
                               color: const Color(0xFF1E1E1E),
                               borderRadius: BorderRadius.circular(28),
-                              border: Border.all(
-                                color: Colors.red.withValues(alpha: 0.5), 
-                                width: 1,
-                              ),
                             ),
                             child: Row(
                               children: [
@@ -367,12 +357,6 @@ class _MessageInputState extends State<MessageInput> {
                             decoration: BoxDecoration(
                               color: const Color(0xFF1E1E1E),
                               borderRadius: BorderRadius.circular(28),
-                              border: widget.showBorder
-                                  ? Border.all(
-                                      color: AppColors.primary.withValues(alpha: 0.3),
-                                      width: 1,
-                                    )
-                                  : null,
                             ),
                             child: TextField(
                               controller: _controller,
@@ -388,6 +372,10 @@ class _MessageInputState extends State<MessageInput> {
                                   fontSize: 16,
                                 ),
                                 border: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
                                 contentPadding:
                                     const EdgeInsets.symmetric(vertical: 12),
                               ),
