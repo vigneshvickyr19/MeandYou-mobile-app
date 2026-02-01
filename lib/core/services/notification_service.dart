@@ -64,8 +64,11 @@ class NotificationService {
 
   bool _initialized = false;
   String? _fcmToken;
+  RemoteMessage? _initialMessage;
+  GlobalKey<NavigatorState>? _navigatorKey;
 
   String? get fcmToken => _fcmToken;
+  RemoteMessage? get initialMessage => _initialMessage;
 
   /// Initialize notification service
   Future<void> initialize() async {
@@ -100,8 +103,18 @@ class NotificationService {
 
   /// Set the navigator key for navigation
   void setNavigatorKey(GlobalKey<NavigatorState> key) {
+    _navigatorKey = key;
     // Also pass it to DeepLinkService to ensure it has the key
     DeepLinkService().initialize(key);
+    
+    // Check if we have an initial message to process
+    if (_initialMessage != null) {
+      if (kDebugMode) {
+        print('NotificationService: Processing initial message after navigator set');
+      }
+      _handleNotificationOpenedApp(_initialMessage!);
+      _initialMessage = null;
+    }
   }
 
   /// Request notification permissions
@@ -204,7 +217,15 @@ class NotificationService {
     // Handle notification that opened app from terminated state
     _firebaseMessaging.getInitialMessage().then((message) {
       if (message != null) {
-        _handleNotificationOpenedApp(message);
+        if (kDebugMode) {
+          print('NotificationService: Found initial message from terminated state');
+        }
+        // If navigator is already set, handle it now, otherwise store for later
+        if (_navigatorKey?.currentState != null) {
+          _handleNotificationOpenedApp(message);
+        } else {
+          _initialMessage = message;
+        }
       }
     });
 
