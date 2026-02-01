@@ -39,27 +39,5 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.transparent,
-      hintStyle: const TextStyle(color: Colors.white54),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.secondary.withValues(alpha: 0.6)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.secondary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.error, width: 1.5),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.error, width: 1.5),
-      ),
-      labelStyle: const TextStyle(color: AppColors.white),
-    ),
   );
 }
