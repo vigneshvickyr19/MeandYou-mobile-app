@@ -67,8 +67,6 @@ class NotificationService {
 
   String? get fcmToken => _fcmToken;
 
-  GlobalKey<NavigatorState>? _navigatorKey;
-
   /// Initialize notification service
   Future<void> initialize() async {
     if (_initialized) {
