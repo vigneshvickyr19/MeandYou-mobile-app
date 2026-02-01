@@ -12,6 +12,7 @@ import '../widgets/message_bubble.dart';
 import '../widgets/date_separator.dart';
 import '../widgets/message_input.dart';
 import '../../../../core/widgets/app_image_preview_modal.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final String chatRoomId;
@@ -103,13 +104,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   child: AppBar(
                     backgroundColor: AppColors.black.withValues(alpha: 0.7),
                     elevation: 0,
-                    leading: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.white,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.pop(context),
+                    leading: const Center(
+                      child: AppBackButton(),
                     ),
                     title: GestureDetector(
                       onTap: () {
