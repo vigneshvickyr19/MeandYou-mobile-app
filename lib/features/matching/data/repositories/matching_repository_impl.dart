@@ -74,6 +74,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
           radiusInKm,
         );
 
+
         matches.add(NearbyMatchEntity(
           id: userId,
           fullName: userName,
@@ -81,6 +82,9 @@ class MatchingRepositoryImpl implements MatchingRepository {
           distance: distance,
           matchPercentage: matchPercentage,
           address: data[FirebaseConstants.address],
+          landmark: data['landmark'],
+          area: data['area'],
+          fullAddress: data[FirebaseConstants.address],
           age: data[FirebaseConstants.age] ?? 18,
           latitude: lat,
           longitude: lng,

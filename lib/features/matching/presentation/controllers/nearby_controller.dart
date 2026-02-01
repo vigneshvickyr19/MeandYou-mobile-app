@@ -8,6 +8,8 @@ import '../../domain/usecases/get_nearby_matches_usecase.dart';
 import '../../domain/usecases/update_location_usecase.dart';
 import '../../../../core/models/user_model.dart';
 import '../../domain/usecases/get_current_user_profile_usecase.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../../core/utils/location_formatter.dart';
 import '../../data/repositories/matching_repository_impl.dart';
 
 class NearbyController extends ChangeNotifier {
@@ -28,6 +30,9 @@ class NearbyController extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  bool _isLocationLoading = false;
+  bool get isLocationLoading => _isLocationLoading;
 
   NearbyMatchEntity? _selectedMatch;
   NearbyMatchEntity? get selectedMatch => _selectedMatch;
@@ -127,9 +132,41 @@ class NearbyController extends ChangeNotifier {
     );
   }
 
-  void selectUser(NearbyMatchEntity match) {
+  void selectUser(NearbyMatchEntity match) async {
     _selectedMatch = match;
     notifyListeners();
+
+    // Perform reverse geocoding if not already available
+    if (match.landmark == null || match.area == null) {
+      _isLocationLoading = true;
+      notifyListeners();
+
+      final locationData = await LocationService.getReadableLocation(
+        match.latitude,
+        match.longitude,
+      );
+
+      _isLocationLoading = false;
+
+      // Check if the user is still selected (async gap)
+      if (_selectedMatch?.id == match.id) {
+        _selectedMatch = _selectedMatch!.copyWith(
+          landmark: locationData['landmark'],
+          area: locationData['area'],
+          fullAddress: locationData['fullAddress'],
+        );
+        
+        // Also update in the list for persistence during this session
+        final index = _users.indexWhere((u) => u.id == match.id);
+        if (index != -1) {
+          _users[index] = _selectedMatch!;
+        }
+        
+        notifyListeners();
+      } else {
+        notifyListeners();
+      }
+    }
   }
 
   void closeSelectedUser() {
@@ -152,10 +189,7 @@ class NearbyController extends ChangeNotifier {
   }
 
   String getDistanceString(NearbyMatchEntity user) {
-    if (user.distance < 1) {
-      return '${(user.distance * 1000).toInt()}m';
-    }
-    return '${user.distance.toStringAsFixed(1)}km';
+    return LocationFormatter.getDistanceString(user.distance);
   }
 
   @override

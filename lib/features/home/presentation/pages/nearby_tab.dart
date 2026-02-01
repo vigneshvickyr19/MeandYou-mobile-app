@@ -256,7 +256,7 @@ class _NearbyTabState extends State<NearbyTab>
                         child: Image.network(
                           user!.profileImageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const Icon(
+                          errorBuilder: (context, error, stackTrace) => const Icon(
                             Icons.person,
                             color: Colors.white,
                             size: 40,
