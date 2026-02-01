@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -35,7 +36,7 @@ class _DiscoverTabState extends State<DiscoverTab>
     super.initState();
     _controller = DiscoverController();
     _pageController = PageController(
-      viewportFraction: 0.78, // Show peek of adjacent cards
+      viewportFraction: 0.88, // Modern peek with dominant center
       initialPage: 0,
     );
 
@@ -170,7 +171,7 @@ class _DiscoverTabState extends State<DiscoverTab>
           Container(
             height: cardHeight,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.4),
@@ -180,7 +181,7 @@ class _DiscoverTabState extends State<DiscoverTab>
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(32),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -248,11 +249,11 @@ class _DiscoverTabState extends State<DiscoverTab>
             end: Alignment.bottomCenter,
             colors: [
               Colors.transparent,
-              Colors.black.withValues(alpha: 0.3),
-              Colors.black.withValues(alpha: 0.7),
-              Colors.black.withValues(alpha: 0.9),
+              Colors.black.withValues(alpha: 0.1),
+              Colors.black.withValues(alpha: 0.5),
+              Colors.black.withValues(alpha: 0.85),
             ],
-            stops: const [0.0, 0.3, 0.7, 1.0],
+            stops: const [0.0, 0.4, 0.7, 1.0],
           ),
         ),
       ),
@@ -262,45 +263,48 @@ class _DiscoverTabState extends State<DiscoverTab>
   /// Build profile info (name, age, location)
   Widget _buildProfileInfo(NearbyMatchEntity match) {
     return Positioned(
-      bottom: 100,
+      bottom: 120,
       left: 24,
       right: 24,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Name and age
           Text(
             '${match.fullName}, ${match.age}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 26,
               fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
+              letterSpacing: 0.5,
               height: 1.2,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
 
           // Location
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.location_on,
                 color: Colors.white.withValues(alpha: 0.7),
-                size: 18,
+                size: 16,
               ),
               const SizedBox(width: 4),
-              Expanded(
+              Flexible(
                 child: Text(
                   LocationFormatter.getLocationName(match),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.2,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
@@ -313,40 +317,43 @@ class _DiscoverTabState extends State<DiscoverTab>
   /// Build distance badge (top-right)
   Widget _buildDistanceBadge(NearbyMatchEntity match) {
     return Positioned(
-      top: 30,
-      right: 30,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.near_me, color: Colors.white, size: 14),
-            const SizedBox(width: 4),
-            Text(
-              LocationFormatter.getDistanceString(match.distance),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
+      top: 24,
+      right: 24,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1,
               ),
             ),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.near_me_rounded,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  LocationFormatter.getDistanceString(match.distance),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -355,23 +362,17 @@ class _DiscoverTabState extends State<DiscoverTab>
   /// Build action buttons (like/dislike) - API call only on tap
   Widget _buildActionButtons(NearbyMatchEntity match) {
     return Positioned(
-      bottom: 20,
-      left: 0,
-      right: 0,
+      bottom: 32,
+      left: 24,
+      right: 24,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Dislike button
+          // Dislike button (Bottom Left)
           _buildActionButton(
-            icon: Icons.close,
-            color: const Color(0xFF4A4A4A),
-            size: 60,
-            iconSize: 32,
+            icon: Icons.close_rounded,
             onTap: () {
-              // Just remove from list, no API call
               _controller.dislikeUser(match);
-
-              // Animate to next card
               if (_currentPage < _controller.matches.length - 1) {
                 _pageController.animateToPage(
                   _currentPage + 1,
@@ -382,14 +383,10 @@ class _DiscoverTabState extends State<DiscoverTab>
             },
           ),
 
-          const SizedBox(width: 24),
-
-          // Like button - API call happens here
+          // Like button (Bottom Right)
           _buildActionButton(
-            icon: Icons.favorite,
-            color: AppColors.primary,
-            size: 70,
-            iconSize: 36,
+            icon: Icons.favorite_rounded,
+            isLike: true,
             onTap: () => _handleLike(match),
           ),
         ],
@@ -400,28 +397,33 @@ class _DiscoverTabState extends State<DiscoverTab>
   /// Build individual action button
   Widget _buildActionButton({
     required IconData icon,
-    required Color color,
-    required double size,
-    required double iconSize,
     required VoidCallback onTap,
+    bool isLike = false,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(36),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.4),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 1,
+              ),
             ),
-          ],
+            child: Icon(
+              icon,
+              color: Colors.white.withValues(alpha: 0.9),
+              size: 28,
+            ),
+          ),
         ),
-        child: Icon(icon, color: Colors.white, size: iconSize),
       ),
     );
   }
