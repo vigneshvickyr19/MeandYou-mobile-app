@@ -29,7 +29,6 @@ class AppSnackbar {
         iconData = Icons.warning;
         break;
       case SnackbarType.info:
-      default:
         backgroundColor = AppColors.info;
         iconData = Icons.info;
         break;

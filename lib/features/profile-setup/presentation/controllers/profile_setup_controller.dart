@@ -62,24 +62,29 @@ class ProfileSetupController {
 
     switch (step) {
       case 0:
-        if (p.fullName == null || p.fullName!.isEmpty)
+        if (p.fullName == null || p.fullName!.isEmpty) {
           return "Please enter your Full Name.";
+        }
         if (p.dob == null) return "Please select your Date of Birth.";
         if (p.gender == null) return "Please select your Gender.";
         return "Please complete all fields.";
       case 1:
-        if (p.photos == null || p.photos!.isEmpty)
+        if (p.photos == null || p.photos!.isEmpty) {
           return "Please upload at least one photo.";
+        }
         return "Please upload photos.";
       case 2:
-        if (p.addressLine1 == null || p.addressLine1!.isEmpty)
+        if (p.addressLine1 == null || p.addressLine1!.isEmpty) {
           return "Please enter Address Line 1.";
+        }
         if (p.city == null || p.city!.isEmpty) return "Please enter City.";
         if (p.state == null || p.state!.isEmpty) return "Please enter State.";
-        if (p.country == null || p.country!.isEmpty)
+        if (p.country == null || p.country!.isEmpty) {
           return "Please enter Country.";
-        if (p.pinCode == null || p.pinCode!.isEmpty)
+        }
+        if (p.pinCode == null || p.pinCode!.isEmpty) {
           return "Please enter Pin Code.";
+        }
         return "Please complete address details.";
       case 3:
         if (p.bio == null || p.bio!.isEmpty) return "Please enter your Bio.";
@@ -100,13 +105,16 @@ class ProfileSetupController {
         if (p.language == null) return "Please select Language.";
         return "Please complete lifestyle details.";
       case 6:
-        if (p.lookingFor == null)
+        if (p.lookingFor == null) {
           return "Please select what you are looking for.";
-        if (p.minAge == null || p.maxAge == null)
+        }
+        if (p.minAge == null || p.maxAge == null) {
           return "Please select Age Range.";
+        }
         if (p.distance == null) return "Please select Distance preference.";
-        if (p.interests == null || p.interests!.isEmpty)
+        if (p.interests == null || p.interests!.isEmpty) {
           return "Please select at least one Interest.";
+        }
         return "Please complete preferences.";
       default:
         return "Please fill in all required fields to proceed.";

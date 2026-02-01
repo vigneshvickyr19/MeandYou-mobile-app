@@ -1,0 +1,268 @@
+﻿Analyzing ME_-_YOU...                                           
+
+warning - Unused import: 'core/providers/profile_setup_provider.dart' - lib\app.dart:9:8 - unused_import
+   info - The constant name 'START' isn't a lowerCamelCase identifier - lib\core\constants\call_constants.dart:2:3 - constant_identifier_names
+   info - The constant name 'END' isn't a lowerCamelCase identifier - lib\core\constants\call_constants.dart:3:3 - constant_identifier_names
+   info - The constant name 'DECLINE' isn't a lowerCamelCase identifier - lib\core\constants\call_constants.dart:4:3 - constant_identifier_names
+   info - The constant name 'MISSED' isn't a lowerCamelCase identifier - lib\core\constants\call_constants.dart:5:3 - constant_identifier_names
+   info - The constant name 'AUDIO' isn't a lowerCamelCase identifier - lib\core\constants\call_constants.dart:9:3 - constant_identifier_names
+   info - The constant name 'VIDEO' isn't a lowerCamelCase identifier - lib\core\constants\call_constants.dart:10:3 - constant_identifier_names
+warning - Unused import: '../../features/linkes/presentation/pages/like_page.dart' - lib\core\router\app_router.dart:11:8 - unused_import
+warning - Unused import: '../../features/chat/presentation/pages/chat_page.dart' - lib\core\router\app_router.dart:12:8 - unused_import
+warning - Unused import: '../../data/repositories/user_repository.dart' - lib\core\services\notification_service.dart:21:8 - unused_import
+warning - The value of the field '_navigatorKey' isn't used - lib\core\services\notification_service.dart:76:30 - unused_field
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:129:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:152:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:187:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:204:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:237:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:245:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:263:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_full_screen_image_viewer.dart:270:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:88:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:91:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:120:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:163:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:166:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:213:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:216:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:229:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:238:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:265:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:282:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_image_preview_modal.dart:294:42 - deprecated_member_use
+warning - This default clause is covered by the previous cases - lib\core\widgets\app_snackbar.dart:32:7 - unreachable_switch_default
+   info - Don't use 'BuildContext's across async gaps - lib\features\auth\presentation\controllers\phone_login_controller.dart:75:24 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\auth\presentation\controllers\phone_login_controller.dart:91:24 - use_build_context_synchronously
+   info - The file name 'forgotPassword_page.dart' isn't a lower_case_with_underscores identifier - lib\features\auth\presentation\pages\forgotPassword_page.dart:1:1 - file_names
+   info - Don't use 'BuildContext's across async gaps - lib\features\auth\presentation\pages\forgotPassword_page.dart:49:38 - use_build_context_synchronously
+warning - Dead code - lib\features\chat\data\models\chat_room_model.dart:109:30 - dead_code
+   info - Unnecessary 'this.' qualifier - lib\features\chat\data\models\chat_room_model.dart:109:33 - unnecessary_this
+warning - The left operand can't be null, so the right operand is never executed - lib\features\chat\data\models\chat_room_model.dart:109:33 - dead_null_aware_expression
+warning - The declaration '_updateChatUsersList' isn't referenced - lib\features\chat\presentation\controllers\chat_list_controller.dart:98:8 - unused_element
+warning - The value of the local variable 'room' isn't used - lib\features\chat\presentation\controllers\chat_list_controller.dart:103:14 - unused_local_variable
+   info - Unnecessary braces in a string interpolation - lib\features\chat\presentation\controllers\chat_list_controller.dart:159:15 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:104:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:149:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:210:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:216:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:223:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:232:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:312:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\pages\chat_detail_page.dart:320:58 - deprecated_member_use
+   info - Unnecessary braces in a string interpolation - lib\features\chat\presentation\widgets\chat_list_item.dart:24:13 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\chat_list_item.dart:73:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\chat_list_item.dart:118:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\chat_list_item.dart:133:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\date_separator.dart:17:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\date_separator.dart:26:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\date_separator.dart:34:38 - deprecated_member_use
+warning - Unused import: 'dart:io' - lib\features\chat\presentation\widgets\message_bubble.dart:2:8 - unused_import
+   info - Unnecessary braces in a string interpolation - lib\features\chat\presentation\widgets\message_bubble.dart:31:13 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_bubble.dart:132:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_bubble.dart:154:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_bubble.dart:171:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_bubble.dart:196:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_image_grid.dart:208:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_image_grid.dart:228:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_image_grid.dart:233:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_image_grid.dart:242:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_image_grid.dart:246:34 - deprecated_member_use
+warning - Unused import: '../../../../core/widgets/app_image_preview_modal.dart' - lib\features\chat\presentation\widgets\message_input.dart:9:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:105:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:111:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:123:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:183:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:195:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:271:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:274:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:294:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:317:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:327:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:344:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:359:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:373:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:388:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:416:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:450:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:475:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:511:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\message_input.dart:540:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\voice_message_bubble.dart:130:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\voice_message_bubble.dart:131:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\voice_message_bubble.dart:156:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\voice_message_bubble.dart:175:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\presentation\widgets\voice_message_bubble.dart:182:47 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\home\data\services\home_service.dart:87:7 - avoid_print
+   info - The private field _likedUsers could be 'final' - lib\features\home\presentation\controllers\discover_controller.dart:20:19 - prefer_final_fields
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:79:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:117:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:137:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:144:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:160:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:189:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\home\presentation\controllers\discover_controller.dart:191:7 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\discover_tab.dart:120:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\discover_tab.dart:126:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\discover_tab.dart:143:40 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\home\presentation\pages\nearby_tab.dart:12:8 - unnecessary_import
+warning - The value of the local variable 'currentUserId' isn't used - lib\features\home\presentation\pages\nearby_tab.dart:54:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:186:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:193:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:223:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:255:40 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\pages\nearby_tab.dart:261:45 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\pages\nearby_tab.dart:261:49 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:309:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:314:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:390:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:423:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:483:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\nearby_tab.dart:493:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\distance_badge.dart:19:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\distance_badge.dart:22:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\match_dialog.dart:43:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\match_dialog.dart:90:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\match_dialog.dart:127:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\match_dialog.dart:173:42 - deprecated_member_use
+warning - Unused import: '../../../../core/constants/app_colors.dart' - lib\features\home\presentation\widgets\profile_preview_card.dart:3:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:41:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:44:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:49:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:80:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:89:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:95:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:113:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:121:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:139:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:147:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:173:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:206:39 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\widgets\profile_preview_card.dart:221:41 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\home\presentation\widgets\profile_preview_card.dart:221:45 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:252:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\profile_preview_card.dart:257:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\segmented_tab_header.dart:24:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\segmented_tab_header.dart:77:67 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_avatar.dart:47:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:33:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:68:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:69:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:70:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:71:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:84:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:87:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:142:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:165:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:176:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\widgets\user_card.dart:241:35 - deprecated_member_use
+warning - Unused import: '../../../home/data/models/like_model.dart' - lib\features\linkes\presentation\controllers\like_controller.dart:4:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\linkes\presentation\widgets\like_card.dart:35:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\linkes\presentation\widgets\like_card.dart:59:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\linkes\presentation\widgets\like_card.dart:94:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\linkes\presentation\widgets\like_card.dart:101:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\linkes\presentation\widgets\like_card.dart:114:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\linkes\presentation\widgets\like_card.dart:172:50 - deprecated_member_use
+warning - Unused import: 'package:dart_geohash/dart_geohash.dart' - lib\features\matching\data\repositories\matching_repository_impl.dart:2:8 - unused_import
+warning - Unused import: '../models/nearby_match_model.dart' - lib\features\matching\data\repositories\matching_repository_impl.dart:4:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:22:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:23:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:24:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:25:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:26:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:27:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:28:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:32:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:41:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:49:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:66:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:73:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:78:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:86:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:87:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:88:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:98:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:103:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:115:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:116:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:136:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:137:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:138:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:139:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:140:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:141:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:142:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:145:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:148:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:151:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:152:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:153:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:154:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:155:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:156:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:158:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:209:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:218:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:219:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:220:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:222:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:232:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:234:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:245:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:247:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:254:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\data\repositories\matching_repository_impl.dart:257:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\domain\usecases\get_current_user_profile_usecase.dart:42:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:42:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:43:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:50:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:53:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:54:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:55:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:56:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:57:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:58:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:59:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:67:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:71:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:78:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\presentation\controllers\nearby_controller.dart:83:7 - avoid_print
+warning - Unused import: 'package:flutter/foundation.dart' - lib\features\notifications\data\services\notification_storage_service.dart:2:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\notifications\data\services\notification_storage_service.dart:38:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\notifications\data\services\notification_storage_service.dart:65:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\notifications\data\services\notification_storage_service.dart:86:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\notifications\data\services\notification_storage_service.dart:95:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\notifications\presentation\pages\notifications_page.dart:222:11 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:66:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:72:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:76:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:80:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:82:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:104:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:106:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\profile-setup\presentation\controllers\profile_setup_controller.dart:109:11 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:115:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:117:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:173:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:180:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:411:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_gallery.dart:49:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:62:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:81:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:91:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:115:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:126:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:144:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:147:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_info_section.dart:210:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_stats_card.dart:23:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\widgets\profile_stats_card.dart:31:38 - deprecated_member_use
+
+flutter : 258 issues found. (ran in 10.4s)
+At line:1 char:1
++ flutter analyze 2>&1 | Out-File -FilePath "analyze_output.txt" -Encod ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (258 issues found. (ran in 10.4s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

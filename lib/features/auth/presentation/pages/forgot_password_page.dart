@@ -46,7 +46,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     // Navigate back or to login after short delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      }
     });
   }
 

@@ -114,9 +114,13 @@ class ProfileSetupProvider extends ChangeNotifier {
       // 1. Save Profile Setup data
       await _userRepository.saveProfileSetup(_draftProfile!);
 
-      // 2. Update User Account status
+      // 2. Update User Account status & sync core details
       final String? fcmToken = NotificationService.instance.fcmToken;
       UserModel updatedUser = currentUser.copyWith(
+        fullName: _draftProfile!.fullName,
+        profileImageUrl: _draftProfile!.photos?.isNotEmpty == true
+            ? _draftProfile!.photos!.first
+            : null,
         isProfileComplete: true,
         fcmToken: fcmToken,
       );

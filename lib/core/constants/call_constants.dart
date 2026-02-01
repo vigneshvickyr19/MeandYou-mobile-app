@@ -1,20 +1,13 @@
-enum CallAction {
-  START,
-  END,
-  DECLINE,
-  MISSED,
-}
+enum CallAction { start, end, decline, missed }
 
-enum CallType {
-  AUDIO,
-  VIDEO,
-}
+enum CallType { audio, video }
 
 class CallSignalPayload {
   final String type = 'CALL_SIGNAL';
   final String callId;
   final String callerId;
   final String callerName;
+  final String calleeId;
   final CallType callType;
   final CallAction action;
 
@@ -22,6 +15,7 @@ class CallSignalPayload {
     required this.callId,
     required this.callerId,
     required this.callerName,
+    required this.calleeId,
     required this.callType,
     required this.action,
   });
@@ -31,6 +25,7 @@ class CallSignalPayload {
       callId: data['callId'] ?? '',
       callerId: data['callerId'] ?? '',
       callerName: data['callerName'] ?? '',
+      calleeId: data['calleeId'] ?? '',
       callType: _parseCallType(data['callType']),
       action: _parseCallAction(data['action']),
     );
@@ -39,24 +34,24 @@ class CallSignalPayload {
   static CallType _parseCallType(String? value) {
     switch (value) {
       case 'VIDEO':
-        return CallType.VIDEO;
+        return CallType.video;
       default:
-        return CallType.AUDIO;
+        return CallType.audio;
     }
   }
 
   static CallAction _parseCallAction(String? value) {
     switch (value) {
       case 'START':
-        return CallAction.START;
+        return CallAction.start;
       case 'END':
-        return CallAction.END;
+        return CallAction.end;
       case 'DECLINE':
-        return CallAction.DECLINE;
+        return CallAction.decline;
       case 'MISSED':
-        return CallAction.MISSED;
+        return CallAction.missed;
       default:
-        return CallAction.START;
+        return CallAction.start;
     }
   }
 }

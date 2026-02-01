@@ -22,50 +22,69 @@ class NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => onTap(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: isActive ? 18 : 14,
-          vertical: 10,
-        ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.primary.withValues(alpha: 0.18)
+              ? AppColors.navItemBg.withValues(alpha: 0.8)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(35),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            /// ICON
-            SvgPicture.asset(
-              iconPath,
-              height: 22,
-              width: 22,
-              colorFilter: ColorFilter.mode(
-                isActive ? AppColors.primary : Colors.white54,
-                BlendMode.srcIn,
+            // Icon Background Circle (Animates only when active)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.all(isActive ? 10 : 0),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: isActive
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.navActiveGradientStart,
+                          AppColors.navActiveGradientEnd,
+                        ],
+                      )
+                    : null,
+              ),
+              child: SvgPicture.asset(
+                iconPath,
+                height: 20,
+                width: 20,
+                colorFilter: ColorFilter.mode(
+                  isActive 
+                      ? Colors.black 
+                      : AppColors.navInactive, 
+                  BlendMode.srcIn,
+                ),
               ),
             ),
-
-            /// LABEL (animated)
-            AnimatedSize(
+    
+            // Animated Label (Uses CrossFade for safe structural transition)
+            AnimatedCrossFade(
               duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              child: isActive
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text(
-                        label,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    )
-                  : const SizedBox(),
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(left: 8, right: 4),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: Color(0xFFFF8A3D),
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+              crossFadeState: isActive 
+                  ? CrossFadeState.showSecond 
+                  : CrossFadeState.showFirst,
             ),
           ],
         ),

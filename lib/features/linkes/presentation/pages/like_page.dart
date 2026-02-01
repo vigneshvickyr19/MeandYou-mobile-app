@@ -6,8 +6,14 @@ class LikePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text("Like Page", style: TextStyle(color: AppColors.white)),
+    return const Scaffold(
+      backgroundColor: AppColors.black,
+      body: Center(
+        child: Text(
+          'Likes Page',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
     );
   }
 }

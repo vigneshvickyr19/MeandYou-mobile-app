@@ -59,26 +59,36 @@ class PhoneLoginController extends ChangeNotifier {
           _isButtonEnabled = false;
           _phoneErrorMessage = null;
           notifyListeners();
-          AppSnackbar.show(context, message: "OTP Sent to $phone", type: SnackbarType.success);
+          if (context.mounted) {
+            AppSnackbar.show(context, message: "OTP Sent to $phone", type: SnackbarType.success);
+          }
         },
         onError: (errorMsg) {
           _phoneErrorMessage = errorMsg;
           notifyListeners();
-          AppSnackbar.show(context, message: errorMsg, type: SnackbarType.error);
+          if (context.mounted) {
+            AppSnackbar.show(context, message: errorMsg, type: SnackbarType.error);
+          }
         },
         onAutoVerify: () {
-          AppSnackbar.show(context, message: "Phone verified automatically!", type: SnackbarType.success);
+          if (context.mounted) {
+            AppSnackbar.show(context, message: "Phone verified automatically!", type: SnackbarType.success);
+          }
           // AuthWrapper will handle navigation
         },
       );
     } catch (e) {
-      AppSnackbar.show(context, message: "Failed: $e", type: SnackbarType.error);
+      if (context.mounted) {
+        AppSnackbar.show(context, message: "Failed: $e", type: SnackbarType.error);
+      }
     }
   }
 
   Future<void> verifyOtp(BuildContext context) async {
     if (_verificationId == null) {
-      AppSnackbar.show(context, message: "Invalid session. Please resend OTP.", type: SnackbarType.error);
+      if (context.mounted) {
+        AppSnackbar.show(context, message: "Invalid session. Please resend OTP.", type: SnackbarType.error);
+      }
       return;
     }
 
@@ -88,7 +98,9 @@ class PhoneLoginController extends ChangeNotifier {
     } catch (e) {
       _otpErrorMessage = "Invalid OTP";
       notifyListeners();
-      AppSnackbar.show(context, message: "Invalid OTP", type: SnackbarType.error);
+      if (context.mounted) {
+        AppSnackbar.show(context, message: "Invalid OTP", type: SnackbarType.error);
+      }
     }
   }
 

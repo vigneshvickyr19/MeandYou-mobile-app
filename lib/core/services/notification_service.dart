@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,11 @@ import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'deep_link_service.dart';
 import '../constants/call_constants.dart';
+import '../constants/notification_constants.dart';
+import '../constants/app_routes.dart';
+import 'database_service.dart';
+import 'notification_api_service.dart';
+import '../models/user_model.dart';
 
 /// Top-level function to handle background messages
 @pragma('vm:entry-point')
@@ -28,51 +34,43 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     } catch (e) {
       // Already initialized or platform doesn't support
     }
-    
-    if (kDebugMode) {
-      print('NotificationService: Handling background message: ${message.messageId}');
-      print('NotificationService: Data: ${message.data}');
-    }
 
-    if (message.data['type'] == 'CALL_SIGNAL') {
+    if (kDebugMode) {}
+
+    if (message.data[NotificationConstants.keyType] ==
+        NotificationConstants.typeCallSignal) {
       final payload = CallSignalPayload.fromMap(message.data);
-      if (kDebugMode) {
-        print('NotificationService: Processing Call Signal Action: ${payload.action}');
-      }
+      if (kDebugMode) {}
       // Use the instance but don't call initialize() here as it might depend on UI context
       await NotificationService.instance.handleCallSignal(payload);
     }
   } catch (e) {
-    if (kDebugMode) {
-      print('NotificationService: Error in background handler: $e');
-    }
+    if (kDebugMode) {}
   }
 }
 
 /// Service to manage Firebase Cloud Messaging and local notifications
 class NotificationService {
   static NotificationService? _instance;
-  static NotificationService get instance => _instance ??= NotificationService._();
-  
+  static NotificationService get instance =>
+      _instance ??= NotificationService._();
+
   NotificationService._();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = 
+  final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  final DatabaseService _databaseService = DatabaseService();
 
   bool _initialized = false;
   String? _fcmToken;
-  
-  String? get fcmToken => _fcmToken;
 
-  GlobalKey<NavigatorState>? _navigatorKey;
+  String? get fcmToken => _fcmToken;
 
   /// Initialize notification service
   Future<void> initialize() async {
     if (_initialized) {
-      if (kDebugMode) {
-        print('Notification service already initialized');
-      }
+      if (kDebugMode) {}
       return;
     }
 
@@ -93,26 +91,23 @@ class NotificationService {
       await _getToken();
 
       _initialized = true;
-      if (kDebugMode) {
-        print('Notification service initialized successfully');
-      }
+      if (kDebugMode) {}
     } catch (e) {
-      if (kDebugMode) {
-        print('Error initializing notification service: $e');
-      }
+      if (kDebugMode) {}
       rethrow;
     }
   }
 
   /// Set the navigator key for navigation
   void setNavigatorKey(GlobalKey<NavigatorState> key) {
-    _navigatorKey = key;
+    // Also pass it to DeepLinkService to ensure it has the key
+    DeepLinkService().initialize(key);
   }
 
   /// Request notification permissions
   Future<void> _requestPermissions() async {
     if (kIsWeb) {
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      await _firebaseMessaging.requestPermission(
         alert: true,
         announcement: false,
         badge: true,
@@ -121,15 +116,12 @@ class NotificationService {
         provisional: false,
         sound: true,
       );
-      if (kDebugMode) {
-        print('Web notification permission status: ${settings.authorizationStatus}');
-      }
       return;
     }
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Request iOS permissions
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      await _firebaseMessaging.requestPermission(
         alert: true,
         announcement: false,
         badge: true,
@@ -138,21 +130,16 @@ class NotificationService {
         provisional: false,
         sound: true,
       );
-
-      if (kDebugMode) {
-        print('iOS notification permission status: ${settings.authorizationStatus}');
-      }
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       // Request Android 13+ notification permission
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-          _localNotifications.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+          _localNotifications
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
 
       if (androidImplementation != null) {
-        final bool? granted = await androidImplementation.requestNotificationsPermission();
-        if (kDebugMode) {
-          print('Android notification permission granted: $granted');
-        }
+        await androidImplementation.requestNotificationsPermission();
       }
     }
   }
@@ -162,11 +149,12 @@ class NotificationService {
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
@@ -189,7 +177,8 @@ class NotificationService {
 
       await _localNotifications
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(channel);
     }
   }
@@ -222,11 +211,22 @@ class NotificationService {
     // Listen to token refresh
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
       _fcmToken = newToken;
-      if (kDebugMode) {
-        print('FCM Token refreshed: $newToken');
-      }
-      // TODO: Send token to your backend server
+      if (kDebugMode) {}
+      _saveTokenToFirestore(newToken);
     });
+  }
+
+  /// Save FCM token to Firestore if user is logged in
+  Future<void> _saveTokenToFirestore(String token) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await _databaseService.updateUserField(user.uid, {'fcmToken': token});
+        if (kDebugMode) {}
+      } catch (e) {
+        if (kDebugMode) {}
+      }
+    }
   }
 
   /// Get FCM token
@@ -239,32 +239,41 @@ class NotificationService {
       } else {
         _fcmToken = await _firebaseMessaging.getToken();
       }
-      if (kDebugMode) {
-        print('FCM Token: $_fcmToken');
+      if (kDebugMode) {}
+      if (_fcmToken != null) {
+        await _saveTokenToFirestore(_fcmToken!);
       }
-      // TODO: Send token to your backend server
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting FCM token: $e');
-      }
+      if (kDebugMode) {}
     }
   }
 
   /// Get VoIP token for iOS (required for CallKit)
   Future<String?> getVoIPToken() async {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-      return await FlutterCallkitIncoming.getDevicePushTokenVoIP();
+      final token = await FlutterCallkitIncoming.getDevicePushTokenVoIP();
+      if (token != null) {
+        // Optionally save VoIP token
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          _databaseService.updateUserField(user.uid, {'voipToken': token});
+        }
+      }
+      return token;
     }
     return null;
   }
 
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
-    if (kDebugMode) {
-      print('Received foreground message: ${message.messageId}');
-      print('Title: ${message.notification?.title}');
-      print('Body: ${message.notification?.body}');
-      print('Data: ${message.data}');
+    if (kDebugMode) {}
+
+    // Check for call signal
+    if (message.data[NotificationConstants.keyType] ==
+        NotificationConstants.typeCallSignal) {
+      final payload = CallSignalPayload.fromMap(message.data);
+      handleCallSignal(payload);
+      return;
     }
 
     // Check for call signal
@@ -280,60 +289,15 @@ class NotificationService {
 
   /// Handle notification opened app
   void _handleNotificationOpenedApp(RemoteMessage message) {
-    if (kDebugMode) {
-      print('Notification opened app: ${message.messageId}');
-      print('Data: ${message.data}');
-    }
+    if (kDebugMode) {}
 
     _navigateToScreen(message.data);
   }
 
   /// Helper to navigate based on data
   void _navigateToScreen(Map<String, dynamic> data) {
-    if (_navigatorKey == null) {
-      if (kDebugMode) {
-        print('Navigator key is null, cannot navigate');
-      }
-      return;
-    }
-
-    final String? route = data['route'];
-    final String? link = data['link'];
-
-    if (kDebugMode) {
-      print('NotificationService: Extracted route: $route, link: $link');
-    }
-
-    if (link != null) {
-      if (kDebugMode) {
-        print('NotificationService: Processing link: $link');
-      }
-      DeepLinkService().handleLink(link);
-      return;
-    }
-
-    if (route != null) {
-      if (kDebugMode) {
-        print('NotificationService: Navigating to route: $route');
-      }
-
-      if (_navigatorKey!.currentState == null) {
-        if (kDebugMode) {
-          print('NotificationService: Navigator state is NULL even though key is set');
-        }
-        return;
-      }
-
-      _navigatorKey!.currentState?.pushNamedAndRemoveUntil(
-        route,
-        (r) => false,
-        arguments: data,
-      );
-    } else {
-      if (kDebugMode) {
-        print('NotificationService: Both route and link are null in data');
-      }
-    }
+    if (kDebugMode) {}
+    DeepLinkService().handleNotificationPayload(data);
   }
 
   /// Show local notification
@@ -341,14 +305,16 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'high_importance_channel',
-      'High Importance Notifications',
-      channelDescription: 'This channel is used for important notifications.',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'high_importance_channel',
+          'High Importance Notifications',
+          channelDescription:
+              'This channel is used for important notifications.',
+          importance: Importance.high,
+          priority: Priority.high,
+          showWhen: true,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -372,32 +338,30 @@ class NotificationService {
 
   /// Handle notification tap
   void _onNotificationTapped(NotificationResponse response) {
-    if (kDebugMode) {
-      print('Notification tapped: ${response.payload}');
-    }
+    if (kDebugMode) {}
 
     if (response.payload != null) {
       try {
         final Map<String, dynamic> data = jsonDecode(response.payload!);
         _navigateToScreen(data);
       } catch (e) {
-        if (kDebugMode) {
-          print('Error parsing notification payload: $e');
-        }
+        if (kDebugMode) {}
       }
     }
   }
 
   /// Show a test local notification
   Future<void> showTestNotification() async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'high_importance_channel',
-      'High Importance Notifications',
-      channelDescription: 'This channel is used for important notifications.',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'high_importance_channel',
+          'High Importance Notifications',
+          channelDescription:
+              'This channel is used for important notifications.',
+          importance: Importance.high,
+          priority: Priority.high,
+          showWhen: true,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
@@ -420,25 +384,28 @@ class NotificationService {
 
   /// Handle Call Signal
   Future<void> handleCallSignal(CallSignalPayload payload) async {
-    if (kDebugMode) {
-      print('NotificationService: handleCallSignal with action: ${payload.action}');
-    }
+    if (kDebugMode) {}
     try {
       switch (payload.action) {
-        case CallAction.START:
+        case CallAction.start:
           await _showIncomingCallUi(payload);
           break;
-        case CallAction.END:
-        case CallAction.DECLINE:
-        case CallAction.MISSED:
+        case CallAction.end:
+        case CallAction.decline:
+        case CallAction.missed:
           await FlutterCallkitIncoming.endCall(payload.callId);
+          await _checkAndHandleEndCallUI(
+            payload,
+          ); // Optional: close any active screens
           break;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('NotificationService: Error handling call signal: $e');
-      }
+      if (kDebugMode) {}
     }
+  }
+
+  Future<void> _checkAndHandleEndCallUI(CallSignalPayload payload) async {
+    // Delegate to listener or DeepLinkService if needed, or broadcast event
   }
 
   /// Show Incoming Call UI using CallKit
@@ -449,17 +416,20 @@ class NotificationService {
       appName: 'Me And You',
       avatar: 'https://i.pravatar.cc/100', // Placeholder
       handle: payload.callerId,
-      type: payload.callType == CallType.VIDEO ? 1 : 0,
+      type: payload.callType == CallType.video ? 1 : 0,
       duration: 30000,
       textAccept: 'Accept',
       textDecline: 'Decline',
-      extra: <String, dynamic>{'userId': payload.callerId},
+      extra: <String, dynamic>{
+        NotificationConstants.keyUserId: payload.callerId,
+        NotificationConstants.keyCalleeId: payload.calleeId,
+      },
       headers: <String, dynamic>{'ApiKey': 'Abc@123!', 'Platform': 'flutter'},
       android: const AndroidParams(
-        isCustomNotification: false, // Changed to false for better stability
+        isCustomNotification:
+            true, // IMPORTANT: 'true' enables the full screen Activity behavior defined in Manifest
         isShowLogo: false,
         ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#09121C',
         backgroundUrl: 'https://i.pravatar.cc/500',
         actionColor: '#4CAF50',
         textColor: '#ffffff',
@@ -471,21 +441,13 @@ class NotificationService {
         iconName: 'CallKitLogo',
         handleType: 'generic',
         supportsVideo: true,
-        maximumCallGroups: 2,
-        maximumCallsPerCallGroup: 1,
-        audioSessionMode: 'default',
-        audioSessionActive: true,
-        audioSessionPreferredSampleRate: 44100.0,
-        audioSessionPreferredIOBufferDuration: 0.005,
-        supportsGrouping: false,
-        supportsUngrouping: false,
-        supportsDTMF: true,
-        supportsHolding: true,
       ),
     );
 
     if (kDebugMode) {
-      print('NotificationService: Showing CallKit UI with params: ${params.toJson()}');
+      print(
+        'NotificationService: Showing CallKit UI with params: ${params.toJson()}',
+      );
     }
 
     await FlutterCallkitIncoming.showCallkitIncoming(params);
@@ -493,27 +455,96 @@ class NotificationService {
 
   /// Listen to CallKit events (Accept, Decline, etc.)
   void _listenToCallEvents() {
-    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
       if (event == null) return;
+
+      if (kDebugMode) {}
 
       switch (event.event) {
         case Event.actionCallAccept:
-          if (kDebugMode) print('Call Accepted: ${event.body}');
-          // TODO: Navigate to call screen
+          if (kDebugMode) {
+            // Navigation to call screen is needed here
+          }
+          _handleCallAccept(event);
           break;
         case Event.actionCallDecline:
-          if (kDebugMode) print('Call Declined: ${event.body}');
-          // TODO: Send decline signal via backend
+          if (kDebugMode) await _handleCallDecline(event);
           break;
         case Event.actionCallEnded:
-          if (kDebugMode) print('Call Ended: ${event.body}');
+          if (kDebugMode) await _handleCallDecline(event, isEnd: true);
           break;
         case Event.actionCallTimeout:
-          if (kDebugMode) print('Call Timeout: ${event.body}');
+          if (kDebugMode) await _handleCallDecline(event, isMissed: true);
           break;
+        case Event.actionCallCallback:
+          // Valid only for Android when app is killed/background
+          if (kDebugMode) break;
         default:
           break;
       }
     });
+  }
+
+  void _handleCallAccept(CallEvent event) {
+    final body = event.body as Map<dynamic, dynamic>?;
+    if (body != null) {
+      final extra = body['extra'] as Map<dynamic, dynamic>?;
+      if (extra != null) {
+        // Navigate to Call Screen via DeepLinkService logic
+        _navigateToScreen({
+          NotificationConstants.keyRoute: AppRoutes.call, // Use constant!
+          NotificationConstants.keyRoomId:
+              body['id'], // Corrected key to RoomId/ChatId
+          ...extra.cast<String, dynamic>(),
+        });
+      }
+    }
+  }
+
+  /// Handle Call Decline/End signal to backend
+  Future<void> _handleCallDecline(
+    CallEvent event, {
+    bool isEnd = false,
+    bool isMissed = false,
+  }) async {
+    try {
+      final body = event.body as Map<dynamic, dynamic>?;
+      if (body == null) return;
+
+      final extra = body['extra'] as Map<dynamic, dynamic>?;
+      if (extra == null) return;
+
+      // The callerId from the incoming call becomes the recipient of our 'Decline' signal
+      final String? callerId =
+          extra[NotificationConstants.keyUserId] as String?;
+      final String? callId = body['id'] as String?;
+      final String? myId =
+          extra[NotificationConstants.keyCalleeId] as String? ??
+          FirebaseAuth.instance.currentUser?.uid;
+
+      if (callerId != null && callId != null && myId != null) {
+        // Fetch caller to get their token
+        final UserModel? caller = await _databaseService.getUserById(callerId);
+
+        if (caller != null && caller.fcmToken != null) {
+          String action = 'DECLINE';
+          if (isEnd) action = 'END';
+          if (isMissed) action = 'MISSED';
+
+          await NotificationApiService.instance.sendCallSignal(
+            deviceToken: caller.fcmToken!,
+            callId: callId,
+            callerId: myId, // I am declining
+            callerName: 'User', // Could fetch my name
+            calleeId: callerId, // Sending back to caller
+            callType:
+                'AUDIO', // Unknown from event, defaulting (or store in extra)
+            action: action,
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {}
+    }
   }
 }
