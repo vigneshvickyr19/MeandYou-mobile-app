@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+
 import 'app.dart';
-import 'core/services/firebase_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/profile_setup_provider.dart';
-import 'package:me_and_you/features/notifications/presentation/controllers/notification_controller.dart';
+import 'features/notifications/presentation/controllers/notification_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase
-  await FirebaseService.instance.initialize();
-  
-  // Initialize Notifications
+
+  // Firebase init ONLY HERE
+  await Firebase.initializeApp();
+
+  // Notification init (safe after Firebase)
   await NotificationService.instance.initialize();
 
   runApp(
