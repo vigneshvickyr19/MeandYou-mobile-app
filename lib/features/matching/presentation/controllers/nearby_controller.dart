@@ -50,10 +50,19 @@ class NearbyController extends ChangeNotifier {
 
   Future<void> loadUsers(UserModel currentUser) async {
     _currentUser = currentUser;
+    
+    // Optimization: If we already have the essential data, start matching immediately
+    if (_currentUser?.latitude != null && _currentUser?.geohash != null) {
+      debugPrint('NearbyController: Essential data found, skipping profile fetch for speed');
+      _startMatchesSubscription();
+      _startLocationUpdates(_currentUser!.id);
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
-    // 1. Get full profile from profileSetup
+    // 1. Get full profile only if essential data is missing
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
 
     _startMatchesSubscription();

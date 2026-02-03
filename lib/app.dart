@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/constants/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/providers/auth_provider.dart';
+import 'features/auth/presentation/pages/auth_wrapper.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -32,6 +32,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _deepLinkService.setUiReady(false);
     _deepLinkService.dispose();
     super.dispose();
   }
@@ -63,7 +64,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: _navigatorKey,
-          initialRoute: AppRoutes.splash,
+          home: const AuthWrapper(),
           theme: AppTheme.darkTheme,
           routes: AppRouter.routes,
           onGenerateRoute: AppRouter.onGenerateRoute,

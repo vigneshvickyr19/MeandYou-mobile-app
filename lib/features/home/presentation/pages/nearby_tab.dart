@@ -57,9 +57,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
       child: Consumer<NearbyController>(
         builder: (context, controller, _) {
           if (controller.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
+            return _buildLoadingState();
           }
 
           return Stack(
@@ -276,6 +274,55 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Stack(
+      children: [
+        // Match the background for seamless transition
+        Positioned.fill(
+          child: CustomPaint(
+            painter: TopographicWavePainter(animationValue: 0.5),
+          ),
+        ),
+        Center(
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+        ),
+        // Skeleton avatars
+        ...List.generate(4, (index) {
+          final angles = [math.pi/4, 3*math.pi/4, 5*math.pi/4, 7*math.pi/4];
+          final radius = 120.0;
+          return Center(
+            child: Transform.translate(
+              offset: Offset(
+                math.cos(angles[index]) * radius,
+                math.sin(angles[index]) * radius,
+              ),
+              child: _buildSkeletonItem(),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildSkeletonItem() {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
       ),
     );
   }

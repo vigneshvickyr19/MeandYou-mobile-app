@@ -16,6 +16,33 @@ class DeepLinkService {
   StreamSubscription? _linkSubscription;
   GlobalKey<NavigatorState>? _navigatorKey;
   NotificationPayloadModel? _pendingPayload;
+  final bool _isHandlingInitialTarget = false;
+  bool _isAuthResolved = false;
+  bool _isUiReady = false;
+
+  bool get hasPendingNotification => _pendingPayload != null || _isHandlingInitialTarget;
+
+  /// Signal that auth has been resolved (either logged in or confirmed logged out)
+  void setAuthResolved(bool resolved) {
+    debugPrint('DeepLinkService: Auth resolution set to $resolved');
+    _isAuthResolved = resolved;
+    _checkAndTriggerNavigation();
+  }
+
+  /// Signal that the UI (Home Screen) is rendered and ready for navigation
+  void setUiReady(bool ready) {
+    debugPrint('DeepLinkService: UI Ready set to $ready');
+    _isUiReady = ready;
+    _checkAndTriggerNavigation();
+  }
+
+  void _checkAndTriggerNavigation() {
+    if (_isAuthResolved && _isUiReady && _pendingPayload != null && _navigatorKey?.currentContext != null) {
+      debugPrint('DeepLinkService: All conditions met, triggering pending navigation');
+      _navigateToPayload(_pendingPayload!);
+      _pendingPayload = null;
+    }
+  }
 
   // Initialize deep link service with navigator key
   void initialize(GlobalKey<NavigatorState> navigatorKey) {
@@ -24,12 +51,8 @@ class DeepLinkService {
     _handleIncomingLinks();
     _handleInitialLink();
 
-    // Process pending payload if anyone was waiting
-    if (_pendingPayload != null) {
-      debugPrint('DeepLinkService: Processing pending payload after initialization');
-      _navigateToPayload(_pendingPayload!);
-      _pendingPayload = null;
-    }
+    // Check for conditions
+    _checkAndTriggerNavigation();
   }
 
   // Handle initial link when app is opened via deep link
@@ -122,7 +145,14 @@ class DeepLinkService {
   void handleNotificationPayload(Map<String, dynamic> data) {
     debugPrint('DeepLinkService: Handling notification payload: $data');
     final payload = NotificationPayloadModel.fromMap(data);
-    _navigateToPayload(payload);
+    
+    // If navigator, auth, or UI is not yet ready, we store this as pending
+    if (_navigatorKey == null || _navigatorKey?.currentContext == null || !_isAuthResolved || !_isUiReady) {
+      _pendingPayload = payload;
+      debugPrint('DeepLinkService: Deferring notification (Navigator/Auth/UI not ready)');
+    } else {
+      _navigateToPayload(payload);
+    }
   }
 
   // Unified navigation using Payload Model

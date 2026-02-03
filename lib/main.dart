@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'firebase_options.dart';
 import 'core/services/notification_service.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/profile_setup_provider.dart';
@@ -11,16 +13,26 @@ import 'features/notifications/presentation/controllers/notification_controller.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase init ONLY HERE
-  await Firebase.initializeApp();
+  // 1. Firebase MUST be initialized with options for multiple platforms
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  // Notification init (safe after Firebase)
-  await NotificationService.instance.initialize();
+  // 2. Pre-warmed state check for "Zero-Gap" startup
+  // We check the cache immediately to avoid even a single frame of Splash if possible
+  final initialUser = FirebaseAuth.instance.currentUser;
+
+  // 3. Optimization: Start NotificationService in parallel (non-blocking)
+  NotificationService.instance.initialize();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        // lazy: false + initialUser makes the first build of AuthWrapper nearly instant
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(initialUser: initialUser), 
+          lazy: false,
+        ),
         ChangeNotifierProvider(create: (_) => ProfileSetupProvider()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
       ],

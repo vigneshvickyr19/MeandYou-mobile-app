@@ -12,6 +12,9 @@ class UserRepository {
   // Get current user stream
   Stream<User?> get authStateChanges => _authService.user;
 
+  // Get current user synchronously
+  User? get currentUser => _authService.currentUser;
+
   // Sign up with Email and create profile
   Future<UserModel> signUpWithEmail({
     required String email,
