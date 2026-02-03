@@ -1,78 +1,88 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/models/user_model.dart';
-import '../../../../core/services/database_service.dart';
-import '../../../home/data/models/like_model.dart';
-import '../../../home/data/services/home_service.dart';
 import '../../../../data/repositories/chat_repository.dart';
-import '../../../chat/data/models/message_model.dart';
+import '../../data/models/match_model.dart';
+import '../../data/services/links_service.dart';
+
+class MatchItem {
+  final MatchModel match;
+  final UserModel otherUser;
+
+  MatchItem({required this.match, required this.otherUser});
+}
 
 class LikeController extends ChangeNotifier {
-  final HomeService _homeService = HomeService();
-  final DatabaseService _databaseService = DatabaseService();
+  final LinksService _linksService = LinksService();
   final ChatRepository _chatRepository = ChatRepository();
 
-  List<Map<String, dynamic>> _likedItems = [];
+  List<MatchItem> _matches = [];
   bool _isLoading = false;
+  bool _isDisposed = false;
+  StreamSubscription? _matchesSubscription;
 
-  List<Map<String, dynamic>> get likedItems => _likedItems;
+  List<MatchItem> get matches => _matches;
   bool get isLoading => _isLoading;
 
-  void loadLikesReceived(String currentUserId) {
+  void init(String currentUserId) {
+    if (_isDisposed) return;
+    
     _isLoading = true;
     notifyListeners();
 
-    _homeService.getLikesReceived(currentUserId).listen((likes) async {
-      final List<Map<String, dynamic>> items = [];
-      
-      for (LikeModel like in likes) {
-        final user = await _databaseService.getUserById(like.fromUserId);
-        if (user != null) {
-          items.add({
-            'like': like,
-            'user': user,
-          });
+    _matchesSubscription?.cancel();
+    _matchesSubscription = _linksService.getMatches(currentUserId).listen((matchModels) async {
+      if (_isDisposed) return;
+
+      try {
+        final List<Future<MatchItem?>> futures = matchModels.map((match) async {
+          final otherUserId = match.getOtherUserId(currentUserId);
+          final otherUser = await _linksService.getUserById(otherUserId);
+          if (otherUser != null) {
+            return MatchItem(match: match, otherUser: otherUser);
+          }
+          return null;
+        }).toList();
+
+        final items = (await Future.wait(futures))
+            .whereType<MatchItem>()
+            .toList();
+        
+        if (!_isDisposed) {
+          _matches = items;
+          _isLoading = false;
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('Error processing matches: $e');
+        if (!_isDisposed) {
+          _isLoading = false;
+          notifyListeners();
         }
       }
-      
-      _likedItems = items;
-      _isLoading = false;
-      notifyListeners();
+    }, onError: (error) {
+      debugPrint('Error loading matches: $error');
+      if (!_isDisposed) {
+        _isLoading = false;
+        notifyListeners();
+      }
     });
   }
 
-  Future<String> sayHello(String currentUserId, UserModel user) async {
+  Future<String> getOrCreateChat(String currentUserId, String otherUserId) async {
     try {
-      // Get or create chat room
-      final chatRoomId = await _chatRepository.getOrCreateChatRoom(
-        currentUserId,
-        user.id,
-      );
-
-      // Send "Hello 👋" message
-      final message = MessageModel(
-        id: '',
-        chatRoomId: chatRoomId,
-        senderId: currentUserId,
-        receiverId: user.id,
-        content: 'Hello 👋',
-        timestamp: DateTime.now(),
-      );
-
-      await _chatRepository.sendMessage(message);
-
-      // Remove the like after interaction
-      await _homeService.removeLike(user.id, currentUserId);
-      
-      return chatRoomId;
+      return await _chatRepository.getOrCreateChatRoom(currentUserId, otherUserId);
     } catch (e) {
-      debugPrint('Error in LikeController.sayHello: $e');
+      debugPrint('Error getting chat room: $e');
       rethrow;
     }
   }
 
-  Future<void> viewProfile(String currentUserId, String fromUserId) async {
-    // Remove the like after interaction (as per requirement: "Remove that card from Likes list")
-    await _homeService.removeLike(fromUserId, currentUserId);
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _matchesSubscription?.cancel();
+    super.dispose();
   }
 
   String formatTimeAgo(DateTime time) {
