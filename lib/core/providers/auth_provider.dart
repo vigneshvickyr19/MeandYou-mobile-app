@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
@@ -11,6 +12,7 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoading = false;
   bool _isInitializing = true;
+  StreamSubscription<UserModel?>? _userDocumentSubscription;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -38,14 +40,15 @@ class AuthProvider extends ChangeNotifier {
     // 1. Listen for auth changes
     _userRepository.authStateChanges.listen((User? user) async {
       if (user == null) {
+        _userDocumentSubscription?.cancel();
         _currentUser = null;
         _isInitializing = false; // Ensure we stop initializing
         _setInitialized();
         return;
       }
 
-      // Skip if we already have this user from constructor to avoid flicker
-      if (_currentUser?.id == user.uid && !_isInitializing) return;
+      // Skip if we already have this user and subscription is active to avoid flicker
+      if (_currentUser?.id == user.uid && !_isInitializing && _userDocumentSubscription != null) return;
 
       // Create a minimal user model from Firebase Auth data
       // This allows immediate navigation to Home without waiting for Firestore
@@ -60,29 +63,23 @@ class AuthProvider extends ChangeNotifier {
       
       _setInitialized();
       
-      // Detailed profile fetch happens in background and doesn't block UI
-      fetchFullProfile();
+      // Start real-time streaming of user document
+      _startUserStreaming(user.uid);
     });
   }
 
-  /// Fetches the full user profile from Firestore without blocking startup
-  Future<void> fetchFullProfile() async {
-    final user = _userRepository.currentUser;
-    if (user == null) return;
-
-    try {
-      final fetchedUser = await _userRepository.getUserAccount(user.uid);
-      if (fetchedUser != null) {
-        _currentUser = fetchedUser;
+  void _startUserStreaming(String uid) {
+    _userDocumentSubscription?.cancel();
+    _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((userData) {
+      if (userData != null) {
+        _currentUser = userData;
         notifyListeners();
       } else {
-        // If no Firestore profile exists yet, it's a new user
+        // Handle case where document doesn't exist yet (new account)
         _currentUser = _currentUser?.copyWith(isProfileComplete: false);
         notifyListeners();
       }
-    } catch (e) {
-      debugPrint("Error fetching full profile: $e");
-    }
+    });
   }
 
   void _setInitialized() {
@@ -195,6 +192,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     _setLoading(true);
     try {
+      _userDocumentSubscription?.cancel();
       await _userRepository.signOut();
       _currentUser = null;
       // Reset auth resolution for next login/session
@@ -202,6 +200,12 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  @override
+  void dispose() {
+    _userDocumentSubscription?.cancel();
+    super.dispose();
   }
 
   // --- Update User Account (Status/Meta) ---

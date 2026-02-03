@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/models/user_model.dart';
+import '../../../../core/services/database_service.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../data/models/match_model.dart';
 import '../../data/services/links_service.dart';
@@ -15,11 +16,14 @@ class MatchItem {
 class LikeController extends ChangeNotifier {
   final LinksService _linksService = LinksService();
   final ChatRepository _chatRepository = ChatRepository();
+  final DatabaseService _databaseService = DatabaseService();
 
   List<MatchItem> _matches = [];
   bool _isLoading = false;
   bool _isDisposed = false;
   StreamSubscription? _matchesSubscription;
+  final Map<String, StreamSubscription> _userSubscriptions = {};
+  final Map<String, UserModel> _userCache = {};
 
   List<MatchItem> get matches => _matches;
   bool get isLoading => _isLoading;
@@ -31,35 +35,36 @@ class LikeController extends ChangeNotifier {
     notifyListeners();
 
     _matchesSubscription?.cancel();
-    _matchesSubscription = _linksService.getMatches(currentUserId).listen((matchModels) async {
+    _matchesSubscription = _linksService.getMatches(currentUserId).listen((matchModels) {
       if (_isDisposed) return;
 
-      try {
-        final List<Future<MatchItem?>> futures = matchModels.map((match) async {
-          final otherUserId = match.getOtherUserId(currentUserId);
-          final otherUser = await _linksService.getUserById(otherUserId);
-          if (otherUser != null) {
-            return MatchItem(match: match, otherUser: otherUser);
-          }
-          return null;
-        }).toList();
-
-        final items = (await Future.wait(futures))
-            .whereType<MatchItem>()
-            .toList();
+      // Handle real-time user updates for each match
+      for (var match in matchModels) {
+        final otherUserId = match.getOtherUserId(currentUserId);
         
-        if (!_isDisposed) {
-          _matches = items;
-          _isLoading = false;
-          notifyListeners();
-        }
-      } catch (e) {
-        debugPrint('Error processing matches: $e');
-        if (!_isDisposed) {
-          _isLoading = false;
-          notifyListeners();
+        if (otherUserId.isNotEmpty && !_userSubscriptions.containsKey(otherUserId)) {
+          // Listen to this user in real-time
+          final sub = _databaseService.streamUserById(otherUserId).listen((user) {
+            if (user != null) {
+              _userCache[otherUserId] = user;
+              _rebuildMatches(matchModels, currentUserId);
+            }
+          });
+          _userSubscriptions[otherUserId] = sub;
+          
+          // Initial fetch to fill cache immediately
+          _databaseService.getUserById(otherUserId).then((user) {
+            if (user != null && !_isDisposed) {
+              _userCache[otherUserId] = user;
+              _rebuildMatches(matchModels, currentUserId);
+            }
+          });
         }
       }
+      
+      _rebuildMatches(matchModels, currentUserId);
+      _isLoading = false;
+      notifyListeners();
     }, onError: (error) {
       debugPrint('Error loading matches: $error');
       if (!_isDisposed) {
@@ -67,6 +72,22 @@ class LikeController extends ChangeNotifier {
         notifyListeners();
       }
     });
+  }
+
+  void _rebuildMatches(List<MatchModel> matchModels, String currentUserId) {
+    if (_isDisposed) return;
+
+    final List<MatchItem> items = [];
+    for (var match in matchModels) {
+      final otherUserId = match.getOtherUserId(currentUserId);
+      final user = _userCache[otherUserId];
+      if (user != null) {
+        items.add(MatchItem(match: match, otherUser: user));
+      }
+    }
+    
+    _matches = items;
+    notifyListeners();
   }
 
   Future<String> getOrCreateChat(String currentUserId, String otherUserId) async {
@@ -82,6 +103,10 @@ class LikeController extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _matchesSubscription?.cancel();
+    for (var sub in _userSubscriptions.values) {
+      sub.cancel();
+    }
+    _userSubscriptions.clear();
     super.dispose();
   }
 

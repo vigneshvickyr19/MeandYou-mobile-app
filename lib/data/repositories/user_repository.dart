@@ -146,6 +146,11 @@ class UserRepository {
     return await _dbService.getUserAccount(uid);
   }
 
+  // Stream User Core Data
+  Stream<UserModel?> streamUserAccount(String uid) {
+    return _dbService.streamUserAccount(uid);
+  }
+
   // Sign Out
   Future<void> signOut() async {
     await _authService.signOut();

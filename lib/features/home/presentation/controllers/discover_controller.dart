@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'dart:math' as math;
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/database_service.dart';
@@ -24,105 +25,97 @@ class DiscoverController extends ChangeNotifier {
   final NotificationStorageService _notificationStorageService =
       NotificationStorageService();
 
-  // Use matching repository for better match data
   final GetNearbyMatchesUseCase _getNearbyMatchesUseCase =
       GetNearbyMatchesUseCase(MatchingRepositoryImpl());
-
-  // Use the same usecase as Nearby tab to fetch full profile with location
   final GetCurrentUserProfileUseCase _getCurrentUserProfileUseCase =
       GetCurrentUserProfileUseCase();
 
   List<NearbyMatchEntity> _matches = [];
-  final List<NearbyMatchEntity> _likedMatches = [];
   bool _isLoading = false;
   NearbyMatchEntity? _matchedUser;
   bool _showMatchDialog = false;
-
+  
+  StreamSubscription? _matchesSubscription;
+  String? _lastUserId;
+  String? _lastGeohash;
+  
   List<NearbyMatchEntity> get matches => _matches;
-  List<NearbyMatchEntity> get likedMatches => _likedMatches;
   bool get isLoading => _isLoading;
   NearbyMatchEntity? get matchedUser => _matchedUser;
   bool get showMatchDialog => _showMatchDialog;
 
-  /// Load users with match percentage and distance calculation
+  /// Load users and maintain a real-time subscription
+  /// This method is called whenever the AuthProvider emits a new user state
   Future<void> loadUsers(UserModel currentUser) async {
-    _isLoading = true;
-    notifyListeners();
+    // If essential search parameters (user ID or geohash/location) haven't changed, 
+    // and we already have a subscription, don't restart it to avoid UI flicker.
+    // However, if the geohash changed, we MUST restart to get people near the new location.
+    if (_lastUserId == currentUser.id && 
+        _lastGeohash == currentUser.geohash && 
+        _matchesSubscription != null) {
+      return;
+    }
+    
+    _lastUserId = currentUser.id;
+    _lastGeohash = currentUser.geohash;
+
+    // Only show loading indicator for the first load or major location shift
+    if (_matches.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
-      // Get full profile from profileSetup collection (includes location data)
-      // This is the same approach used by Nearby tab
+      // 1. Get full profile with location from profileSetup (required for complex matching)
       final fullProfile = await _getCurrentUserProfileUseCase(currentUser);
 
-      // Check if user has location data
-      if (fullProfile.latitude == null ||
-          fullProfile.longitude == null ||
-          fullProfile.geohash == null) {
-        if (kDebugMode) {
-          debugPrint(
-            '[DiscoverTab] User location data is missing. Latitude: ${fullProfile.latitude}, Longitude: ${fullProfile.longitude}, Geohash: ${fullProfile.geohash}',
-          );
-        }
+      if (fullProfile.latitude == null || fullProfile.longitude == null) {
         _isLoading = false;
         notifyListeners();
         return;
       }
 
-      if (kDebugMode) {
-        debugPrint(
-          '[DiscoverTab] Full profile loaded with location: lat=${fullProfile.latitude}, lng=${fullProfile.longitude}, geohash=${fullProfile.geohash}',
-        );
-      }
+      // 2. Cancel old subscription for clean state
+      await _matchesSubscription?.cancel();
 
-      // Start listening to matches with full profile
-      _getNearbyMatchesUseCase(
+      // 3. Start a new real-time stream for matches
+      // This stream emits whenever ANY nearby profile document changes in Firestore
+      _matchesSubscription = _getNearbyMatchesUseCase(
         currentUser: fullProfile,
-        radiusInKm: 10.0, // 10km radius (same as Nearby tab)
+        radiusInKm: 10.0,
       ).listen(
-        (matches) async {
+        (matches) {
           _matches = matches;
           _isLoading = false;
           notifyListeners();
-
-          if (kDebugMode) {
-            debugPrint('[DiscoverTab] Loaded ${matches.length} matches');
-          }
-
-          // Proactively fetch location for the first 3 matches
+          
+          // Pre-fetch locations for top matches to ensure text is ready when swiped
           for (int i = 0; i < math.min(3, _matches.length); i++) {
-            await fetchLocationForMatch(_matches[i]);
+            fetchLocationForMatch(_matches[i]);
           }
         },
         onError: (error) {
+          debugPrint('[DiscoverTab] Stream error: $error');
           _isLoading = false;
           notifyListeners();
-          if (kDebugMode) {
-            debugPrint('[DiscoverTab] Error loading matches: $error');
-          }
         },
       );
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      if (kDebugMode) {
-        debugPrint('[DiscoverTab] Error in loadUsers: $e');
-      }
+      debugPrint('[DiscoverTab] Error loading users: $e');
     }
   }
 
   Future<void> likeUser(String currentUserId, NearbyMatchEntity match) async {
     try {
+      // Immediate optimistic update (handled by removing from list if not mutual)
+      // but mutual matches will trigger the match dialog.
       final isMatch = await _homeService.likeUser(currentUserId, match.id);
-
-      // Remove match from list
-      _matches.removeWhere((m) => m.id == match.id);
-      _likedMatches.add(match);
 
       if (isMatch) {
         _matchedUser = match;
         _showMatchDialog = true;
-
-        // Send match notification
         await _sendProfileNotification(
           currentUserId: currentUserId,
           targetUserId: match.id,
@@ -130,7 +123,6 @@ class DiscoverController extends ChangeNotifier {
           interactionType: 'match',
         );
       } else {
-        // Send like notification
         await _sendProfileNotification(
           currentUserId: currentUserId,
           targetUserId: match.id,
@@ -138,24 +130,19 @@ class DiscoverController extends ChangeNotifier {
           interactionType: 'like',
         );
       }
-
       notifyListeners();
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error liking user: $e');
-      }
+      debugPrint('Error liking user: $e');
     }
   }
 
   Future<void> dislikeUser(NearbyMatchEntity match) async {
-    // Just remove from list (no Firebase storage for dislikes)
+    // Local optimistic update: immediately hide the card
     _matches.removeWhere((m) => m.id == match.id);
     notifyListeners();
   }
 
-  /// Fetch readable location name for a match if not already present
   Future<void> fetchLocationForMatch(NearbyMatchEntity match) async {
-    // If we already have area/landmark, no need to fetch again
     if ((match.area != null && match.area!.isNotEmpty) ||
         (match.landmark != null && match.landmark!.isNotEmpty)) {
       return;
@@ -177,9 +164,7 @@ class DiscoverController extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error fetching location for match in Discover: $e');
-      }
+      debugPrint('Error fetching location for match: $e');
     }
   }
 
@@ -190,37 +175,25 @@ class DiscoverController extends ChangeNotifier {
   }
 
   Future<String> sayHello(String currentUserId, NearbyMatchEntity match) async {
-    try {
-      // Get or create chat room
-      final chatRoomId = await _chatRepository.getOrCreateChatRoom(
-        currentUserId,
-        match.id,
-      );
-
-      // Send "Hello 👋" message
-      final message = MessageModel(
-        id: '',
-        chatRoomId: chatRoomId,
-        senderId: currentUserId,
-        receiverId: match.id,
-        content: 'Hello 👋',
-        timestamp: DateTime.now(),
-      );
-
-      await _chatRepository.sendMessage(message);
-
-      return chatRoomId;
-    } catch (e) {
-      rethrow;
-    }
+    final chatRoomId = await _chatRepository.getOrCreateChatRoom(currentUserId, match.id);
+    final message = MessageModel(
+      id: '',
+      chatRoomId: chatRoomId,
+      senderId: currentUserId,
+      receiverId: match.id,
+      content: 'Hello 👋',
+      timestamp: DateTime.now(),
+    );
+    await _chatRepository.sendMessage(message);
+    return chatRoomId;
   }
 
-  /// Get distance from match (already calculated in matching repository)
-  double getDistance(NearbyMatchEntity match) {
-    return match.distance;
+  @override
+  void dispose() {
+    _matchesSubscription?.cancel();
+    super.dispose();
   }
 
-  /// Send profile interaction notification using payload builder
   Future<void> _sendProfileNotification({
     required String currentUserId,
     required String targetUserId,
@@ -228,26 +201,13 @@ class DiscoverController extends ChangeNotifier {
     required String interactionType,
   }) async {
     try {
-      // Get target user details for FCM token
       final targetUser = await _databaseService.getUserById(targetUserId);
-      if (targetUser == null) {
-        return;
-      }
+      if (targetUser == null || targetUser.fcmToken == null || targetUser.fcmToken!.isEmpty) return;
 
-      // Check if target user has FCM token
-      if (targetUser.fcmToken == null || targetUser.fcmToken!.isEmpty) {
-        return;
-      }
-
-      // Get current user details
       final currentUser = await _databaseService.getUserById(currentUserId);
-      if (currentUser == null) {
-        return;
-      }
+      if (currentUser == null) return;
 
       final senderName = currentUser.fullName ?? 'Someone';
-
-      // Build notification payload using the builder
       final payload = NotificationPayloadBuilder.buildProfileNotification(
         profileId: currentUserId,
         senderId: currentUserId,
@@ -255,15 +215,8 @@ class DiscoverController extends ChangeNotifier {
         interactionType: interactionType,
       );
 
-      // Validate payload
-      if (!NotificationPayloadBuilder.validatePayload(payload)) {
-        return;
-      }
-
-      // Extract title and body
       final titleBody = NotificationPayloadBuilder.extractTitleAndBody(payload);
 
-      // Send notification
       await _notificationApiService.sendNotification(
         deviceToken: targetUser.fcmToken!,
         title: titleBody['title']!,
@@ -271,23 +224,18 @@ class DiscoverController extends ChangeNotifier {
         data: payload,
       );
 
-      // Store notification in Firestore for history
       await _notificationStorageService.sendNotification(
         receiverId: targetUserId,
         senderId: currentUserId,
         senderName: senderName,
         senderPhotoUrl: currentUser.profileImageUrl,
-        type: interactionType == 'match'
-            ? NotificationType.match
-            : NotificationType.like,
+        type: interactionType == 'match' ? NotificationType.match : NotificationType.like,
         title: titleBody['title']!,
         message: titleBody['body']!,
         metadata: payload,
       );
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error sending profile notification: $e');
-      }
+      debugPrint('Error sending notification: $e');
     }
   }
 }

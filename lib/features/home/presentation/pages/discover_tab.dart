@@ -5,7 +5,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/utils/location_formatter.dart';
 import '../controllers/discover_controller.dart';
+import '../widgets/discover_action_button.dart';
+import '../widgets/heart_flow_overlay.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 
 /// Discover Tab - iOS-style carousel with smooth animations
 ///
@@ -30,6 +34,7 @@ class _DiscoverTabState extends State<DiscoverTab>
   late PageController _pageController;
   int _currentPage = 0;
   double _currentPageValue = 0.0;
+  final StreamController<void> _heartTriggerController = StreamController<void>.broadcast();
 
   @override
   void initState() {
@@ -60,23 +65,27 @@ class _DiscoverTabState extends State<DiscoverTab>
   void dispose() {
     _pageController.dispose();
     _controller.dispose();
+    _heartTriggerController.close();
     super.dispose();
   }
 
-  /// Handle like action - API call only when heart icon is tapped
   void _handleLike(NearbyMatchEntity match) async {
     final authProvider = context.read<AuthProvider>();
     final currentUserId = authProvider.currentUser?.id ?? '';
 
+    // Trigger Heart Flow Animation
+    _heartTriggerController.add(null);
+    HapticFeedback.mediumImpact();
+
     // Call API to like user
     await _controller.likeUser(currentUserId, match);
 
-    // Animate to next card
+    // Animate to next card with premium curve
     if (_currentPage < _controller.matches.length - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeOutQuart,
       );
     }
   }
@@ -97,7 +106,12 @@ class _DiscoverTabState extends State<DiscoverTab>
             return _buildEmptyState();
           }
 
-          return _buildCarousel(matches);
+          return Stack(
+            children: [
+              _buildCarousel(matches),
+              HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
+            ],
+          );
         },
       ),
     );
@@ -147,19 +161,31 @@ class _DiscoverTabState extends State<DiscoverTab>
     return AnimatedBuilder(
       animation: _pageController,
       builder: (context, child) {
+        final double delta = index - _currentPageValue;
+        
+        // 3D Matrix Transformation for modern sliding effect
+        final matrix = Matrix4.identity()
+          ..setEntry(3, 2, 0.001) // perspective
+          ..rotateY(delta * 0.4) // subtle Y-axis rotation
+          ..scale(scale, scale, 1.0);
+
         return Center(
-          child: Transform.scale(
-            scale: scale,
-            child: Opacity(opacity: opacity, child: child),
+          child: Transform(
+            transform: matrix,
+            alignment: Alignment.center,
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0), 
+              child: child
+            ),
           ),
         );
       },
-      child: _buildProfileCard(match, index == _currentPage),
+      child: _buildProfileCard(match, index == _currentPage, index),
     );
   }
 
   /// Build profile card matching the reference image
-  Widget _buildProfileCard(NearbyMatchEntity match, bool isActive) {
+  Widget _buildProfileCard(NearbyMatchEntity match, bool isActive, int index) {
     final screenHeight = MediaQuery.of(context).size.height;
     final cardHeight = screenHeight * 0.68;
 
@@ -174,9 +200,13 @@ class _DiscoverTabState extends State<DiscoverTab>
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 40,
+                  spreadRadius: -10,
+                  offset: Offset(
+                    (index - _currentPageValue) * 20, 
+                    25
+                  ),
                 ),
               ],
             ),
@@ -185,8 +215,8 @@ class _DiscoverTabState extends State<DiscoverTab>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Profile image
-                  _buildProfileImage(match),
+                  // Profile image with parallax
+                  _buildParallaxImage(match, index),
 
                   // Gradient overlay for text readability
                   _buildGradientOverlay(),
@@ -208,17 +238,27 @@ class _DiscoverTabState extends State<DiscoverTab>
     );
   }
 
-  /// Build profile image
-  Widget _buildProfileImage(NearbyMatchEntity match) {
-    return match.profileImageUrl != null && match.profileImageUrl!.isNotEmpty
-        ? Image.network(
-            match.profileImageUrl!,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildPlaceholderImage();
-            },
-          )
-        : _buildPlaceholderImage();
+  /// Build profile image with parallax effect
+  Widget _buildParallaxImage(NearbyMatchEntity match, int index) {
+    return AnimatedBuilder(
+      animation: _pageController,
+      builder: (context, child) {
+        final double delta = index - _currentPageValue;
+        return Container(
+          transform: Matrix4.identity()..translate(delta * 40, 0.0, 0.0), // Parallax shift
+          child: match.profileImageUrl != null && match.profileImageUrl!.isNotEmpty
+              ? Image.network(
+                  match.profileImageUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  scale: 1.1, // Slightly larger to allow shifting without gaps
+                  errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+                )
+              : _buildPlaceholderImage(),
+        );
+      },
+    );
   }
 
   /// Build placeholder image
@@ -266,50 +306,67 @@ class _DiscoverTabState extends State<DiscoverTab>
       bottom: 120,
       left: 24,
       right: 24,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Name and age
-          Text(
-            '${match.fullName}, ${match.age}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-
-          // Location
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_on,
-                color: Colors.white.withValues(alpha: 0.7),
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  LocationFormatter.getLocationName(match),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.2,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 600),
+        child: Column(
+          key: ValueKey(match.id),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Name and age with fade-in
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 800),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
+                );
+              },
+              child: Text(
+                '${match.fullName}, ${match.age}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  height: 1.2,
                 ),
+                textAlign: TextAlign.center,
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 8),
+
+            // Location
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    LocationFormatter.getLocationName(match),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -359,7 +416,7 @@ class _DiscoverTabState extends State<DiscoverTab>
     );
   }
 
-  /// Build action buttons (like/dislike) - API call only on tap
+  /// Build action buttons (like/dislike) - Use specialized animated component
   Widget _buildActionButtons(NearbyMatchEntity match) {
     return Positioned(
       bottom: 32,
@@ -368,23 +425,23 @@ class _DiscoverTabState extends State<DiscoverTab>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Dislike button (Bottom Left)
-          _buildActionButton(
+          // Dislike button
+          DiscoverActionButton(
             icon: Icons.close_rounded,
             onTap: () {
               _controller.dislikeUser(match);
               if (_currentPage < _controller.matches.length - 1) {
                 _pageController.animateToPage(
                   _currentPage + 1,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutQuint,
                 );
               }
             },
           ),
 
-          // Like button (Bottom Right)
-          _buildActionButton(
+          // Like button
+          DiscoverActionButton(
             icon: Icons.favorite_rounded,
             isLike: true,
             onTap: () => _handleLike(match),
@@ -394,39 +451,6 @@ class _DiscoverTabState extends State<DiscoverTab>
     );
   }
 
-  /// Build individual action button
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    bool isLike = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(36),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              icon,
-              color: Colors.white.withValues(alpha: 0.9),
-              size: 28,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   /// Build loading state
   Widget _buildLoadingState() {

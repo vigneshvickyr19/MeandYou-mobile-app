@@ -26,9 +26,9 @@ class CustomBottomNav extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-             const Color(0xFF2A2A2A),
-             AppColors.navBg,
-             const Color(0xFF0A0A0A),
+            const Color(0xFF2A2A2A),
+            AppColors.navBg,
+            const Color(0xFF0A0A0A),
           ],
           stops: const [0.0, 0.4, 1.0],
         ),
@@ -63,7 +63,7 @@ class CustomBottomNav extends StatelessWidget {
           ),
           NavItem(
             index: 1,
-            label: 'Discover',
+            label: 'Likes',
             iconPath: AppImages.lovelyIcon,
             isActive: currentIndex == 1,
             onTap: onChanged,

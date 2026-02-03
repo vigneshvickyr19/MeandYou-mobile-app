@@ -6,7 +6,8 @@ import '../widgets/pill_tab_switcher.dart';
 import 'nearby_tab.dart';
 import 'discover_tab.dart';
 import '../../../../core/widgets/app_back_button.dart';
-import '../../../notifications/presentation/pages/notifications_page.dart';
+import '../../../notifications/presentation/controllers/notification_controller.dart';
+import '../widgets/home_notification_icon.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,6 +26,13 @@ class _HomePageState extends State<HomePage>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       setState(() {}); // Rebuild to update header
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.currentUser != null) {
+        context.read<NotificationController>().listenToNotifications(authProvider.currentUser!.id);
+      }
     });
   }
 
@@ -129,7 +137,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  /// Build header for Nearby tab (segmented tabs)
   Widget _buildNearbyHeader(BuildContext context) {
     return Row(
       key: const ValueKey('nearby_header'),
@@ -146,12 +153,11 @@ class _HomePageState extends State<HomePage>
         ),
 
         // Right: Notification Icon
-        _buildNotificationIcon(),
+        const HomeNotificationIcon(),
       ],
     );
   }
 
-  /// Build header for Discover tab (back arrow + location)
   Widget _buildDiscoverHeader(BuildContext context) {
     return Row(
       key: const ValueKey('discover_header'),
@@ -212,43 +218,8 @@ class _HomePageState extends State<HomePage>
         ),
 
         // Right: Notification Icon
-        _buildNotificationIcon(),
+        const HomeNotificationIcon(),
       ],
-    );
-  }
-
-  /// Build notification icon button
-  Widget _buildNotificationIcon() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const NotificationsPage()),
-          );
-        },
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppColors.white.withValues(alpha: 0.1),
-              width: 1,
-            ),
-          ),
-          child: Center(
-            child: Icon(
-              Icons.notifications_outlined,
-              color: AppColors.white.withValues(alpha: 0.9),
-              size: 24,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
