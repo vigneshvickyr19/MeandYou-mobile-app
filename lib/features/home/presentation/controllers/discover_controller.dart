@@ -15,6 +15,7 @@ import '../../../matching/domain/usecases/get_current_user_profile_usecase.dart'
 import '../../../matching/data/repositories/matching_repository_impl.dart';
 import '../../../../core/services/location_service.dart';
 import '../../data/services/home_service.dart';
+import '../../data/models/like_result.dart';
 
 class DiscoverController extends ChangeNotifier {
   final HomeService _homeService = HomeService();
@@ -38,6 +39,11 @@ class DiscoverController extends ChangeNotifier {
   StreamSubscription? _matchesSubscription;
   String? _lastUserId;
   String? _lastGeohash;
+  
+  // Cache to prevent duplicate operations in a single session
+  final Set<String> _likedUserIds = {};
+  // Track in-flight requests to avoid rapid-fire processing
+  final Set<String> _processingIds = {};
   
   List<NearbyMatchEntity> get matches => _matches;
   bool get isLoading => _isLoading;
@@ -108,12 +114,23 @@ class DiscoverController extends ChangeNotifier {
   }
 
   Future<void> likeUser(String currentUserId, NearbyMatchEntity match) async {
-    try {
-      // Immediate optimistic update (handled by removing from list if not mutual)
-      // but mutual matches will trigger the match dialog.
-      final isMatch = await _homeService.likeUser(currentUserId, match.id);
+    // 1. Prevent multiple in-flight requests for the same user
+    if (_processingIds.contains(match.id)) return;
+    
+    // 2. Optimization: If we already liked them in this session, don't ping Firebase
+    // But we still allow the UI to "finish" if needed (though card usually moves)
+    if (_likedUserIds.contains(match.id)) {
+      debugPrint('[Discover] User ${match.id} already liked in this session.');
+      return;
+    }
 
-      if (isMatch) {
+    _processingIds.add(match.id);
+
+    try {
+      final result = await _homeService.likeUser(currentUserId, match.id);
+
+      if (result == LikeResult.mutualMatch) {
+        _likedUserIds.add(match.id);
         _matchedUser = match;
         _showMatchDialog = true;
         await _sendProfileNotification(
@@ -122,17 +139,24 @@ class DiscoverController extends ChangeNotifier {
           targetUserName: match.fullName,
           interactionType: 'match',
         );
-      } else {
+      } else if (result == LikeResult.newLike) {
+        _likedUserIds.add(match.id);
         await _sendProfileNotification(
           currentUserId: currentUserId,
           targetUserId: match.id,
           targetUserName: match.fullName,
           interactionType: 'like',
         );
+      } else if (result == LikeResult.alreadyLiked) {
+        _likedUserIds.add(match.id);
+        debugPrint('[Discover] User was already liked in DB.');
       }
+      
       notifyListeners();
     } catch (e) {
       debugPrint('Error liking user: $e');
+    } finally {
+      _processingIds.remove(match.id);
     }
   }
 

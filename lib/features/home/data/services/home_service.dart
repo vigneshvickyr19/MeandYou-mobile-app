@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/like_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/constants/firebase_constants.dart';
+import '../models/like_result.dart';
 
 class HomeService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -42,18 +44,18 @@ class HomeService {
   }
 
   // Like a user
-  Future<bool> likeUser(String fromUserId, String toUserId) async {
+  Future<LikeResult> likeUser(String fromUserId, String toUserId) async {
     try {
       final likeId = '${fromUserId}_$toUserId';
       
-      // Check if already liked
+      // Check if already liked in DB
       final existingLike = await _firestore
           .collection(_likesCollection)
           .doc(likeId)
           .get();
       
       if (existingLike.exists) {
-        return false; // Already liked
+        return LikeResult.alreadyLiked;
       }
 
       // Save like
@@ -79,11 +81,13 @@ class HomeService {
       if (reverseLike.exists) {
         // It's a match!
         await _createMatch(fromUserId, toUserId);
-        return true; // Mutual match
+        return LikeResult.mutualMatch;
       }
 
-      return false; // Like saved, no match
-    } catch (e) {      rethrow;
+      return LikeResult.newLike;
+    } catch (e) {
+      debugPrint('Error in likeUser: $e');
+      return LikeResult.error;
     }
   }
 
