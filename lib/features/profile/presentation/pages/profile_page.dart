@@ -6,7 +6,6 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/profile_info_section.dart';
-import '../widgets/profile_stats_card.dart';
 import '../widgets/profile_gallery.dart';
 import '../widgets/profile_skeleton.dart';
 import '../../../home/presentation/controllers/home_navigation_controller.dart';
@@ -174,7 +173,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          profile.city ?? 'Location not set',
+                          [profile.city, profile.state, profile.country]
+                                  .where((e) => e != null && e.isNotEmpty)
+                                  .join(', ')
+                                  .isEmpty
+                              ? 'Location not set'
+                              : [profile.city, profile.state, profile.country]
+                                  .where((e) => e != null && e.isNotEmpty)
+                                  .join(', '),
                           style: TextStyle(
                             color: AppColors.white.withValues(alpha: 0.6),
                             fontSize: 14,
@@ -183,15 +189,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    // Stats
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        ProfileStatsCard(label: "Posts", value: "12"),
-                        ProfileStatsCard(label: "Followers", value: "1.2K"),
-                        ProfileStatsCard(label: "Following", value: "108"),
-                      ],
-                    ),
                     const SizedBox(height: 32),
                     // Photo Gallery
                     ProfileGallery(photos: profile.photos ?? []),
@@ -212,8 +209,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildInterestsSection(profile),
                     const SizedBox(height: 24),
                     // Verification
-                    _buildVerificationSection(profile),
-                    const SizedBox(height: 48),
+                    _buildVerificationSection(profile, controller),
+                    const SizedBox(height: 100), // Extra space for bottom nav
                   ],
                 ),
               ),
@@ -280,14 +277,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ProfileInfoItem(
           title: "Bio Section",
           value: profile.bio ?? "Short intro about myself...",
-        ),
-        ProfileInfoItem(
-          title: "Prompt 1",
-          value: "Lorem ipsum dolor sit amet consectetur morbi tristique placerat lectus maecenas.",
-        ),
-        ProfileInfoItem(
-          title: "Prompt 2",
-          value: "Lorem ipsum dolor sit amet consectetur morbi tristique placerat lectus maecenas.",
         ),
       ],
     );
@@ -427,22 +416,22 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildVerificationSection(ProfileModel profile) {
+  Widget _buildVerificationSection(ProfileModel profile, ProfileController controller) {
     return ProfileInfoSection(
       title: "Verification",
       items: [
         ProfileInfoItem(
           title: "Identity Verification",
-          value: "Verified",
+          value: "",
           isVerified: true,
         ),
         ProfileInfoItem(
           title: "Phone Number",
-          value: "97878 79890",
+          value: controller.user?.phoneNumber ?? "Not provided",
         ),
         ProfileInfoItem(
           title: "Email",
-          value: "user@email.com",
+          value: controller.user?.email ?? "Not provided",
         ),
         ProfileInfoItem(
           title: "Linkedin",
