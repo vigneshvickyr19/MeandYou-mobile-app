@@ -4,8 +4,10 @@ import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../home/data/models/like_result.dart';
 import '../controllers/like_controller.dart';
 import '../widgets/match_card.dart';
+import '../widgets/received_like_card.dart';
 
 class LikePage extends StatefulWidget {
   const LikePage({super.key});
@@ -14,20 +16,37 @@ class LikePage extends StatefulWidget {
   State<LikePage> createState() => _LikePageState();
 }
 
-class _LikePageState extends State<LikePage> {
+class _LikePageState extends State<LikePage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Rebuild for tab indicator or header updates
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshMatches();
+      _loadData();
     });
   }
 
-  void _refreshMatches() {
+  void _loadData({bool force = false}) {
+    if (!mounted) return;
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentUser != null) {
-      context.read<LikeController>().init(authProvider.currentUser!.id);
+      context.read<LikeController>().init(
+        authProvider.currentUser!.id,
+        force: force,
+      );
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -36,106 +55,21 @@ class _LikePageState extends State<LikePage> {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
-          // Background Gradient Glow
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.05),
-              ),
-            ),
-          ),
-          
+          // Dynamic Background Glows
+          _buildBackgroundGlows(),
+
           SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context),
-                
+                _buildHeader(),
+                _buildTabBar(),
                 Expanded(
-                  child: Consumer<LikeController>(
-                    builder: (context, controller, child) {
-                      if (controller.isLoading && controller.matches.isEmpty) {
-                        return _buildLoadingState();
-                      }
-
-                      if (controller.matches.isEmpty) {
-                        return _buildEmptyState(context);
-                      }
-
-                      return RefreshIndicator(
-                        onRefresh: () async => _refreshMatches(),
-                        backgroundColor: const Color(0xFF1E1E1E),
-                        color: AppColors.primary,
-                        child: GridView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          physics: const AlwaysScrollableScrollPhysics(
-                            parent: BouncingScrollPhysics(),
-                          ),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 18,
-                            crossAxisSpacing: 18,
-                            childAspectRatio: 0.72,
-                          ),
-                          itemCount: controller.matches.length,
-                          itemBuilder: (context, index) {
-                            final item = controller.matches[index];
-                            return MatchCard(
-                              index: index,
-                              user: item.otherUser,
-                              matchDate: controller.formatTimeAgo(item.match.createdAt),
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.otherProfile,
-                                  arguments: {'userId': item.otherUser.id},
-                                );
-                              },
-                              onChatTap: () async {
-                                final currentUserId = context.read<AuthProvider>().currentUser?.id;
-                                if (currentUserId != null) {
-                                  try {
-                                    final chatRoomId = await controller.getOrCreateChat(
-                                      currentUserId,
-                                      item.otherUser.id,
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        AppRoutes.chatDetail,
-                                        arguments: {
-                                          'chatRoomId': chatRoomId,
-                                          'otherUser': item.otherUser,
-                                        },
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          behavior: SnackBarBehavior.floating,
-                                          backgroundColor: AppColors.error,
-                                          content: Text('Error starting chat: $e'),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    },
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: const BouncingScrollPhysics(),
+                    children: [_buildLikesTab(), _buildMatchesTab()],
                   ),
                 ),
-                // Padding for bottom nav bar
-                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -144,197 +78,435 @@ class _LikePageState extends State<LikePage> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildBackgroundGlows() {
+    return Stack(
+      children: [
+        Positioned(
+          top: -100,
+          right: -50,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary.withValues(alpha: 0.08),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 150,
+          left: -80,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.secondary.withValues(alpha: 0.04),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    return Consumer<LikeController>(
+      builder: (context, controller, child) {
+        final totalCount =
+            controller.receivedLikes.length + controller.matches.length;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: const Text(
-                  'Messages & Links',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              FadeInDown(
-                delay: const Duration(milliseconds: 200),
-                duration: const Duration(milliseconds: 500),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.flash_on, color: AppColors.success, size: 10),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Mutual interest found',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    child: const Text(
+                      'Links',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -1,
                       ),
                     ),
-                  ],
+                  ),
+                  if (totalCount > 0)
+                    FadeInDown(
+                      delay: const Duration(milliseconds: 200),
+                      child: Text(
+                        'You have $totalCount new interactions',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              FadeInDown(
+                duration: const Duration(milliseconds: 600),
+                child: GestureDetector(
+                  onTap: () => _loadData(force: true),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.refresh_rounded,
+                      color: controller.isLoading
+                          ? AppColors.primary
+                          : Colors.white,
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          
-          // Match count chip
-          Consumer<LikeController>(
-            builder: (context, controller, child) {
-              if (controller.matches.isEmpty) return const SizedBox.shrink();
-              return ZoomIn(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                  ),
-                  child: Text(
-                    '${controller.matches.length}',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
+  Widget _buildTabBar() {
+    return Consumer<LikeController>(
+      builder: (context, controller, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: const Color(0xFF141414),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white.withValues(alpha: 0.3),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            tabs: [
+              _buildTabTitle('Liked You', controller.receivedLikes.length),
+              _buildTabTitle('Matches', controller.matches.length),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Tab _buildTabTitle(String title, int count) {
+    return Tab(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            color: AppColors.primary,
-            strokeWidth: 3,
-          ),
-          SizedBox(height: 20),
-          Text(
-            'Finding your special someone...',
-            style: TextStyle(color: Colors.white54, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FadeInDown(
-              child: Container(
-                width: 140,
-                height: 140,
-                padding: const EdgeInsets.all(30),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.03),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.white.withValues(alpha: 0.05),
-                    width: 2,
-                  ),
-                ),
-                child: Icon(
-                  Icons.favorite_rounded,
-                  size: 60,
-                  color: AppColors.white.withValues(alpha: 0.1),
-                ),
+          Text(title),
+          if (count > 0) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-            const SizedBox(height: 32),
-            FadeInUp(
-              duration: const Duration(milliseconds: 600),
-              child: const Text(
-                'No Matches Yet',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            FadeInUp(
-              delay: const Duration(milliseconds: 200),
-              duration: const Duration(milliseconds: 600),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLikesTab() {
+    return Consumer<LikeController>(
+      builder: (context, controller, child) {
+        if (controller.isLoading && controller.receivedLikes.isEmpty) {
+          return _buildLoadingState();
+        }
+
+        if (controller.receivedLikes.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.favorite_border_rounded,
+            title: 'No likes yet',
+            subtitle: 'Start exploring to get noticed by others!',
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async => _loadData(force: true),
+          backgroundColor: const Color(0xFF1E1E1E),
+          color: AppColors.primary,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            itemCount: controller.receivedLikes.length,
+            itemBuilder: (context, index) {
+              final item = controller.receivedLikes[index];
+              return ReceivedLikeCard(
+                index: index,
+                user: item.fromUser,
+                timeAgo: controller.formatTimeAgo(item.like.createdAt),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.otherProfile,
+                    arguments: {'userId': item.fromUser.id},
+                  );
+                },
+                onSayHelloTap: () => _handleLikeBack(item),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMatchesTab() {
+    return Consumer<LikeController>(
+      builder: (context, controller, child) {
+        if (controller.isLoading && controller.matches.isEmpty) {
+          return _buildLoadingState();
+        }
+
+        if (controller.matches.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.bolt_rounded,
+            title: 'No matches yet',
+            subtitle: 'Matches appear when you both like each other.',
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async => _loadData(force: true),
+          backgroundColor: const Color(0xFF1E1E1E),
+          color: AppColors.primary,
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 20,
+              crossAxisSpacing: 20,
+              childAspectRatio: 0.72,
+            ),
+            itemCount: controller.matches.length,
+            itemBuilder: (context, index) {
+              final item = controller.matches[index];
+              return MatchCard(
+                index: index,
+                user: item.otherUser,
+                matchDate: controller.formatTimeAgo(item.match.createdAt),
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.otherProfile,
+                    arguments: {'userId': item.otherUser.id},
+                  );
+                },
+                onChatTap: () async {
+                  final currentUserId = context
+                      .read<AuthProvider>()
+                      .currentUser
+                      ?.id;
+                  if (currentUserId != null) {
+                    try {
+                      final chatRoomId = await controller.getOrCreateChat(
+                        currentUserId,
+                        item.otherUser.id,
+                      );
+                      if (context.mounted) {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.chatDetail,
+                          arguments: {
+                            'chatRoomId': chatRoomId,
+                            'otherUser': item.otherUser,
+                          },
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        _showErrorSnackBar('Error starting chat: $e');
+                      }
+                    }
+                  }
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleLikeBack(LikeItem item) async {
+    final controller = context.read<LikeController>();
+    final currentUserId = context.read<AuthProvider>().currentUser?.id;
+    if (currentUserId == null) return;
+
+    try {
+      final result = await controller.likeBack(currentUserId, item.fromUser.id);
+      final chatRoomId = await controller.getOrCreateChat(
+        currentUserId,
+        item.fromUser.id,
+      );
+
+      if (mounted) {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.chatDetail,
+          arguments: {'chatRoomId': chatRoomId, 'otherUser': item.fromUser},
+        );
+
+        if (result == LikeResult.mutualMatch) {
+          _showSuccessSnackBar('It\'s a Match! Say Hello 👋');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar('Error starting chat: $e');
+      }
+    }
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: AppColors.primary,
+            strokeWidth: 3,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Syncing your connections...',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FadeInDown(
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.02),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              ),
+              child: Icon(
+                icon,
+                size: 64,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          FadeInUp(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FadeInUp(
+            delay: const Duration(milliseconds: 200),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 48),
               child: Text(
-                'Matches appear here when you both like each other. Go to "Discover" to find more people!',
+                subtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  fontSize: 15,
+                  color: Colors.white.withValues(alpha: 0.3),
+                  fontSize: 14,
                   height: 1.5,
                 ),
               ),
             ),
-            const SizedBox(height: 48),
-            FadeInUp(
-              delay: const Duration(milliseconds: 400),
-              duration: const Duration(milliseconds: 600),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to Home/Discover
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'Explore Discover',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.error,
+        content: Text(message),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.success,
+        content: Text(message),
       ),
     );
   }

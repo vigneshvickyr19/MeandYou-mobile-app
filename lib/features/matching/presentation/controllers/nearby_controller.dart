@@ -11,6 +11,7 @@ import '../../domain/usecases/get_current_user_profile_usecase.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/location_formatter.dart';
 import '../../data/repositories/matching_repository_impl.dart';
+import '../../../../features/home/data/services/home_service.dart';
 
 class NearbyController extends ChangeNotifier {
   final GetNearbyMatchesUseCase _getNearbyMatchesUseCase;
@@ -88,6 +89,8 @@ class NearbyController extends ChangeNotifier {
           radiusInKm: 10.0,
         ).listen(
           (matches) {
+            // Sort by distance (closest first)
+            matches.sort((a, b) => a.distance.compareTo(b.distance));
             _users = matches;
             _isLoading = false;
             notifyListeners();
@@ -155,13 +158,57 @@ class NearbyController extends ChangeNotifier {
       _startMatchesSubscription();
     }
 
-    // Sync to cloud
+  // Sync to cloud
     _updateLocationUseCase(
       userId: userId,
       latitude: position.latitude,
       longitude: position.longitude,
       geohash: geohash,
     );
+  }
+
+  Future<void> likeUser(String currentUserId, NearbyMatchEntity match) async {
+    final HomeService homeService = HomeService();
+    try {
+      await homeService.likeUser(currentUserId, match.id);
+      // Optional: remove from list after liking if that's the desired behavior
+      // _users.removeWhere((m) => m.id == match.id);
+      // notifyListeners();
+    } catch (e) {
+      debugPrint('Error liking user: $e');
+    }
+  }
+
+  Future<void> dislikeUser(NearbyMatchEntity match) async {
+    // Local optimistic update
+    _users.removeWhere((m) => m.id == match.id);
+    notifyListeners();
+  }
+
+  Future<void> fetchLocationForMatch(NearbyMatchEntity match) async {
+    if ((match.area != null && match.area!.isNotEmpty) ||
+        (match.landmark != null && match.landmark!.isNotEmpty)) {
+      return;
+    }
+
+    try {
+      final locationData = await LocationService.getReadableLocation(
+        match.latitude,
+        match.longitude,
+      );
+
+      final index = _users.indexWhere((m) => m.id == match.id);
+      if (index != -1) {
+        _users[index] = _users[index].copyWith(
+          landmark: locationData['landmark'],
+          area: locationData['area'],
+          fullAddress: locationData['fullAddress'],
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching location for match: $e');
+    }
   }
 
   void selectUser(NearbyMatchEntity match) async {

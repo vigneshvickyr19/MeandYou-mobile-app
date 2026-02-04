@@ -231,6 +231,9 @@ class _DiscoverTabState extends State<DiscoverTab>
           // Distance badge (top-right)
           if (isActive) _buildDistanceBadge(match),
 
+          // Match Percentage Badge (top-left)
+          if (isActive) _buildMatchPercentageBadge(match),
+
           // Action buttons (bottom) - only show for active card
           if (isActive) _buildActionButtons(match),
         ],
@@ -371,7 +374,6 @@ class _DiscoverTabState extends State<DiscoverTab>
     );
   }
 
-  /// Build distance badge (top-right)
   Widget _buildDistanceBadge(NearbyMatchEntity match) {
     return Positioned(
       top: 24,
@@ -405,6 +407,60 @@ class _DiscoverTabState extends State<DiscoverTab>
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMatchPercentageBadge(NearbyMatchEntity match) {
+    return Positioned(
+      top: 24,
+      left: 24,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.2),
+                  const Color(0xFFFF8C42).withValues(alpha: 0.2),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],
+                  ).createShader(bounds),
+                  child: const Icon(
+                    Icons.bolt_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${match.matchPercentage.toInt()}% Match',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0.3,
                   ),
                 ),

@@ -1,16 +1,15 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_routes.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/utils/location_formatter.dart';
 import '../../../matching/presentation/controllers/nearby_controller.dart';
-import '../../../chat/presentation/pages/chat_detail_page.dart';
-import '../../../../core/models/user_model.dart';
-import '../widgets/profile_preview_card.dart';
-import '../widgets/premium_animated_avatar.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
-import '../../../../data/repositories/chat_repository.dart';
-import 'dart:math' as math;
+import '../widgets/discover_action_button.dart';
+import '../widgets/heart_flow_overlay.dart';
 
 class NearbyTab extends StatefulWidget {
   const NearbyTab({super.key});
@@ -21,16 +20,25 @@ class NearbyTab extends StatefulWidget {
 
 class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
   late NearbyController _controller;
-  late AnimationController _animationController;
+  late PageController _pageController;
+  int _currentPage = 0;
+  double _currentPageValue = 0.0;
+  final StreamController<void> _heartTriggerController = StreamController<void>.broadcast();
 
   @override
   void initState() {
     super.initState();
     _controller = NearbyController();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
+    _pageController = PageController(
+      viewportFraction: 0.88,
+      initialPage: 0,
+    );
+
+    _pageController.addListener(() {
+      setState(() {
+        _currentPageValue = _pageController.page ?? 0.0;
+      });
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
@@ -42,16 +50,32 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _pageController.dispose();
     _controller.dispose();
+    _heartTriggerController.close();
     super.dispose();
+  }
+
+  void _handleLike(NearbyMatchEntity match) async {
+    final authProvider = context.read<AuthProvider>();
+    final currentUserId = authProvider.currentUser?.id ?? '';
+
+    _heartTriggerController.add(null);
+    HapticFeedback.mediumImpact();
+
+    await _controller.likeUser(currentUserId, match);
+
+    if (_currentPage < _controller.users.length - 1) {
+      _pageController.animateToPage(
+        _currentPage + 1,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeOutQuart,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final currentUser = authProvider.currentUser;
-
     return ChangeNotifierProvider.value(
       value: _controller,
       child: Consumer<NearbyController>(
@@ -60,151 +84,16 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
             return _buildLoadingState();
           }
 
+          final users = controller.users;
+
+          if (users.isEmpty) {
+            return _buildEmptyState();
+          }
+
           return Stack(
             children: [
-              // 1. Topographic Wave Background
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      painter: TopographicWavePainter(
-                        animationValue: _animationController.value,
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // 2. Connection Lines
-              Positioned.fill(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final center = Offset(
-                      constraints.maxWidth / 2,
-                      constraints.maxHeight / 2,
-                    );
-                    return CustomPaint(
-                      painter: ConnectionLinesPainter(
-                        center: center,
-                        users: controller.users,
-                        selectedMatch: controller.selectedMatch,
-                        animationValue: _animationController.value,
-                        constraints: constraints,
-                        controller: controller,
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // 3. Central Pulse (Current User)
-              Center(
-                child: GestureDetector(
-                  onTap: () => controller.closeSelectedUser(),
-                  child: _buildCentralUser(currentUser),
-                ),
-              ),
-
-              // 4. Radial Nearby Matches
-              Positioned.fill(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Stack(
-                      children: List.generate(controller.users.length, (index) {
-                        final match = controller.users[index];
-                        final pos = controller.getUserPosition(
-                          index,
-                          constraints.biggest,
-                        );
-
-                        return AnimatedPositioned(
-                          duration: const Duration(milliseconds: 800),
-                          curve: Curves.easeOutBack,
-                          left: pos.dx - 30,
-                          top: pos.dy - 64,
-                          child: _buildNearbyUserAvatar(match, index),
-                        );
-                      }),
-                    );
-                  },
-                ),
-              ),
-
-              // 5. Profile Preview Overlay (Target Card)
-              if (controller.selectedMatch != null)
-                Positioned(
-                  bottom: 110,
-                  left: 20,
-                  right: 20,
-                  child: ProfilePreviewCard(
-                    match: controller.selectedMatch!,
-                    onClose: () => controller.closeSelectedUser(),
-                    onViewProfile: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.otherProfile,
-                        arguments: {'userId': controller.selectedMatch!.id},
-                      );
-                    },
-                    onSayHello: () async {
-                      final authProvider = context.read<AuthProvider>();
-                      if (authProvider.currentUser == null) return;
-
-                      // Use ChatRepository to get or create a real room ID
-                      final chatRepository = ChatRepository();
-                      final chatRoomId = await chatRepository
-                          .getOrCreateChatRoom(
-                            authProvider.currentUser!.id,
-                            controller.selectedMatch!.id,
-                          );
-
-                      final otherUser = UserModel(
-                        id: controller.selectedMatch!.id,
-                        email: '',
-                        fullName: controller.selectedMatch!.fullName,
-                        profileImageUrl:
-                            controller.selectedMatch!.profileImageUrl,
-                      );
-
-                      if (context.mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatDetailPage(
-                              chatRoomId: chatRoomId,
-                              otherUser: otherUser,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ),
-
-              // 6. Empty State
-              if (!controller.isLoading && controller.users.isEmpty)
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.location_off_outlined,
-                        color: Colors.white.withValues(alpha: 0.2),
-                        size: 80,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Searching for people nearby...',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              _buildCarousel(users),
+              HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
             ],
           );
         },
@@ -212,66 +101,305 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildCentralUser(UserModel? user) {
-    return PremiumAnimatedAvatar(imageUrl: user?.profileImageUrl, size: 80);
+  Widget _buildCarousel(List<NearbyMatchEntity> users) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0A0A0A), Color(0xFF151515), Color(0xFF1A1A1A)],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: PageView.builder(
+          controller: _pageController,
+          itemCount: users.length,
+          onPageChanged: (index) {
+            setState(() {
+              _currentPage = index;
+            });
+            _controller.fetchLocationForMatch(users[index]);
+            if (index + 1 < users.length) {
+              _controller.fetchLocationForMatch(users[index + 1]);
+            }
+          },
+          itemBuilder: (context, index) {
+            return _buildCarouselCard(users[index], index);
+          },
+        ),
+      ),
+    );
   }
 
-  Widget _buildNearbyUserAvatar(NearbyMatchEntity match, int index) {
-    return GestureDetector(
-      onTap: () => _controller.selectUser(match),
-      child: Stack(
-        alignment: Alignment.topCenter,
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            bottom: -3,
-            child: Transform.rotate(
-              angle: math.pi / 4,
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2A2A2A),
-                  borderRadius: const BorderRadius.only(
-                    bottomRight: Radius.circular(4),
-                  ),
-                ),
-              ),
+  Widget _buildCarouselCard(NearbyMatchEntity match, int index) {
+    final difference = (index - _currentPageValue).abs();
+    final scale = 1.0 - (difference * 0.15).clamp(0.0, 0.15);
+    final opacity = 1.0 - (difference * 0.5).clamp(0.0, 0.5);
+
+    return AnimatedBuilder(
+      animation: _pageController,
+      builder: (context, child) {
+        final double delta = index - _currentPageValue;
+        final matrix = Matrix4.identity()
+          ..setEntry(3, 2, 0.001)
+          ..rotateY(delta * 0.4)
+          ..scale(scale, scale, 1.0);
+
+        return Center(
+          child: Transform(
+            transform: matrix,
+            alignment: Alignment.center,
+            child: Opacity(
+              opacity: opacity.clamp(0.0, 1.0),
+              child: child
             ),
           ),
+        );
+      },
+      child: _buildProfileCard(match, index == _currentPage, index),
+    );
+  }
+
+  Widget _buildProfileCard(NearbyMatchEntity match, bool isActive, int index) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final cardHeight = screenHeight * 0.68;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
+      child: Stack(
+        children: [
           Container(
-            width: 60,
-            height: 60,
+            height: cardHeight,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF2A2A2A),
-              border: Border.all(
-                color: _controller.selectedMatch?.id == match.id
-                    ? AppColors.primary
-                    : Colors.white.withValues(alpha: 0.12),
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 40,
+                  spreadRadius: -10,
+                  offset: Offset(
+                    (index - _currentPageValue) * 20,
+                    25
+                  ),
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(3),
-            child: ClipOval(
-              child: match.profileImageUrl != null
-                  ? Image.network(match.profileImageUrl!, fit: BoxFit.cover)
-                  : Container(
-                      color: Colors.grey[800],
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white24,
-                        size: 25,
-                      ),
-                    ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildParallaxImage(match, index),
+                  _buildGradientOverlay(),
+                  _buildProfileInfo(match),
+                ],
+              ),
             ),
+          ),
+          if (isActive) _buildDistanceBadge(match),
+          if (isActive) _buildActionButtons(match),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParallaxImage(NearbyMatchEntity match, int index) {
+    return AnimatedBuilder(
+      animation: _pageController,
+      builder: (context, child) {
+        final double delta = index - _currentPageValue;
+        return Container(
+          transform: Matrix4.identity()..translate(delta * 40, 0.0, 0.0),
+          child: match.profileImageUrl != null && match.profileImageUrl!.isNotEmpty
+              ? Image.network(
+                  match.profileImageUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  scale: 1.1,
+                  errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+                )
+              : _buildPlaceholderImage(),
+        );
+      },
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      color: const Color(0xFF2A2A2A),
+      child: Center(
+        child: Icon(
+          Icons.person,
+          size: 120,
+          color: Colors.white.withValues(alpha: 0.3),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientOverlay() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        height: 250,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withValues(alpha: 0.1),
+              Colors.black.withValues(alpha: 0.5),
+              Colors.black.withValues(alpha: 0.85),
+            ],
+            stops: const [0.0, 0.4, 0.7, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileInfo(NearbyMatchEntity match) {
+    return Positioned(
+      bottom: 120,
+      left: 24,
+      right: 24,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 600),
+        child: Column(
+          key: ValueKey(match.id),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 800),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: Text(
+                '${match.fullName}, ${match.age}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    LocationFormatter.getLocationName(match),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDistanceBadge(NearbyMatchEntity match) {
+    return Positioned(
+      top: 24,
+      right: 24,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.near_me_rounded,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  LocationFormatter.getDistanceString(match.distance),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(NearbyMatchEntity match) {
+    return Positioned(
+      bottom: 32,
+      left: 24,
+      right: 24,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          DiscoverActionButton(
+            icon: Icons.close_rounded,
+            onTap: () {
+              _controller.dislikeUser(match);
+              if (_currentPage < _controller.users.length - 1) {
+                _pageController.animateToPage(
+                  _currentPage + 1,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutQuint,
+                );
+              }
+            },
+          ),
+          DiscoverActionButton(
+            icon: Icons.favorite_rounded,
+            isLike: true,
+            onTap: () => _handleLike(match),
           ),
         ],
       ),
@@ -279,301 +407,124 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
   }
 
   Widget _buildLoadingState() {
-    return Stack(
-      children: [
-        // Match the background for seamless transition
-        Positioned.fill(
-          child: CustomPaint(
-            painter: TopographicWavePainter(animationValue: 0.5),
-          ),
-        ),
-        Center(
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.1),
-            ),
-          ),
-        ),
-        // Skeleton avatars
-        ...List.generate(4, (index) {
-          final angles = [math.pi/4, 3*math.pi/4, 5*math.pi/4, 7*math.pi/4];
-          final radius = 120.0;
-          return Center(
-            child: Transform.translate(
-              offset: Offset(
-                math.cos(angles[index]) * radius,
-                math.sin(angles[index]) * radius,
-              ),
-              child: _buildSkeletonItem(),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildSkeletonItem() {
     return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.05),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
-      ),
-    );
-  }
-}
-
-class TopographicWavePainter extends CustomPainter {
-  final double animationValue;
-
-  TopographicWavePainter({required this.animationValue});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 1. Full-screen black background
-    final bgPaint = Paint()..color = const Color(0xFF050505);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // 2. Animated Radial Gradients (Cinematic Lighting)
-    _drawRadialGlow(
-      canvas,
-      size,
-      0.4,
-      const Color(0xFFE85D04).withValues(alpha: 0.08),
-    );
-    _drawRadialGlow(
-      canvas,
-      size,
-      -0.3,
-      const Color(0xFF3B82F6).withValues(alpha: 0.05),
-    );
-
-    // 3. Gradient colors for the waves
-    final gradientColors = [
-      const Color(0xFF10B981), // Green
-      const Color(0xFFFBBF24), // Yellow
-      const Color(0xFFE85D04), // Orange
-      const Color(0xFF3B82F6), // Blue
-    ];
-
-    // 4. Draw flowing topographic contour lines
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..strokeCap = StrokeCap.round;
-
-    // Create multiple wave layers
-    const int numLayers = 50;
-    const double baseSpacing = 18.0;
-
-    for (int layer = 0; layer < numLayers; layer++) {
-      final progress = layer / numLayers;
-      final animOffset = animationValue * 100;
-
-      final colorIndex =
-          (layer / (numLayers / gradientColors.length)).floor() %
-          gradientColors.length;
-      final nextColorIndex = (colorIndex + 1) % gradientColors.length;
-      final colorProgress =
-          (layer % (numLayers / gradientColors.length)) /
-          (numLayers / gradientColors.length);
-
-      final color = Color.lerp(
-        gradientColors[colorIndex],
-        gradientColors[nextColorIndex],
-        colorProgress,
-      )!;
-
-      paint.color = color.withValues(alpha: 0.08 + (progress * 0.05));
-
-      final path = Path();
-      bool firstPoint = true;
-
-      for (double x = -50; x <= size.width + 50; x += 10) {
-        final y1 = math.sin((x + animOffset) * 0.006 + layer * 0.3) * 35;
-        final y2 = math.sin((x - animOffset * 0.4) * 0.01 + layer * 0.2) * 25;
-
-        final baseY = (layer * baseSpacing) + (size.height * 0.05);
-        final y = baseY + y1 + y2;
-
-        if (firstPoint) {
-          path.moveTo(x, y);
-          firstPoint = false;
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  void _drawRadialGlow(
-    Canvas canvas,
-    Size size,
-    double offsetMult,
-    Color color,
-  ) {
-    final center = Offset(
-      size.width / 2 +
-          math.sin(animationValue * 2 * math.pi * 0.5 + offsetMult) *
-              size.width *
-              0.2,
-      size.height / 2 +
-          math.cos(animationValue * 2 * math.pi * 0.3 + offsetMult) *
-              size.height *
-              0.2,
-    );
-
-    final paint = Paint()
-      ..shader = RadialGradient(
-        colors: [color, Colors.transparent],
-        radius: 1.5,
-      ).createShader(Rect.fromCircle(center: center, radius: size.width));
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(TopographicWavePainter oldDelegate) => true;
-}
-
-class ConnectionLinesPainter extends CustomPainter {
-  final Offset center;
-  final List<NearbyMatchEntity> users;
-  final NearbyMatchEntity? selectedMatch;
-  final double animationValue;
-  final BoxConstraints constraints;
-  final NearbyController controller;
-
-  ConnectionLinesPainter({
-    required this.center,
-    required this.users,
-    required this.selectedMatch,
-    required this.animationValue,
-    required this.constraints,
-    required this.controller,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (int i = 0; i < users.length; i++) {
-      final user = users[i];
-      final target = controller.getUserPosition(i, size);
-      final isSelected = selectedMatch?.id == user.id;
-
-      if (isSelected) {
-        _drawSelectedLine(
-          canvas,
-          center,
-          target,
-          controller.getDistanceString(user),
-        );
-      } else {
-        final paint = Paint()
-          ..color = Colors.white.withValues(alpha: 0.03)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.5;
-        canvas.drawLine(center, target, paint);
-      }
-    }
-  }
-
-  void _drawSelectedLine(Canvas canvas, Offset p1, Offset p2, String distance) {
-    final paint = Paint()
-      ..color = const Color(0xFFE85D04).withValues(alpha: 0.8)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    const double dashWidth = 6;
-    const double dashSpace = 4;
-    final double dx = p2.dx - p1.dx;
-    final double dy = p2.dy - p1.dy;
-    final double totalDistance = math.sqrt(dx * dx + dy * dy);
-    final double angle = math.atan2(dy, dx);
-
-    double currentDist = 20;
-    while (currentDist < totalDistance - 15) {
-      canvas.drawLine(
-        Offset(
-          p1.dx + math.cos(angle) * currentDist,
-          p1.dy + math.sin(angle) * currentDist,
-        ),
-        Offset(
-          p1.dx + math.cos(angle) * (currentDist + dashWidth),
-          p1.dy + math.sin(angle) * (currentDist + dashWidth),
-        ),
-        paint,
-      );
-      currentDist += dashWidth + dashSpace;
-    }
-
-    final midPoint = Offset((p1.dx + p2.dx) / 2, (p1.dy + p2.dy) / 2);
-    _drawDistanceLabel(canvas, midPoint, distance, angle);
-  }
-
-  void _drawDistanceLabel(
-    Canvas canvas,
-    Offset center,
-    String text,
-    double angle,
-  ) {
-    double textRotation = angle;
-    if (angle > math.pi / 2 || angle < -math.pi / 2) textRotation += math.pi;
-
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.3,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
         ),
       ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(textRotation);
-
-    // Orange pill-shaped badge
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: textPainter.width + 20,
-        height: textPainter.height + 10,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Finding people nearby...',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
-      const Radius.circular(16),
     );
-
-    // Orange gradient background
-    final gradient = LinearGradient(
-      colors: [const Color(0xFFE85D04), const Color(0xFFFF8C42)],
-    );
-
-    final rect = Rect.fromCenter(
-      center: Offset.zero,
-      width: textPainter.width + 20,
-      height: textPainter.height + 10,
-    );
-
-    final paint = Paint()..shader = gradient.createShader(rect);
-
-    canvas.drawRRect(rrect, paint);
-
-    // Draw text
-    textPainter.paint(
-      canvas,
-      Offset(-textPainter.width / 2, -textPainter.height / 2),
-    );
-    canvas.restore();
   }
 
-  @override
-  bool shouldRepaint(ConnectionLinesPainter oldDelegate) => true;
+  Widget _buildEmptyState() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                Icons.people_outline_rounded,
+                size: 72,
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'No one nearby',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Check back later for new people\nwithin 10km',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+            GestureDetector(
+              onTap: () {
+                final authProvider = context.read<AuthProvider>();
+                if (authProvider.currentUser != null) {
+                  _controller.loadUsers(authProvider.currentUser!);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'REFRESH',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

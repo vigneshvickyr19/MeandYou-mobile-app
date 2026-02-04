@@ -91,6 +91,8 @@ class DiscoverController extends ChangeNotifier {
         radiusInKm: 10.0,
       ).listen(
         (matches) {
+          // Sort matches by match percentage in descending order
+          matches.sort((a, b) => b.matchPercentage.compareTo(a.matchPercentage));
           _matches = matches;
           _isLoading = false;
           notifyListeners();
