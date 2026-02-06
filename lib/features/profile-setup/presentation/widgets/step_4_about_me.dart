@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../../core/widgets/app_text_area.dart';
 import '../../../../core/providers/profile_setup_provider.dart';
 
@@ -30,30 +31,49 @@ class _StepAboutMeState extends State<StepAboutMe> {
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<ProfileSetupProvider>(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Short Bio',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: const Text(
+              'About You',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Write a short description about yourself.',
-          style: TextStyle(color: Colors.white70, fontSize: 14),
-        ),
-        const SizedBox(height: 24),
-        AppTextArea(
-          label: 'About Me',
-          hint: 'Write something interesting...',
-          controller: bioCtrl,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(bio: v)),
-        ),
-      ],
+          const SizedBox(height: 8),
+          FadeInDown(
+            delay: const Duration(milliseconds: 100),
+            duration: const Duration(milliseconds: 600),
+            child: Text(
+              'Showcase your personality! A good bio can make a huge difference.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          FadeInUp(
+            delay: const Duration(milliseconds: 200),
+            child: AppTextArea(
+              label: 'Your Bio',
+              hint: 'I love traveling, coffee, and meaningful conversations...',
+              controller: bioCtrl,
+              onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(bio: v)),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 }

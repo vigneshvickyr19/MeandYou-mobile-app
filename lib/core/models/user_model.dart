@@ -25,6 +25,7 @@ class UserModel {
   final List<String> swipedUsers;
   final String? gender;
   final DateTime? lastLocationUpdate;
+  final String role;
 
   UserModel({
     required this.id,
@@ -50,6 +51,7 @@ class UserModel {
     this.swipedUsers = const [],
     this.gender,
     this.lastLocationUpdate,
+    this.role = 'user',
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -82,6 +84,7 @@ class UserModel {
       gender: data[FirebaseConstants.gender],
       lastLocationUpdate:
           (data[FirebaseConstants.lastLocationUpdate] as Timestamp?)?.toDate(),
+      role: data[FirebaseConstants.role] ?? 'user',
     );
   }
 
@@ -113,6 +116,7 @@ class UserModel {
       FirebaseConstants.lastLocationUpdate: lastLocationUpdate != null
           ? Timestamp.fromDate(lastLocationUpdate!)
           : null,
+      FirebaseConstants.role: role,
     };
   }
 
@@ -137,6 +141,7 @@ class UserModel {
     List<String>? swipedUsers,
     String? gender,
     DateTime? lastLocationUpdate,
+    String? role,
   }) {
     return UserModel(
       id: id,
@@ -162,6 +167,7 @@ class UserModel {
       swipedUsers: swipedUsers ?? this.swipedUsers,
       gender: gender ?? this.gender,
       lastLocationUpdate: lastLocationUpdate ?? this.lastLocationUpdate,
+      role: role ?? this.role,
     );
   }
 }

@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-
-class InterestItem {
-  final String label;
-  final IconData icon;
-
-  InterestItem({required this.label, required this.icon});
-}
+import '../constants/app_data_constants.dart';
 
 class AppInterestSelector extends StatefulWidget {
   final List<String> selectedInterests;
@@ -23,19 +17,6 @@ class AppInterestSelector extends StatefulWidget {
 }
 
 class _AppInterestSelectorState extends State<AppInterestSelector> {
-  final List<InterestItem> _items = [
-    InterestItem(label: 'Game', icon: Icons.sports_esports),
-    InterestItem(label: 'Singing', icon: Icons.mic),
-    InterestItem(label: 'Yoga', icon: Icons.self_improvement),
-    InterestItem(label: 'Anime', icon: Icons.favorite),
-    InterestItem(label: 'Movie', icon: Icons.movie),
-    InterestItem(label: 'Coffee', icon: Icons.coffee),
-    InterestItem(label: 'Music', icon: Icons.music_note),
-    InterestItem(label: 'Travel', icon: Icons.flight),
-    InterestItem(label: 'Fitness', icon: Icons.fitness_center),
-    InterestItem(label: 'Reading', icon: Icons.menu_book),
-  ];
-
   late Set<String> _selected;
 
   @override
@@ -57,46 +38,54 @@ class _AppInterestSelectorState extends State<AppInterestSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: _items.map((item) {
-        final isSelected = _selected.contains(item.label);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          alignment: WrapAlignment.start,
+          children: AppDataConstants.interests.map((item) {
+            final isSelected = _selected.contains(item.label);
 
-        return GestureDetector(
-          onTap: () => _toggle(item.label),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.darkOverlay : AppColors.black,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.greyDark,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  item.icon,
-                  size: 18,
-                  color: isSelected ? AppColors.primary : AppColors.greyLight,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  item.label,
-                  style: const TextStyle(
-                    color: AppColors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+            return InkWell(
+              onTap: () => _toggle(item.label),
+              borderRadius: BorderRadius.circular(30),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.1),
+                    width: 1.5,
                   ),
                 ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.icon,
+                      size: 16,
+                      color: isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.4),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        color: isSelected ? AppColors.primary : Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

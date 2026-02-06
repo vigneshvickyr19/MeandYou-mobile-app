@@ -4,10 +4,10 @@ import '../../../../core/models/user_model.dart';
 import '../../../../core/services/database_service.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../../home/data/models/like_model.dart';
-import '../../../home/data/models/like_result.dart';
 import '../../../home/data/services/home_service.dart';
 import '../../data/models/match_model.dart';
 import '../../data/services/links_service.dart';
+import '../../../../core/services/like_action_service.dart';
 
 class MatchItem {
   final MatchModel match;
@@ -147,9 +147,8 @@ class LikeController extends ChangeNotifier {
     _receivedLikes = likeItems;
   }
 
-  Future<LikeResult> likeBack(String currentUserId, String otherUserId) async {
-    final result = await _homeService.likeUser(currentUserId, otherUserId);
-    return result;
+  Future<void> likeBack(String currentUserId, String otherUserId) async {
+    await LikeActionService.instance.handleLike(otherUserId);
   }
 
   Future<String> getOrCreateChat(String currentUserId, String otherUserId) async {

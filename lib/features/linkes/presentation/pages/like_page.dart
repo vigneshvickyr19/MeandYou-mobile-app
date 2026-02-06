@@ -8,6 +8,9 @@ import '../../../home/data/models/like_result.dart';
 import '../controllers/like_controller.dart';
 import '../widgets/match_card.dart';
 import '../widgets/received_like_card.dart';
+import '../../../../core/services/like_action_service.dart';
+import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import 'package:flutter/services.dart';
 
 class LikePage extends StatefulWidget {
   const LikePage({super.key});
@@ -389,7 +392,8 @@ class _LikePageState extends State<LikePage>
     if (currentUserId == null) return;
 
     try {
-      final result = await controller.likeBack(currentUserId, item.fromUser.id);
+      await controller.likeBack(currentUserId, item.fromUser.id);
+      
       final chatRoomId = await controller.getOrCreateChat(
         currentUserId,
         item.fromUser.id,
@@ -401,11 +405,12 @@ class _LikePageState extends State<LikePage>
           AppRoutes.chatDetail,
           arguments: {'chatRoomId': chatRoomId, 'otherUser': item.fromUser},
         );
-
-        if (result == LikeResult.mutualMatch) {
-          _showSuccessSnackBar('It\'s a Match! Say Hello 👋');
-        }
+        _showSuccessSnackBar('It\'s a Match! Say Hello 👋');
       }
+    } on LikeLimitReachedException catch (_) {
+      if (!mounted) return;
+      HapticFeedback.vibrate();
+      SubscriptionBottomSheet.show(context);
     } catch (e) {
       if (mounted) {
         _showErrorSnackBar('Error starting chat: $e');

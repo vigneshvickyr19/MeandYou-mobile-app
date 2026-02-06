@@ -28,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
         isProfileComplete: true, 
         isVerified: initialUser.emailVerified || (initialUser.phoneNumber != null),
         createdAt: DateTime.now(),
+        role: 'user', // Basic user by default
       );
       _isInitializing = false;
       // Signal immediately for pre-warmed session
@@ -59,6 +60,7 @@ class AuthProvider extends ChangeNotifier {
         isProfileComplete: true, // Optimistically true, corrected after fetch
         isVerified: user.emailVerified || (user.phoneNumber != null),
         createdAt: DateTime.now(),
+        role: 'user', // Basic user by default
       );
       
       _setInitialized();

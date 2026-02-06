@@ -10,6 +10,8 @@ import '../widgets/heart_flow_overlay.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import '../../../../core/services/like_action_service.dart';
+import '../../../../core/widgets/subscription_bottom_sheet.dart';
 
 /// Discover Tab - iOS-style carousel with smooth animations
 ///
@@ -70,22 +72,31 @@ class _DiscoverTabState extends State<DiscoverTab>
   }
 
   void _handleLike(NearbyMatchEntity match) async {
-    final authProvider = context.read<AuthProvider>();
-    final currentUserId = authProvider.currentUser?.id ?? '';
+    try {
+      // Trigger Heart Flow Animation
+      _heartTriggerController.add(null);
+      HapticFeedback.mediumImpact();
 
-    // Trigger Heart Flow Animation
-    _heartTriggerController.add(null);
-    HapticFeedback.mediumImpact();
+      // Call Unified Like Service with Limit Check
+      await LikeActionService.instance.handleLike(match.id);
 
-    // Call API to like user
-    await _controller.likeUser(currentUserId, match);
-
-    // Animate to next card with premium curve
-    if (_currentPage < _controller.matches.length - 1) {
-      _pageController.animateToPage(
-        _currentPage + 1,
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeOutQuart,
+      // Animate to next card with premium curve
+      if (_currentPage < _controller.matches.length - 1) {
+        _pageController.animateToPage(
+          _currentPage + 1,
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutQuart,
+        );
+      }
+    } on LikeLimitReachedException catch (_) {
+      if (!mounted) return;
+      HapticFeedback.vibrate();
+      SubscriptionBottomSheet.show(context);
+    } catch (e) {
+      debugPrint("Error liking user: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error liking profile. Please try again.')),
       );
     }
   }

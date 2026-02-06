@@ -1,4 +1,5 @@
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -95,5 +96,49 @@ class LocationService {
       final googleUri = Uri.parse(googleUrl);
       await launchUrl(googleUri, mode: LaunchMode.platformDefault);
     }
+  }
+
+  /// Single reusable function to fetch and format the location address/name.
+  /// If [latitude] or [longitude] are null, it fetches the current position.
+  /// Returns a formatted string like "Near Central Park, Manhattan".
+  static Future<String> fetchAndFormatLocation({double? latitude, double? longitude}) async {
+    double lat = latitude ?? 0;
+    double lng = longitude ?? 0;
+
+    if (latitude == null || longitude == null) {
+      try {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) return "Location disabled";
+
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied) return "Permission denied";
+        }
+        
+        if (permission == LocationPermission.deniedForever) return "Permission denied";
+
+        Position position = await Geolocator.getCurrentPosition();
+        lat = position.latitude;
+        lng = position.longitude;
+      } catch (e) {
+        debugPrint("Error fetching current position: $e");
+        return "Unknown Location";
+      }
+    }
+
+    final locationMap = await getReadableLocation(lat, lng);
+    final landmark = locationMap['landmark'] ?? "";
+    final area = locationMap['area'] ?? "";
+
+    if (landmark.isNotEmpty && area.isNotEmpty) {
+      return "$landmark, $area";
+    } else if (area.isNotEmpty) {
+      return area;
+    } else if (landmark.isNotEmpty) {
+      return landmark;
+    }
+    
+    return "Nearby";
   }
 }

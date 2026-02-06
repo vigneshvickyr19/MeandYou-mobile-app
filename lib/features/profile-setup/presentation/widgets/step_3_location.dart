@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../../core/widgets/app_input.dart';
 import '../../../../core/providers/profile_setup_provider.dart';
 
@@ -45,60 +46,98 @@ class _StepLocationState extends State<StepLocation> {
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<ProfileSetupProvider>(context);
 
-    return ListView(
-      children: [
-        const Text(
-          'Location Details',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: const Text(
+              'Your Location',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        AppInput(
-          label: 'Address Line 1',
-          hint: 'Enter address 1',
-          controller: address1Ctrl,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(addressLine1: v)),
-        ),
-        const SizedBox(height: 16),
-        AppInput(
-          label: 'Address Line 2 (Optional)',
-          hint: 'Enter address 2',
-          controller: address2Ctrl,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(addressLine2: v)),
-        ),
-        const SizedBox(height: 16),
-        AppInput(
-          label: 'City',
-          hint: 'Enter city',
-          controller: cityCtrl,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(city: v)),
-        ),
-        const SizedBox(height: 16),
-        AppInput(
-          label: 'State',
-          hint: 'Enter state',
-          controller: stateCtrl,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(state: v)),
-        ),
-        const SizedBox(height: 16),
-        AppInput(
-          label: 'Country',
-          hint: 'Enter country',
-          controller: countryCtrl,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(country: v)),
-        ),
-        const SizedBox(height: 16),
-        AppInput(
-          label: 'Pin Code',
-          hint: 'Enter pin code',
-          controller: pinCodeCtrl,
-          keyboardType: TextInputType.number,
-          onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(pinCode: v)),
-        ),
-      ],
+          const SizedBox(height: 8),
+          FadeInDown(
+            delay: const Duration(milliseconds: 100),
+            duration: const Duration(milliseconds: 600),
+            child: Text(
+              'Where in the world are you located?',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          FadeInUp(
+            delay: const Duration(milliseconds: 200),
+            child: AppInput(
+              label: 'Address Line 1',
+              hint: 'Street, Building, Flat...',
+              controller: address1Ctrl,
+              onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(addressLine1: v)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          FadeInUp(
+            delay: const Duration(milliseconds: 300),
+            child: AppInput(
+              label: 'City',
+              hint: 'e.g. New York',
+              controller: cityCtrl,
+              onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(city: v)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          FadeInUp(
+            delay: const Duration(milliseconds: 400),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppInput(
+                    label: 'State',
+                    hint: 'NY',
+                    controller: stateCtrl,
+                    onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(state: v)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: AppInput(
+                    label: 'Pin Code',
+                    hint: '10001',
+                    controller: pinCodeCtrl,
+                    keyboardType: TextInputType.number,
+                    onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(pinCode: v)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          FadeInUp(
+            delay: const Duration(milliseconds: 500),
+            child: AppInput(
+              label: 'Country',
+              hint: 'e.g. United States',
+              controller: countryCtrl,
+              onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(country: v)),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 }

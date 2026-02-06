@@ -10,6 +10,8 @@ import '../../../matching/presentation/controllers/nearby_controller.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
 import '../widgets/discover_action_button.dart';
 import '../widgets/heart_flow_overlay.dart';
+import '../../../../core/services/like_action_service.dart';
+import '../../../../core/widgets/subscription_bottom_sheet.dart';
 
 class NearbyTab extends StatefulWidget {
   const NearbyTab({super.key});
@@ -57,19 +59,29 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
   }
 
   void _handleLike(NearbyMatchEntity match) async {
-    final authProvider = context.read<AuthProvider>();
-    final currentUserId = authProvider.currentUser?.id ?? '';
+    try {
+      _heartTriggerController.add(null);
+      HapticFeedback.mediumImpact();
 
-    _heartTriggerController.add(null);
-    HapticFeedback.mediumImpact();
+      // Call Unified Like Service with Limit Check
+      await LikeActionService.instance.handleLike(match.id);
 
-    await _controller.likeUser(currentUserId, match);
-
-    if (_currentPage < _controller.users.length - 1) {
-      _pageController.animateToPage(
-        _currentPage + 1,
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeOutQuart,
+      if (_currentPage < _controller.users.length - 1) {
+        _pageController.animateToPage(
+          _currentPage + 1,
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutQuart,
+        );
+      }
+    } on LikeLimitReachedException catch (_) {
+      if (!mounted) return;
+      HapticFeedback.vibrate();
+      SubscriptionBottomSheet.show(context);
+    } catch (e) {
+      debugPrint("Error liking user: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error liking profile. Please try again.')),
       );
     }
   }

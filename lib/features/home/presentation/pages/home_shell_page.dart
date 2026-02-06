@@ -9,6 +9,7 @@ import '../../../../core/widgets/custom_bottom_nav/custom_bottom_nav.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../linkes/presentation/pages/like_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
+import '../../../admin/presentation/pages/admin_panel_page.dart';
 import '../controllers/home_navigation_controller.dart';
 import 'home_page.dart';
 
@@ -101,11 +102,12 @@ class _HomeShellPageState extends State<HomeShellPage> {
                     height: double.infinity,
                     child: IndexedStack(
                       index: controller.index,
-                      children: const [
-                        HomePage(),
-                        LikePage(),
-                        ChatPage(),
-                        ProfilePage(isTab: true),
+                      children: [
+                        const HomePage(),
+                        const LikePage(),
+                        const ChatPage(),
+                        const ProfilePage(isTab: true),
+                        const AdminPanelPage(),
                       ],
                     ),
                   ),
@@ -127,6 +129,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
   }
 
   Widget _buildFloatingBottomNav(HomeNavigationController controller) {
+    final showAdmin = context.watch<AuthProvider>().currentUser?.role == 'admin';
     return Container(
       // Add internal SafeArea padding for home indicator
       padding: EdgeInsets.only(
@@ -149,6 +152,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
       child: CustomBottomNav(
         currentIndex: controller.index,
         onChanged: controller.changeTab,
+        showAdmin: showAdmin,
       ),
     );
   }
