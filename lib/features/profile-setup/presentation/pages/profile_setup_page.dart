@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/profile_setup_provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -35,9 +36,10 @@ class ProfileSetupPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<ProfileSetupProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    
+
     // Initialize once if needed
-    if (profileProvider.draftProfile == null && authProvider.currentUser != null) {
+    if (profileProvider.draftProfile == null &&
+        authProvider.currentUser != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         profileProvider.initialize(authProvider.currentUser!.id);
       });
@@ -58,46 +60,105 @@ class ProfileSetupPage extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.black,
-        body: isAppLoading 
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    /// TOP BAR
-                    Row(
-                      children: [
-                        AppBackButton(
-                          onTap: () => controller.handleBack(context),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(child: AppProgressBar(progress: profileProvider.progress)),
-                      ],
-                    ),
-  
-                    const SizedBox(height: 28),
-  
-                    /// STEP CONTENT
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: _steps[profileProvider.currentStep],
+        body: isAppLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              )
+            : Stack(
+                children: [
+                  // Background Glow
+                  Positioned(
+                    top: -50,
+                    right: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary.withValues(alpha: 0.05),
                       ),
                     ),
-  
-                    const SizedBox(height: 20),
-  
-                    /// CONTINUE BUTTON
-                    AppButton(
-                      text: profileProvider.currentStep == 7 ? 'Finish' : 'Continue',
-                      isLoading: profileProvider.isSaving,
-                      onPressed: () => controller.handleContinue(context),
+                  ),
+
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      child: Column(
+                        children: [
+                          /// TOP BAR
+                          Row(
+                            children: [
+                              AppBackButton(
+                                onTap: () => controller.handleBack(context),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: AppProgressBar(
+                                  progress: profileProvider.progress,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                '${(profileProvider.progress * 100).toInt()}%',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          /// STEP CONTENT
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 400),
+                              switchInCurve: Curves.easeOut,
+                              switchOutCurve: Curves.easeIn,
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0.05, 0),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: KeyedSubtree(
+                                key: ValueKey(profileProvider.currentStep),
+                                child: _steps[profileProvider.currentStep],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// CONTINUE BUTTON
+                          FadeInUp(
+                            duration: const Duration(milliseconds: 600),
+                            child: AppButton(
+                              text: profileProvider.currentStep == 7
+                                  ? 'Finish Registration'
+                                  : 'Continue',
+                              isLoading: profileProvider.isSaving,
+                              onPressed: () =>
+                                  controller.handleContinue(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
       ),
     );
   }

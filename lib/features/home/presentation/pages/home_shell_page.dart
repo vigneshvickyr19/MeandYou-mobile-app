@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_routes.dart';
+import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/widgets/custom_bottom_nav/custom_bottom_nav.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../linkes/presentation/pages/like_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
+import '../../../admin/presentation/pages/admin_panel_page.dart';
 import '../controllers/home_navigation_controller.dart';
 import 'home_page.dart';
 
@@ -33,10 +38,41 @@ class _HomeShellPageState extends State<HomeShellPage> {
         _controller.changeTab(widget.initialTabIndex!);
       });
     }
+
+    // --- Post-Startup Optimization Logic ---
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      
+      // 1. Signal that UI is ready for deferred notifications/deep links
+      DeepLinkService().setUiReady(true);
+      
+      // 2. Heavy work: Sync FCM token (Only after UI is rendered)
+      NotificationService.instance.syncTokenNow();
+      
+      // 3. Listen for profile completion status
+      // If profile is incomplete, redirect to Setup
+      _checkProfileStatus(authProvider);
+      authProvider.addListener(_authListener);
+    });
+  }
+
+  void _authListener() {
+    _checkProfileStatus(context.read<AuthProvider>());
+  }
+
+  void _checkProfileStatus(AuthProvider auth) {
+    if (auth.currentUser != null && !auth.currentUser!.isProfileComplete) {
+      // Redirect to profile setup if incomplete
+      Navigator.of(context).pushReplacementNamed(AppRoutes.profileSetupPage);
+    }
   }
 
   @override
   void dispose() {
+    // Clean up
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.removeListener(_authListener);
+    
     _controller.dispose();
     super.dispose();
   }
@@ -66,11 +102,12 @@ class _HomeShellPageState extends State<HomeShellPage> {
                     height: double.infinity,
                     child: IndexedStack(
                       index: controller.index,
-                      children: const [
-                        HomePage(),
-                        LikePage(),
-                        ChatPage(),
-                        ProfilePage(isTab: true),
+                      children: [
+                        const HomePage(),
+                        const LikePage(),
+                        const ChatPage(),
+                        const ProfilePage(isTab: true),
+                        const AdminPanelPage(),
                       ],
                     ),
                   ),
@@ -92,6 +129,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
   }
 
   Widget _buildFloatingBottomNav(HomeNavigationController controller) {
+    final showAdmin = context.watch<AuthProvider>().currentUser?.role == 'admin';
     return Container(
       // Add internal SafeArea padding for home indicator
       padding: EdgeInsets.only(
@@ -114,6 +152,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
       child: CustomBottomNav(
         currentIndex: controller.index,
         onChanged: controller.changeTab,
+        showAdmin: showAdmin,
       ),
     );
   }

@@ -24,12 +24,22 @@ class AppProgressBar extends StatelessWidget {
               return Stack(
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutCubic,
                     height: height,
                     width: width,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
+                      ),
                       borderRadius: BorderRadius.circular(height / 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
 

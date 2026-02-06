@@ -28,17 +28,17 @@ class AppBackButton extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.08),
+            color: AppColors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: AppColors.white.withOpacity(0.1),
+              color: AppColors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
           child: Center(
             child: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
               size: 20,
             ),
           ),

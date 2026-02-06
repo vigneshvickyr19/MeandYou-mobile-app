@@ -12,6 +12,9 @@ class UserRepository {
   // Get current user stream
   Stream<User?> get authStateChanges => _authService.user;
 
+  // Get current user synchronously
+  User? get currentUser => _authService.currentUser;
+
   // Sign up with Email and create profile
   Future<UserModel> signUpWithEmail({
     required String email,
@@ -141,6 +144,11 @@ class UserRepository {
   // Get User Core Data
   Future<UserModel?> getUserAccount(String uid) async {
     return await _dbService.getUserAccount(uid);
+  }
+
+  // Stream User Core Data
+  Stream<UserModel?> streamUserAccount(String uid) {
+    return _dbService.streamUserAccount(uid);
   }
 
   // Sign Out

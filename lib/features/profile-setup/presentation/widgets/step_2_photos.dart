@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:animate_do/animate_do.dart';
 import 'dart:io';
 import '../../../../core/widgets/app_upload_box.dart';
 import '../../../../core/providers/profile_setup_provider.dart';
@@ -50,44 +51,63 @@ class _StepPhotosState extends State<StepPhotos> {
     final profileProvider = Provider.of<ProfileSetupProvider>(context);
     List<String> photos = profileProvider.draftProfile?.photos ?? [];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Profile Photos',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: const Text(
+              'Profile Photos',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Upload at least one photo. All fields are required.',
-          style: TextStyle(color: Colors.white54, fontSize: 14),
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          FadeInDown(
+            delay: const Duration(milliseconds: 100),
+            duration: const Duration(milliseconds: 600),
+            child: Text(
+              'Upload at least one photo. People love to see who they are talking to!',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5), 
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
 
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 6,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
+          FadeInUp(
+            delay: const Duration(milliseconds: 200),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 6,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.8,
+              ),
+              itemBuilder: (_, index) {
+                String? path = index < photos.length ? photos[index] : null;
+                return AppUploadBox(
+                  size: 100,
+                  imageFile: (path != null && path.isNotEmpty) ? File(path) : null,
+                  onTap: () => _pickImage(index),
+                  onRemove: () => _removeImage(index),
+                );
+              },
+            ),
           ),
-          itemBuilder: (_, index) {
-            String? path = index < photos.length ? photos[index] : null;
-            return AppUploadBox(
-              size: 100,
-              imageFile: (path != null && path.isNotEmpty) ? File(path) : null,
-              onTap: () => _pickImage(index),
-              onRemove: () => _removeImage(index),
-            );
-          },
-        ),
-      ],
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 }

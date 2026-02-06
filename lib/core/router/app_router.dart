@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/get_started_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -17,7 +16,6 @@ import '../../features/auth/presentation/pages/phone_login_page.dart';
 
 class AppRouter {
   static Map<String, WidgetBuilder> get routes => {
-    AppRoutes.splash: (_) => const SplashPage(),
     AppRoutes.authWrapper: (_) => const AuthWrapper(),
     AppRoutes.getStarted: (_) => const GetStartedPage(),
     AppRoutes.login: (_) => const LoginPage(),
@@ -82,12 +80,6 @@ class AppRouter {
       case AppRoutes.likes:
         return MaterialPageRoute(
           builder: (_) => HomeShellPage(initialTabIndex: 1),
-          settings: settings,
-        );
-
-      case AppRoutes.splash:
-        return MaterialPageRoute(
-          builder: (_) => const SplashPage(),
           settings: settings,
         );
 

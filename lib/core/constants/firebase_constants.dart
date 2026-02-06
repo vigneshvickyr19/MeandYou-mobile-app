@@ -6,6 +6,10 @@ class FirebaseConstants {
   static const String chats = 'chats';
   static const String messages = 'messages';
   static const String notifications = 'notifications';
+  static const String admin = 'admin';
+  static const String helpCenter = 'help_center';
+  static const String announcements = 'announcements';
+  static const String dailyStats = 'daily_stats';
 
   // Field Names
   static const String lastMessageAt = 'lastMessageAt';
@@ -59,4 +63,6 @@ class FirebaseConstants {
   static const String lookingFor = 'lookingFor';
   static const String minAge = 'minAge';
   static const String maxAge = 'maxAge';
+  static const String role = 'role';
+  static const String settings = 'settings';
 }

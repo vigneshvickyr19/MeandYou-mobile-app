@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../../core/widgets/app_input.dart';
 import '../../../../core/widgets/app_date_picker.dart';
 import '../../../../core/widgets/app_toggle_switch.dart';
@@ -34,57 +35,87 @@ class _StepBasicIdentityState extends State<StepBasicIdentity> {
     final profileProvider = Provider.of<ProfileSetupProvider>(context);
     final profile = profileProvider.draftProfile;
 
-    return ListView(
-      children: [
-        const Text(
-          'Basic Identity',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FadeInDown(
+            duration: const Duration(milliseconds: 600),
+            child: const Text(
+              'Essential Identity',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-
-        AppInput(
-          label: 'Full Name',
-          hint: 'Enter your name',
-          controller: nameCtrl,
-          onChanged: (v) {
-            profileProvider.updateProfile((p) => p.copyWith(fullName: v));
-          },
-        ),
-        const SizedBox(height: 20),
-
-        AppDatePicker(
-          label: 'Date of Birth',
-          selectedDate: profile?.dob,
-          onDateSelected: (d) {
-            profileProvider.updateProfile((p) => p.copyWith(dob: d));
-          },
-        ),
-        const SizedBox(height: 20),
-
-        AppToggleSwitch(
-          title: 'Gender',
-          selectedValue: profile?.gender ?? 'male',
-          onChanged: (v) {
-            profileProvider.updateProfile((p) => p.copyWith(gender: v));
-          },
-          options: [
-            AppToggleOption(
-              label: 'Male',
-              value: 'male',
-              svgPath: AppImages.faceMaleIcon,
+          const SizedBox(height: 8),
+          FadeInDown(
+            delay: const Duration(milliseconds: 100),
+            duration: const Duration(milliseconds: 600),
+            child: Text(
+              'Let us start with the basics to help people know who you are.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontSize: 15,
+              ),
             ),
-            AppToggleOption(
-              label: 'Female',
-              value: 'female',
-              svgPath: AppImages.faceFemaleIcon,
+          ),
+          const SizedBox(height: 32),
+
+          FadeInUp(
+            delay: const Duration(milliseconds: 200),
+            child: AppInput(
+              label: 'Display Name',
+              hint: 'What should we call you?',
+              controller: nameCtrl,
+              onChanged: (v) {
+                profileProvider.updateProfile((p) => p.copyWith(fullName: v));
+              },
             ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(height: 24),
+
+          FadeInUp(
+            delay: const Duration(milliseconds: 300),
+            child: AppDatePicker(
+              label: 'Birth Date',
+              selectedDate: profile?.dob,
+              onDateSelected: (d) {
+                profileProvider.updateProfile((p) => p.copyWith(dob: d));
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          FadeInUp(
+            delay: const Duration(milliseconds: 400),
+            child: AppToggleSwitch(
+              title: 'Gender',
+              selectedValue: profile?.gender ?? 'male',
+              onChanged: (v) {
+                profileProvider.updateProfile((p) => p.copyWith(gender: v));
+              },
+              options: [
+                AppToggleOption(
+                  label: 'Male',
+                  value: 'male',
+                  svgPath: AppImages.faceMaleIcon,
+                ),
+                AppToggleOption(
+                  label: 'Female',
+                  value: 'female',
+                  svgPath: AppImages.faceFemaleIcon,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 }

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
 import '../services/notification_service.dart';
+import '../services/deep_link_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -10,46 +12,86 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _currentUser;
   bool _isLoading = false;
   bool _isInitializing = true;
+  StreamSubscription<UserModel?>? _userDocumentSubscription;
 
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isInitializing => _isInitializing;
   bool get isAuthenticated => _currentUser != null;
 
-  AuthProvider() {
+  AuthProvider({User? initialUser}) {
+    if (initialUser != null) {
+      _currentUser = UserModel(
+        id: initialUser.uid,
+        email: initialUser.email ?? '',
+        phoneNumber: initialUser.phoneNumber,
+        isProfileComplete: true, 
+        isVerified: initialUser.emailVerified || (initialUser.phoneNumber != null),
+        createdAt: DateTime.now(),
+        role: 'user', // Basic user by default
+      );
+      _isInitializing = false;
+      // Signal immediately for pre-warmed session
+      DeepLinkService().setAuthResolved(true);
+    }
     _init();
   }
 
   void _init() {
+    // 1. Listen for auth changes
     _userRepository.authStateChanges.listen((User? user) async {
-      try {
-        if (user != null) {
-          _currentUser = await _userRepository.getUserAccount(user.uid);
-          if (_currentUser == null) {
-            // Fallback: Create new user if not found in DB
-            final newUser = UserModel(
-              id: user.uid,
-              email: user.email ?? '',
-              phoneNumber: user.phoneNumber,
-              isProfileComplete: false,
-              isVerified: user.emailVerified || (user.phoneNumber != null),
-              createdAt: DateTime.now(),
-            );
-            await _userRepository.updateUserAccount(newUser); // Save to DB
-            _currentUser = newUser;
-          }
-          await _updateFcmToken();
-        } else {
-          _currentUser = null;
-        }
-      } catch (e) {
-        debugPrint("Error during AuthProvider initialization: $e");
+      if (user == null) {
+        _userDocumentSubscription?.cancel();
         _currentUser = null;
-      } finally {
-        _isInitializing = false;
+        _isInitializing = false; // Ensure we stop initializing
+        _setInitialized();
+        return;
+      }
+
+      // Skip if we already have this user and subscription is active to avoid flicker
+      if (_currentUser?.id == user.uid && !_isInitializing && _userDocumentSubscription != null) return;
+
+      // Create a minimal user model from Firebase Auth data
+      // This allows immediate navigation to Home without waiting for Firestore
+      _currentUser = UserModel(
+        id: user.uid,
+        email: user.email ?? '',
+        phoneNumber: user.phoneNumber,
+        isProfileComplete: true, // Optimistically true, corrected after fetch
+        isVerified: user.emailVerified || (user.phoneNumber != null),
+        createdAt: DateTime.now(),
+        role: 'user', // Basic user by default
+      );
+      
+      _setInitialized();
+      
+      // Start real-time streaming of user document
+      _startUserStreaming(user.uid);
+    });
+  }
+
+  void _startUserStreaming(String uid) {
+    _userDocumentSubscription?.cancel();
+    _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((userData) {
+      if (userData != null) {
+        _currentUser = userData;
+        notifyListeners();
+      } else {
+        // Handle case where document doesn't exist yet (new account)
+        _currentUser = _currentUser?.copyWith(isProfileComplete: false);
         notifyListeners();
       }
     });
+  }
+
+  void _setInitialized() {
+    // Always signal that state is stable
+    DeepLinkService().setAuthResolved(true);
+
+    if (_isInitializing) {
+      _isInitializing = false;
+    }
+    notifyListeners();
   }
 
   // --- Login with Email ---
@@ -152,11 +194,20 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     _setLoading(true);
     try {
+      _userDocumentSubscription?.cancel();
       await _userRepository.signOut();
       _currentUser = null;
+      // Reset auth resolution for next login/session
+      DeepLinkService().setAuthResolved(false);
     } finally {
       _setLoading(false);
     }
+  }
+
+  @override
+  void dispose() {
+    _userDocumentSubscription?.cancel();
+    super.dispose();
   }
 
   // --- Update User Account (Status/Meta) ---

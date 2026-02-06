@@ -70,34 +70,24 @@ class NotificationService {
   String? get fcmToken => _fcmToken;
   RemoteMessage? get initialMessage => _initialMessage;
 
-  /// Initialize notification service
   Future<void> initialize() async {
-    if (_initialized) {
-      if (kDebugMode) {}
-      return;
-    }
+    if (_initialized) return;
 
     try {
-      // Request notification permissions
-      await _requestPermissions();
+      // 1. Core setup - these are fast and required for system registration
+      await Future.wait([
+        _requestPermissions(),
+        _initializeLocalNotifications(),
+      ]);
 
-      // Initialize local notifications
-      await _initializeLocalNotifications();
-
-      // Configure FCM
+      // 2. Configure listeners ONLY - do NOT fetch tokens or save to DB here
       await _configureFCM();
-
-      // Listen to CallKit events
-      _listenToCallEvents();
-
-      // Get FCM token
-      await _getToken();
+      
+      if (!kIsWeb) _listenToCallEvents();
 
       _initialized = true;
-      if (kDebugMode) {}
     } catch (e) {
-      if (kDebugMode) {}
-      rethrow;
+      debugPrint('Error initializing notification service: $e');
     }
   }
 
@@ -243,14 +233,26 @@ class NotificationService {
 
   /// Save FCM token to Firestore if user is logged in
   Future<void> _saveTokenToFirestore(String token) async {
+    // If we're already checking, don't double save
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
         await _databaseService.updateUserField(user.uid, {'fcmToken': token});
-        if (kDebugMode) {}
+        debugPrint("NotificationService: FCM Token saved for user: ${user.uid}");
       } catch (e) {
-        if (kDebugMode) {}
+        debugPrint("NotificationService: Error saving FCM token: $e");
       }
+    } else {
+      debugPrint("NotificationService: Skip saving token, user not logged in yet.");
+    }
+  }
+
+  /// Triggered after user log in to sync token immediately
+  Future<void> syncTokenNow() async {
+    if (_fcmToken != null) {
+      await _saveTokenToFirestore(_fcmToken!);
+    } else {
+      await _getToken();
     }
   }
 

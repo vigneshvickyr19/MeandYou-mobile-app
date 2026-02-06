@@ -6,19 +6,21 @@ import 'nav_item.dart';
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onChanged;
+  final bool showAdmin;
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
     required this.onChanged,
+    this.showAdmin = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 76,
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.navBg,
         borderRadius: BorderRadius.circular(40),
@@ -26,9 +28,9 @@ class CustomBottomNav extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-             const Color(0xFF2A2A2A),
-             AppColors.navBg,
-             const Color(0xFF0A0A0A),
+            const Color(0xFF2A2A2A),
+            AppColors.navBg,
+            const Color(0xFF0A0A0A),
           ],
           stops: const [0.0, 0.4, 1.0],
         ),
@@ -42,12 +44,6 @@ class CustomBottomNav extends StatelessWidget {
             blurRadius: 40,
             spreadRadius: 2,
             offset: const Offset(0, 25),
-          ),
-          // Soft highlights for neumorphic effect
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(-5, -5),
           ),
         ],
       ),
@@ -63,11 +59,20 @@ class CustomBottomNav extends StatelessWidget {
           ),
           NavItem(
             index: 1,
-            label: 'Discover',
+            label: 'Likes',
             iconPath: AppImages.lovelyIcon,
             isActive: currentIndex == 1,
             onTap: onChanged,
           ),
+          if (showAdmin)
+            NavItem(
+              index: 4,
+              label: 'Admin',
+              iconPath: AppImages.homeIcon, // Temporary fallback
+              icon: Icons.admin_panel_settings_rounded,
+              isActive: currentIndex == 4,
+              onTap: onChanged,
+            ),
           NavItem(
             index: 2,
             label: 'Chats',

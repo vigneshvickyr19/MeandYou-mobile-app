@@ -9,6 +9,7 @@ class NotificationController extends ChangeNotifier {
 
   List<AppNotification> get notifications => _notifications;
   bool get isLoading => _isLoading;
+  int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   void listenToNotifications(String userId) {
     if (userId.isEmpty) return;

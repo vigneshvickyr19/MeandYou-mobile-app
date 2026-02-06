@@ -37,8 +37,10 @@ class NotificationPayloadModel {
     
     String? profileId = data[NotificationConstants.keyProfileId] as String?;
     if (profileId == null && data[NotificationConstants.keyUserId] != null) {
-       // Sometimes userId in payload implies profile to view
        profileId = data[NotificationConstants.keyUserId] as String?;
+    }
+    if (profileId == null && data[NotificationConstants.keySenderId] != null) {
+       profileId = data[NotificationConstants.keySenderId] as String?;
     }
 
     final title = data[NotificationConstants.keyTitle] as String?;
@@ -68,7 +70,9 @@ class NotificationPayloadModel {
       if (chatId != null || link != null) return AppRoutes.chatDetail;
     }
     
-    if (type == NotificationConstants.typeProfile) {
+    if (type == NotificationConstants.typeProfile || 
+        type?.toUpperCase() == 'LIKE' || 
+        type?.toUpperCase() == 'INTEREST') {
        return AppRoutes.otherProfile;
     }
 
@@ -93,11 +97,13 @@ class NotificationPayloadModel {
        }
      }
      
-     if (type == NotificationConstants.typeProfile) {
-       if (profileId != null) {
-         return {'userId': profileId};
-       }
-     }
+      if (type == NotificationConstants.typeProfile || 
+          type?.toUpperCase() == 'LIKE' || 
+          type?.toUpperCase() == 'INTEREST') {
+        if (profileId != null) {
+          return {'userId': profileId};
+        }
+      }
      
      return originalData;
   }

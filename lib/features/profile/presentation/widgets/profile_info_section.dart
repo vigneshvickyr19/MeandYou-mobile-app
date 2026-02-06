@@ -155,15 +155,6 @@ class ProfileInfoSection extends StatelessWidget {
             color: AppColors.info,
             size: 14,
           ),
-          SizedBox(width: 4),
-          Text(
-            "Verified",
-            style: TextStyle(
-              color: AppColors.info,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ],
       ),
     );

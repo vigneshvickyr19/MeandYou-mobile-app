@@ -11,6 +11,7 @@ import '../../domain/usecases/get_current_user_profile_usecase.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/location_formatter.dart';
 import '../../data/repositories/matching_repository_impl.dart';
+import '../../../../features/home/data/services/home_service.dart';
 
 class NearbyController extends ChangeNotifier {
   final GetNearbyMatchesUseCase _getNearbyMatchesUseCase;
@@ -22,13 +23,13 @@ class NearbyController extends ChangeNotifier {
     UpdateLocationUseCase? updateLocationUseCase,
     GetCurrentUserProfileUseCase? getCurrentUserProfileUseCase,
   }) : _getNearbyMatchesUseCase =
-           getNearbyMatchesUseCase ??
-           GetNearbyMatchesUseCase(MatchingRepositoryImpl()),
-       _updateLocationUseCase =
-           updateLocationUseCase ??
-           UpdateLocationUseCase(MatchingRepositoryImpl()),
-       _getCurrentUserProfileUseCase =
-           getCurrentUserProfileUseCase ?? GetCurrentUserProfileUseCase();
+            getNearbyMatchesUseCase ??
+            GetNearbyMatchesUseCase(MatchingRepositoryImpl()),
+        _updateLocationUseCase =
+            updateLocationUseCase ??
+            UpdateLocationUseCase(MatchingRepositoryImpl()),
+        _getCurrentUserProfileUseCase =
+            getCurrentUserProfileUseCase ?? GetCurrentUserProfileUseCase();
 
   List<NearbyMatchEntity> _users = [];
   List<NearbyMatchEntity> get users => _users;
@@ -47,13 +48,31 @@ class NearbyController extends ChangeNotifier {
 
   UserModel? _currentUser;
   Position? _lastPosition;
+  String? _lastGeohash;
 
+  /// Load users and ensure query is reactive to current user changes
   Future<void> loadUsers(UserModel currentUser) async {
+    // If geohash hasn't changed and we have a subscription, don't restart to avoid flicker
+    if (_currentUser?.id == currentUser.id && 
+        _lastGeohash == currentUser.geohash && 
+        _matchesSubscription != null) {
+      return;
+    }
+
     _currentUser = currentUser;
+    _lastGeohash = currentUser.geohash;
+    
+    // Optimization: If we already have the essential data, start matching immediately
+    if (_currentUser?.latitude != null && _currentUser?.geohash != null) {
+      _startMatchesSubscription();
+      _startLocationUpdates(_currentUser!.id);
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
-    // 1. Get full profile from profileSetup
+    // 1. Get full profile only if essential data is missing
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
 
     _startMatchesSubscription();
@@ -61,9 +80,7 @@ class NearbyController extends ChangeNotifier {
   }
 
   void _startMatchesSubscription() {
-    if (_currentUser == null) {
-      return;
-    }
+    if (_currentUser == null) return;
 
     _matchesSubscription?.cancel();
     _matchesSubscription =
@@ -72,6 +89,8 @@ class NearbyController extends ChangeNotifier {
           radiusInKm: 10.0,
         ).listen(
           (matches) {
+            // Sort by distance (closest first)
+            matches.sort((a, b) => a.distance.compareTo(b.distance));
             _users = matches;
             _isLoading = false;
             notifyListeners();
@@ -102,7 +121,7 @@ class NearbyController extends ChangeNotifier {
         Geolocator.getPositionStream(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high,
-            distanceFilter: 100,
+            distanceFilter: 100, // Update Firestore every 100 meters
           ),
         ).listen((Position position) {
           _onLocationChanged(userId, position);
@@ -118,6 +137,7 @@ class NearbyController extends ChangeNotifier {
         position.longitude,
       );
 
+      // Only update Firestore if moved significantly (500m) to save writes
       if (distance < 500) return;
     }
 
@@ -127,22 +147,68 @@ class NearbyController extends ChangeNotifier {
       position.latitude,
     );
 
-    // Update local user and restart subscription
+    // Update query parameters locally and restart stream
     if (_currentUser != null) {
       _currentUser = _currentUser!.copyWith(
         latitude: position.latitude,
         longitude: position.longitude,
         geohash: geohash,
       );
+      _lastGeohash = geohash;
       _startMatchesSubscription();
     }
 
+  // Sync to cloud
     _updateLocationUseCase(
       userId: userId,
       latitude: position.latitude,
       longitude: position.longitude,
       geohash: geohash,
     );
+  }
+
+  Future<void> likeUser(String currentUserId, NearbyMatchEntity match) async {
+    final HomeService homeService = HomeService();
+    try {
+      await homeService.likeUser(currentUserId, match.id);
+      // Optional: remove from list after liking if that's the desired behavior
+      // _users.removeWhere((m) => m.id == match.id);
+      // notifyListeners();
+    } catch (e) {
+      debugPrint('Error liking user: $e');
+    }
+  }
+
+  Future<void> dislikeUser(NearbyMatchEntity match) async {
+    // Local optimistic update
+    _users.removeWhere((m) => m.id == match.id);
+    notifyListeners();
+  }
+
+  Future<void> fetchLocationForMatch(NearbyMatchEntity match) async {
+    if ((match.area != null && match.area!.isNotEmpty) ||
+        (match.landmark != null && match.landmark!.isNotEmpty)) {
+      return;
+    }
+
+    try {
+      final locationData = await LocationService.getReadableLocation(
+        match.latitude,
+        match.longitude,
+      );
+
+      final index = _users.indexWhere((m) => m.id == match.id);
+      if (index != -1) {
+        _users[index] = _users[index].copyWith(
+          landmark: locationData['landmark'],
+          area: locationData['area'],
+          fullAddress: locationData['fullAddress'],
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching location for match: $e');
+    }
   }
 
   void selectUser(NearbyMatchEntity match) async {
@@ -169,7 +235,7 @@ class NearbyController extends ChangeNotifier {
           fullAddress: locationData['fullAddress'],
         );
 
-        // Also update in the list for persistence during this session
+        // Update in list so it's cached for this session
         final index = _users.indexWhere((u) => u.id == match.id);
         if (index != -1) {
           _users[index] = _selectedMatch!;
@@ -191,7 +257,6 @@ class NearbyController extends ChangeNotifier {
     final double centerX = size.width / 2;
     final double centerY = size.height / 2;
 
-    // Distribute users in a radial pattern
     final double radius = (size.width * 0.25) + (index % 3 * 30);
     final double angle = (index * (2 * math.pi / 5)) + (math.pi / 6);
 

@@ -6,6 +6,7 @@ class NavItem extends StatelessWidget {
   final int index;
   final String label;
   final String iconPath;
+  final IconData? icon;
   final bool isActive;
   final ValueChanged<int> onTap;
 
@@ -14,6 +15,7 @@ class NavItem extends StatelessWidget {
     required this.index,
     required this.label,
     required this.iconPath,
+    this.icon,
     required this.isActive,
     required this.onTap,
   });
@@ -52,17 +54,25 @@ class NavItem extends StatelessWidget {
                       )
                     : null,
               ),
-              child: SvgPicture.asset(
-                iconPath,
-                height: 20,
-                width: 20,
-                colorFilter: ColorFilter.mode(
-                  isActive 
-                      ? Colors.black 
-                      : AppColors.navInactive, 
-                  BlendMode.srcIn,
-                ),
-              ),
+              child: icon != null 
+                ? Icon(
+                    icon,
+                    size: 20,
+                    color: isActive 
+                        ? Colors.black 
+                        : AppColors.navInactive, 
+                  )
+                : SvgPicture.asset(
+                    iconPath,
+                    height: 20,
+                    width: 20,
+                    colorFilter: ColorFilter.mode(
+                      isActive 
+                          ? Colors.black 
+                          : AppColors.navInactive, 
+                      BlendMode.srcIn,
+                    ),
+                  ),
             ),
     
             // Animated Label (Uses CrossFade for safe structural transition)
