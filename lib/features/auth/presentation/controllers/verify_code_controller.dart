@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/widgets/app_snackbar.dart';
-import '../../../../core/services/email_otp_service.dart';
 import '../../../../core/constants/app_routes.dart';
 
 class VerifyCodeController extends ChangeNotifier {
@@ -10,7 +9,6 @@ class VerifyCodeController extends ChangeNotifier {
   final TextEditingController codeController = TextEditingController();
   bool _showError = false;
   bool _isButtonEnabled = false;
-  bool _isLocalLoading = false;
 
   VerifyCodeController(this._authProvider) {
     _authProvider.addListener(notifyListeners);
@@ -18,53 +16,45 @@ class VerifyCodeController extends ChangeNotifier {
 
   bool get showError => _showError;
   bool get isButtonEnabled => _isButtonEnabled;
-  bool get isLoading => _isLocalLoading || _authProvider.isLoading;
+  bool get isLoading => _authProvider.isLoading;
 
   void validateCode(String value) {
-    _isButtonEnabled = value.trim().length == 6;
+    // Supporting 4 or 6 digits as per requirement
+    _isButtonEnabled = value.trim().length >= 4 && value.trim().length <= 6;
     _showError = value.isNotEmpty && !_isButtonEnabled;
     notifyListeners();
   }
 
-  Future<void> verify(BuildContext context, String email) async {
+  Future<void> verify(BuildContext context, String phoneNumber, String verificationId) async {
     final code = codeController.text.trim();
     if (!_isButtonEnabled) {
       _showError = true;
       notifyListeners();
-      AppSnackbar.show(
-        context,
-        message: "Please enter a valid 6-digit code",
-        type: SnackbarType.error,
-      );
       return;
     }
 
-    _isLocalLoading = true;
-    notifyListeners();
-
     try {
-      bool isValid = EmailOtpService.verifyOtp(email, code);
-      if (isValid) {
-        if (context.mounted) {
-          Navigator.pushNamed(
-            context, 
-            AppRoutes.createPassword,
-            arguments: {'email': email},
-          );
-        }
-      } else {
-        _showError = true;
-        if (context.mounted) {
-          AppSnackbar.show(
-            context, 
-            message: "Incorrect code. Please check your email.", 
-            type: SnackbarType.error
-          );
-        }
+      await _authProvider.verifyOtp(
+        verificationId,
+        code,
+      );
+
+      if (context.mounted) {
+        // Reset stack and let AuthWrapper decide (Home vs Profile Setup)
+        Navigator.pushNamedAndRemoveUntil(
+          context, 
+          AppRoutes.authWrapper,
+          (route) => false,
+        );
       }
-    } finally {
-      _isLocalLoading = false;
-      notifyListeners();
+    } catch (e) {
+      if (context.mounted) {
+        AppSnackbar.show(
+          context, 
+          message: "Incorrect code. Please check and try again.", 
+          type: SnackbarType.error
+        );
+      }
     }
   }
 

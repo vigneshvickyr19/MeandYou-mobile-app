@@ -1,14 +1,82 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_images.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/providers/auth_provider.dart';
+import '../models/onboarding_model.dart';
+import '../widgets/onboarding_content.dart';
 
-class GetStartedPage extends StatelessWidget {
+class GetStartedPage extends StatefulWidget {
   const GetStartedPage({super.key});
+
+  @override
+  State<GetStartedPage> createState() => _GetStartedPageState();
+}
+
+class _GetStartedPageState extends State<GetStartedPage> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  Timer? _autoSlideTimer;
+
+  final List<OnboardingModel> _onboardingData = [
+    OnboardingModel(
+      title: 'Find your ',
+      highlightedText: 'Perfect',
+      suffixText: ' Match',
+      description:
+          'Join us and discover meaningful connections that last a lifetime.',
+      image: AppImages.getStarted,
+    ),
+    OnboardingModel(
+      title: 'Connect and ',
+      highlightedText: 'Chat',
+      suffixText: ' Easily',
+      description:
+          'Start a conversation and explore common interests with like-minded people.',
+      image: AppImages.getStarted,
+    ),
+    OnboardingModel(
+      title: 'Date with ',
+      highlightedText: 'Confidence',
+      suffixText: '',
+      description:
+          'A safe and secure platform designed for your dating journey.',
+      image: AppImages.getStarted,
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoSlide();
+  }
+
+  void _startAutoSlide() {
+    _autoSlideTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_currentPage < _onboardingData.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoSlideTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +84,7 @@ class GetStartedPage extends StatelessWidget {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
-          // Background Gradient/Glow
+          // Background Glows
           Positioned(
             top: -100,
             right: -100,
@@ -25,7 +93,7 @@ class GetStartedPage extends StatelessWidget {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -37,7 +105,7 @@ class GetStartedPage extends StatelessWidget {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.secondary.withValues(alpha: 0.05),
+                color: AppColors.secondary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -45,29 +113,22 @@ class GetStartedPage extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                // 🔝 Top Image
-                Expanded(
-                  flex: 4,
-                  child: FadeInDown(
-                    duration: const Duration(milliseconds: 1000),
-                    child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              blurRadius: 40,
-                              spreadRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: Image.asset(
-                            AppImages.getStarted,
-                            fit: BoxFit.cover,
+                // Top Skip Button
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: FadeInRight(
+                      child: TextButton(
+                        onPressed: () =>
+                            Navigator.pushNamed(context, AppRoutes.login),
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -75,81 +136,62 @@ class GetStartedPage extends StatelessWidget {
                   ),
                 ),
 
-                // 🔽 Content
                 Expanded(
-                  flex: 5,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FadeInLeft(
-                          duration: const Duration(milliseconds: 800),
-                          child: const Text(
-                            'Discover Your\nPerfect Match',
-                            style: TextStyle(
-                              color: AppColors.white,
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
-                              letterSpacing: -1,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        FadeInLeft(
-                          delay: const Duration(milliseconds: 200),
-                          duration: const Duration(milliseconds: 800),
-                          child: Text(
-                            'Join the community where meaningful connections are made every day.',
-                            style: TextStyle(
-                              color: AppColors.white.withValues(alpha: 0.6),
-                              fontSize: 16,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                      });
+                    },
+                    itemCount: _onboardingData.length,
+                    itemBuilder: (context, index) {
+                      return OnboardingContent(
+                        data: _onboardingData[index],
+                        index: index,
+                      );
+                    },
+                  ),
+                ),
 
-                        // 🔹 Sign Up Buttons
-                        _buildAuthButtons(context),
-
-                        const Spacer(),
-
-                        // 🔹 Already have account? Log in
-                        FadeInUp(
-                          delay: const Duration(milliseconds: 600),
-                          child: Center(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(context, AppRoutes.login);
-                              },
-                              child: RichText(
-                                text: const TextSpan(
-                                  text: 'Already have an account? ',
-                                  style: TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 15,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: 'Log in',
-                                      style: TextStyle(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                // Slider indicator dots
+                FadeInUp(
+                  delay: const Duration(milliseconds: 200),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _onboardingData.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: _currentPage == index ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: _currentPage == index
+                              ? AppColors.primary
+                              : AppColors.white.withValues(alpha: 0.2),
                         ),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 32),
+
+                // Bottom "Get Started" primary CTA button
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: FadeInUp(
+                    delay: const Duration(milliseconds: 400),
+                    child: AppButton(
+                      text: 'Get Started',
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.login),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -157,58 +199,6 @@ class GetStartedPage extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildAuthButtons(BuildContext context) {
-    return Column(
-      children: [
-        FadeInUp(
-          delay: const Duration(milliseconds: 300),
-          child: AppButton(
-            text: 'Sign up with Google',
-            iconPath: AppImages.google,
-            type: AppButtonType.transparent,
-            onPressed: () async {
-              try {
-                await Provider.of<AuthProvider>(context, listen: false).loginWithGoogle();
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: AppColors.error,
-                      content: Text('Google Sign-In failed: $e'),
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        FadeInUp(
-          delay: const Duration(milliseconds: 400),
-          child: AppButton(
-            text: 'Sign up with Email',
-            iconPath: AppImages.sms,
-            type: AppButtonType.transparent,
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.signUp);
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        FadeInUp(
-          delay: const Duration(milliseconds: 500),
-          child: AppButton(
-            text: 'Sign up with Phone',
-            iconPath: AppImages.phone,
-            type: AppButtonType.transparent,
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.phoneLogin);
-            },
-          ),
-        ),
-      ],
-    );
-  }
 }
+
+

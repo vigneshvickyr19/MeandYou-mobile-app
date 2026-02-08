@@ -5,9 +5,7 @@ class AppRoutes {
   static const home = "/home";
   static const login = '/login';
   static const signUp = '/sign-up';
-  static const forgotPassword = '/forgot-password';
   static const verifyCode = '/verify-code';
-  static const createPassword = '/create-password';
   static const profileSetupPage = 'profile-setup';
   static const profile = '/profile';
   static const otherProfile = '/other_profile';
@@ -15,5 +13,4 @@ class AppRoutes {
   static const String chatDetail = '/chat-detail';
   static const call = '/call';
   static const likes = '/likes';
-  static const String phoneLogin = '/phone-login';
 }
