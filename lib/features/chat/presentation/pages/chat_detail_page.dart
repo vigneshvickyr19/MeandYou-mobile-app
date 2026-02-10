@@ -84,6 +84,33 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
+  bool _isUserOnline(Map<String, dynamic>? status) {
+    if (status == null) return false;
+    return status['state'] == 'online';
+  }
+
+  String _getPresenceStatus(Map<String, dynamic>? status) {
+    if (status == null) return 'Offline';
+    if (status['state'] == 'online') return 'Online';
+
+    final lastChanged = status['lastChanged'];
+    if (lastChanged == null) return 'Offline';
+
+    final lastChangedDate = DateTime.fromMillisecondsSinceEpoch(lastChanged);
+    final now = DateTime.now();
+    final difference = now.difference(lastChangedDate);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return 'Active ${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return 'Active ${difference.inHours}h ago';
+    } else {
+      return 'Active ${difference.inDays}d ago';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -119,7 +146,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         children: [
                           ChatAvatar(
                             imageUrl: widget.otherUser.profileImageUrl,
-                            isOnline: widget.otherUser.isOnline,
+                            isOnline: _isUserOnline(controller.otherUserStatus),
                             size: 36,
                           ),
                           const SizedBox(width: 12),
@@ -136,11 +163,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                   ),
                                 ),
                                 Text(
-                                  widget.otherUser.isOnline
-                                      ? 'Online'
-                                      : 'Offline',
+                                  _getPresenceStatus(controller.otherUserStatus),
                                   style: TextStyle(
-                                    color: widget.otherUser.isOnline
+                                    color: _isUserOnline(controller.otherUserStatus)
                                         ? const Color(0xFF4CAF50)
                                         : AppColors.white.withValues(alpha: 0.5),
                                     fontSize: 11,

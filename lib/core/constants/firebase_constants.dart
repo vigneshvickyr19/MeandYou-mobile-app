@@ -70,4 +70,9 @@ class FirebaseConstants {
   static const String profileImagesPath = 'profile_images';
   static const String chatImagesPath = 'chat_images';
   static const String chatAudioPath = 'chat_audio';
+
+  // Realtime Database Paths
+  static const String statusPath = 'status';
+  static const String typingPath = 'typing';
+  static const String activeChatsPath = 'activeChats';
 }

@@ -15,6 +15,7 @@ import '../../../notifications/data/services/notification_storage_service.dart';
 import '../../../notifications/data/models/notification_model.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/presence_service.dart';
 
 class ChatDetailController extends ChangeNotifier {
   final ChatRepository _chatRepository = ChatRepository();
@@ -40,6 +41,9 @@ class ChatDetailController extends ChangeNotifier {
   String _otherUserId = '';
   List<XFile> _selectedImages = [];
   StreamSubscription? _typingSubscription;
+  StreamSubscription? _statusSubscription;
+  StreamSubscription? _otherUserTypingSubscription;
+  Map<String, dynamic>? _otherUserStatus;
 
   List<MessageModel> get messages {
     if (_needsRebuildCache) {
@@ -64,6 +68,7 @@ class ChatDetailController extends ChangeNotifier {
   bool get isOtherUserTyping => _isOtherUserTyping;
   List<XFile> get selectedImages => _selectedImages;
   ChatRoomModel? get chatRoom => _chatRoom;
+  Map<String, dynamic>? get otherUserStatus => _otherUserStatus;
 
   void initialize(String chatRoomId, String currentUserId, String otherUserId) {
     _chatRoomId = chatRoomId;
@@ -76,9 +81,35 @@ class ChatDetailController extends ChangeNotifier {
       notifyListeners();
     }
 
+    // 1. Mark as Active Chat for push suppression
+    PresenceService.instance.setActiveChat(_chatRoomId);
+
+    // 2. Start Real-time Presence & Typing Listeners (RTDB)
+    _startPresenceListeners();
+
     loadMessages();
     markMessagesAsSeen(); // Initial clear
     _listenToChatRoom();
+  }
+
+  void _startPresenceListeners() {
+    // Listen to other user's presence (Online/Offline/Last Seen)
+    _statusSubscription?.cancel();
+    _statusSubscription = PresenceService.instance.streamUserStatus(_otherUserId).listen((status) {
+      _otherUserStatus = status;
+      notifyListeners();
+    });
+
+    // Listen to other user's typing status (RTDB is much faster than Firestore for this)
+    _otherUserTypingSubscription?.cancel();
+    _otherUserTypingSubscription = PresenceService.instance
+        .streamTypingStatus(_chatRoomId, _otherUserId)
+        .listen((isTyping) {
+      if (_isOtherUserTyping != isTyping) {
+        _isOtherUserTyping = isTyping;
+        notifyListeners();
+      }
+    });
   }
 
   StreamSubscription? _chatRoomSubscription;
@@ -96,13 +127,6 @@ class ChatDetailController extends ChangeNotifier {
         final unreadForMe = chatRoom.getUnreadCount(_currentUserId);
         if (unreadForMe > 0 && !_isMarkingAsSeen) {
           markMessagesAsSeen();
-        }
-
-        // Handle typing status
-        final typingStatus = chatRoom.isUserTyping(_otherUserId);
-        if (_isOtherUserTyping != typingStatus) {
-          _isOtherUserTyping = typingStatus;
-          notifyListeners();
         }
       }
     });
@@ -438,11 +462,10 @@ class ChatDetailController extends ChangeNotifier {
   Future<void> updateTypingStatus(bool isTyping) async {
     if (_isTyping != isTyping) {
       _isTyping = isTyping;
-      await _chatRepository.updateTypingStatus(
-        _chatRoomId,
-        _currentUserId,
-        isTyping,
-      );
+      
+      // Update RTDB typing indicator (much better than Firestore for transient states)
+      await PresenceService.instance.setTypingStatus(_chatRoomId, isTyping);
+      
       notifyListeners();
     }
   }
@@ -490,7 +513,13 @@ class ChatDetailController extends ChangeNotifier {
   void dispose() {
     _chatRoomSubscription?.cancel();
     _typingSubscription?.cancel();
+    _statusSubscription?.cancel();
+    _otherUserTypingSubscription?.cancel();
+
     if (_chatRoomId.isNotEmpty && _currentUserId.isNotEmpty) {
+      // 1. Clear active chat (stops push suppression)
+      PresenceService.instance.setActiveChat(null);
+      // 2. Clear typing indicator
       updateTypingStatus(false);
     }
     super.dispose();

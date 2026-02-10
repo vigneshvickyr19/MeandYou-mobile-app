@@ -6,6 +6,7 @@ import '../../data/repositories/user_repository.dart';
 import '../services/notification_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/storage_service.dart';
+import '../services/presence_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -75,6 +76,10 @@ class AuthProvider extends ChangeNotifier {
 
   void _startUserStreaming(String uid) {
     _userDocumentSubscription?.cancel();
+    
+    // Initialize Presence (RTDB) when user document starts streaming
+    PresenceService.instance.initialize(uid);
+
     _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((
       userData,
     ) {
@@ -194,6 +199,10 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _userDocumentSubscription?.cancel();
+      // Clear presence on sign out
+      PresenceService.instance.setStatus(false);
+      PresenceService.instance.dispose();
+      
       await _userRepository.signOut();
       _currentUser = null;
       // Reset auth resolution for next login/session
@@ -211,6 +220,9 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
 
     try {
+      // 0. Cleanup Presence
+      PresenceService.instance.dispose();
+      
       // 1. Cleanup Storage (Scoped folders)
       await StorageService.instance.deleteUserStorageDetails(userId);
 
@@ -276,7 +288,9 @@ class AuthProvider extends ChangeNotifier {
   Future<void> setOnlineStatus(bool isOnline) async {
     if (_currentUser == null) return;
     try {
-      await _userRepository.updateOnlineStatus(_currentUser!.id, isOnline);
+      await PresenceService.instance.setStatus(isOnline);
+      // We still update Firestore for "last seen" if needed, 
+      // but the real-time "Online" state is now in RTDB.
       _currentUser = _currentUser!.copyWith(isOnline: isOnline);
       notifyListeners();
     } catch (e) {

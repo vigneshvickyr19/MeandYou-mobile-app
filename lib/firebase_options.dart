@@ -51,6 +51,7 @@ class DefaultFirebaseOptions {
     projectId: 'me-and-you-11e89',
     authDomain: 'me-and-you-11e89.firebaseapp.com',
     storageBucket: 'me-and-you-11e89.firebasestorage.app',
+    databaseURL: 'https://me-and-you-11e89-default-rtdb.firebaseio.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -59,6 +60,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '170946286094',
     projectId: 'me-and-you-11e89',
     storageBucket: 'me-and-you-11e89.firebasestorage.app',
+    databaseURL: 'https://me-and-you-11e89-default-rtdb.firebaseio.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -68,5 +70,6 @@ class DefaultFirebaseOptions {
     projectId: 'me-and-you-11e89',
     storageBucket: 'me-and-you-11e89.firebasestorage.app',
     iosBundleId: 'com.meandyou.dating',
+    databaseURL: 'https://me-and-you-11e89-default-rtdb.firebaseio.com',
   );
 }
