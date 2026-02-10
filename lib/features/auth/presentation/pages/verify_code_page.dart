@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/app_back_button.dart';
-import '../../../../core/widgets/app_input.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/otp_input_field.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../controllers/verify_code_controller.dart';
 
@@ -62,7 +62,7 @@ class VerifyCodePage extends StatelessWidget {
                               FadeInDown(
                                 duration: const Duration(milliseconds: 600),
                                 child: const Text(
-                                  "Verify Identity",
+                                  "Enter code",
                                   style: TextStyle(
                                     color: AppColors.white,
                                     fontSize: 32,
@@ -76,7 +76,7 @@ class VerifyCodePage extends StatelessWidget {
                                 delay: const Duration(milliseconds: 100),
                                 duration: const Duration(milliseconds: 600),
                                 child: Text(
-                                  "We've sent a 6-digit verification code to $phoneNumber. Please enter it below.",
+                                  "We sent a verification code to your phone\n$phoneNumber",
                                   style: TextStyle(
                                     color: AppColors.white.withValues(alpha: 0.6),
                                     fontSize: 16,
@@ -89,35 +89,50 @@ class VerifyCodePage extends StatelessWidget {
                               FadeInUp(
                                 delay: const Duration(milliseconds: 200),
                                 duration: const Duration(milliseconds: 600),
-                                child: AppInput(
-                                  label: "Verification Code",
-                                  hint: "4 or 6 digit code",
-                                  controller: controller.codeController,
-                                  keyboardType: TextInputType.number,
+                                child: OtpInputField(
+                                  otpLength: args?['otpLength'] ?? 6,
                                   showError: controller.showError,
-                                  errorMessage: "Please enter a valid code",
-                                  onChanged: controller.validateCode,
+                                  onOtpComplete: (otp) {
+                                    controller.validateCode(otp);
+                                    if (otp.length == (args?['otpLength'] ?? 6)) {
+                                      controller.verify(context, phoneNumber, verificationId);
+                                    }
+                                  },
                                 ),
                               ),
                               
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 48),
                               
                               FadeInUp(
                                 delay: const Duration(milliseconds: 300),
                                 duration: const Duration(milliseconds: 600),
-                                child: Center(
-                                  child: TextButton(
-                                    onPressed: () {
-                                      // Resend logic could be added here
-                                    },
-                                    child: const Text(
-                                      "Didn't receive code? Resend",
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      "You didn’t receive any code? ",
                                       style: TextStyle(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.white.withValues(alpha: 0.7),
+                                        fontSize: 16,
                                       ),
                                     ),
-                                  ),
+                                    GestureDetector(
+                                      onTap: controller.canResend 
+                                        ? () => controller.resendOtp(context, phoneNumber)
+                                        : null,
+                                      child: Text(
+                                        controller.canResend 
+                                          ? "Resend Code" 
+                                          : "Resend Code in ${controller.resendTimer}s",
+                                        style: TextStyle(
+                                          color: controller.canResend 
+                                            ? AppColors.secondary 
+                                            : AppColors.secondary.withValues(alpha: 0.5),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

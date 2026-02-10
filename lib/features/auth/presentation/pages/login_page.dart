@@ -45,7 +45,6 @@ class LoginPage extends StatelessWidget {
                         child: Row(
                           children: [
                             const AppBackButton(),
-                            const Spacer(),
                           ],
                         ),
                       ),

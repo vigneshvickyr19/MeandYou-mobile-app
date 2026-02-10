@@ -135,6 +135,23 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // --- Send OTP Wrapper ---
+  Future<void> sendOtp(String phoneNumber) async {
+    final completer = Completer<void>();
+    
+    await loginWithPhone(
+      phoneNumber,
+      (verificationId, resendToken) {
+        if (!completer.isCompleted) completer.complete();
+      },
+      onError: (error) {
+        if (!completer.isCompleted) completer.completeError(error);
+      },
+    );
+    
+    return completer.future;
+  }
+
   // --- Login with Google ---
   Future<void> loginWithGoogle() async {
     _setLoading(true);
