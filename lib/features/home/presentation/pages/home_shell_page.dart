@@ -12,6 +12,8 @@ import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../admin/presentation/pages/admin_panel_page.dart';
 import '../controllers/home_navigation_controller.dart';
 import 'home_page.dart';
+import '../../../matching/presentation/pages/location_permission_page.dart';
+import '../../../../core/providers/location_provider.dart';
 
 class HomeShellPage extends StatefulWidget {
   final int? initialTabIndex;
@@ -22,12 +24,14 @@ class HomeShellPage extends StatefulWidget {
   State<HomeShellPage> createState() => _HomeShellPageState();
 }
 
-class _HomeShellPageState extends State<HomeShellPage> {
+class _HomeShellPageState extends State<HomeShellPage>
+    with WidgetsBindingObserver {
   late HomeNavigationController _controller;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = HomeNavigationController();
 
     // Set initial tab index from deep link if provided
@@ -46,11 +50,23 @@ class _HomeShellPageState extends State<HomeShellPage> {
 
       // 2. Heavy work: Sync FCM token (Only after UI is rendered)
       NotificationService.instance.syncTokenNow();
+
+      // 3. Initial location check
+      context.read<LocationProvider>().refreshStatus();
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Re-check when user returns from settings
+      context.read<LocationProvider>().refreshStatus();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
@@ -71,10 +87,9 @@ class _HomeShellPageState extends State<HomeShellPage> {
             },
             child: Scaffold(
               backgroundColor: AppColors.black,
-              // Use Stack to overlay bottom nav on content
               body: Stack(
                 children: [
-                  // Full-screen content (100% height, renders behind bottom nav)
+                  // Full-screen content
                   SizedBox(
                     width: double.infinity,
                     height: double.infinity,
@@ -90,7 +105,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
                     ),
                   ),
 
-                  // Floating bottom navigation (absolute positioned at bottom)
+                  // Floating bottom navigation
                   Positioned(
                     bottom: 0,
                     left: 0,

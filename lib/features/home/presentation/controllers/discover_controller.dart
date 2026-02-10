@@ -35,8 +35,6 @@ class DiscoverController extends ChangeNotifier {
   bool _isLoading = false;
   NearbyMatchEntity? _matchedUser;
   bool _showMatchDialog = false;
-  
-  StreamSubscription? _matchesSubscription;
   String? _lastUserId;
   String? _lastGeohash;
   
@@ -44,21 +42,21 @@ class DiscoverController extends ChangeNotifier {
   final Set<String> _likedUserIds = {};
   // Track in-flight requests to avoid rapid-fire processing
   final Set<String> _processingIds = {};
+  bool _isDisposed = false;
   
   List<NearbyMatchEntity> get matches => _matches;
   bool get isLoading => _isLoading;
   NearbyMatchEntity? get matchedUser => _matchedUser;
   bool get showMatchDialog => _showMatchDialog;
 
-  /// Load users and maintain a real-time subscription
+  /// Load users (one-time fetch)
   /// This method is called whenever the AuthProvider emits a new user state
   Future<void> loadUsers(UserModel currentUser) async {
     // If essential search parameters (user ID or geohash/location) haven't changed, 
-    // and we already have a subscription, don't restart it to avoid UI flicker.
-    // However, if the geohash changed, we MUST restart to get people near the new location.
+    // and we already have results, avoid re-fetching to prevent UI flicker.
     if (_lastUserId == currentUser.id && 
         _lastGeohash == currentUser.geohash && 
-        _matchesSubscription != null) {
+        _matches.isNotEmpty) {
       return;
     }
     
@@ -81,33 +79,22 @@ class DiscoverController extends ChangeNotifier {
         return;
       }
 
-      // 2. Cancel old subscription for clean state
-      await _matchesSubscription?.cancel();
-
-      // 3. Start a new real-time stream for matches
-      // This stream emits whenever ANY nearby profile document changes in Firestore
-      _matchesSubscription = _getNearbyMatchesUseCase(
+      // 2. Fetch matches (Now Future-based)
+      final matches = await _getNearbyMatchesUseCase(
         currentUser: fullProfile,
         radiusInKm: 10.0,
-      ).listen(
-        (matches) {
-          // Sort matches by match percentage in descending order
-          matches.sort((a, b) => b.matchPercentage.compareTo(a.matchPercentage));
-          _matches = matches;
-          _isLoading = false;
-          notifyListeners();
-          
-          // Pre-fetch locations for top matches to ensure text is ready when swiped
-          for (int i = 0; i < math.min(3, _matches.length); i++) {
-            fetchLocationForMatch(_matches[i]);
-          }
-        },
-        onError: (error) {
-          debugPrint('[DiscoverTab] Stream error: $error');
-          _isLoading = false;
-          notifyListeners();
-        },
       );
+
+      // 3. Process and update state
+      // Sort matches by match percentage in descending order
+      _matches = List.from(matches)..sort((a, b) => b.matchPercentage.compareTo(a.matchPercentage));
+      _isLoading = false;
+      notifyListeners();
+      
+      // Pre-fetch locations for top matches to ensure text is ready when swiped
+      for (int i = 0; i < math.min(3, _matches.length); i++) {
+        fetchLocationForMatch(_matches[i]);
+      }
     } catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -215,8 +202,14 @@ class DiscoverController extends ChangeNotifier {
   }
 
   @override
+  void notifyListeners() {
+    if (_isDisposed) return;
+    super.notifyListeners();
+  }
+
+  @override
   void dispose() {
-    _matchesSubscription?.cancel();
+    _isDisposed = true;
     super.dispose();
   }
 

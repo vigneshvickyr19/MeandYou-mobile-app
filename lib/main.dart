@@ -11,6 +11,7 @@ import 'core/providers/profile_setup_provider.dart';
 import 'features/notifications/presentation/controllers/notification_controller.dart';
 import 'features/linkes/presentation/controllers/like_controller.dart';
 import 'features/admin/presentation/controllers/admin_controller.dart';
+import 'core/providers/location_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => NotificationController()),
         ChangeNotifierProvider(create: (_) => LikeController()),
         ChangeNotifierProvider(create: (_) => AdminController()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: const MyApp(),
     ),

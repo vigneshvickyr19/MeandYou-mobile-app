@@ -6,6 +6,7 @@ import '../../features/home/presentation/pages/home_shell_page.dart';
 import '../../features/profile-setup/presentation/pages/profile_setup_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/matching/presentation/pages/location_permission_page.dart';
 import '../models/user_model.dart';
 import '../../features/auth/presentation/pages/auth_wrapper.dart';
 import '../constants/app_routes.dart';
@@ -21,6 +22,7 @@ class AppRouter {
     AppRoutes.chat: (_) => const HomeShellPage(initialTabIndex: 2),
     AppRoutes.profile: (_) => const HomeShellPage(initialTabIndex: 3),
     AppRoutes.likes: (_) => const HomeShellPage(initialTabIndex: 1),
+    AppRoutes.locationPermission: (_) => const LocationPermissionPage(),
   };
 
   // Generate route with support for deep linking parameters
@@ -102,6 +104,12 @@ class AppRouter {
       case AppRoutes.profileSetupPage:
         return MaterialPageRoute(
           builder: (_) => const ProfileSetupPage(),
+          settings: settings,
+        );
+
+      case AppRoutes.locationPermission:
+        return MaterialPageRoute(
+          builder: (_) => const LocationPermissionPage(),
           settings: settings,
         );
 
