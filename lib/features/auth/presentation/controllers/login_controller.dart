@@ -1,71 +1,75 @@
 import 'package:flutter/material.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 
 class LoginController extends ChangeNotifier {
   final AuthProvider _authProvider;
   
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  bool _showEmailError = false;
-  bool _showPasswordError = false;
+  final TextEditingController phoneController = TextEditingController();
+  
+  String _fullPhoneNumber = '';
+  bool _showPhoneError = false;
   bool _isButtonEnabled = false;
 
   LoginController(this._authProvider) {
     _authProvider.addListener(notifyListeners);
   }
 
-  bool get showEmailError => _showEmailError;
-  bool get showPasswordError => _showPasswordError;
+  bool get showPhoneError => _showPhoneError;
   bool get isButtonEnabled => _isButtonEnabled;
   bool get isLoading => _authProvider.isLoading;
 
-  void validateInputs() {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+  set phoneNumber(String value) => _fullPhoneNumber = value;
 
-    _showEmailError = email.isNotEmpty && !emailRegex.hasMatch(email);
-    _showPasswordError = password.isNotEmpty && password.length < 6;
-    _isButtonEnabled = emailRegex.hasMatch(email) && password.length >= 6;
+  void validateInputs() {
+    final phone = phoneController.text.trim();
+    
+    // Basic phone validation
+    final isPhoneValid = phone.length >= 8;
+    
+    _isButtonEnabled = isPhoneValid;
+    _showPhoneError = phone.isNotEmpty && !isPhoneValid;
+    
     notifyListeners();
   }
 
-  Future<void> login(BuildContext context) async {
+  Future<void> sendOtp(BuildContext context) async {
     if (!_isButtonEnabled) {
       validateInputs();
-      AppSnackbar.show(
-        context,
-        message: "Please fix the errors before continuing",
-        type: SnackbarType.error,
-      );
       return;
     }
 
     try {
-      await _authProvider.loginWithEmail(
-        emailController.text.trim(),
-        passwordController.text.trim(),
+      await _authProvider.loginWithPhone(
+        _fullPhoneNumber,
+        (verificationId, resendToken) {
+          if (context.mounted) {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.verifyCode,
+              arguments: {
+                'phoneNumber': _fullPhoneNumber,
+                'verificationId': verificationId,
+              },
+            );
+          }
+        },
+        onError: (error) {
+          if (context.mounted) {
+            AppSnackbar.show(
+              context,
+              message: error,
+              type: SnackbarType.error,
+            );
+          }
+        },
       );
-
-      if (context.mounted) {
-        AppSnackbar.show(
-          context,
-          message: "Login successful",
-          type: SnackbarType.success,
-        );
-        Navigator.of(context).pop(); // Back to AuthWrapper which will show Home
-      }
     } catch (e) {
       if (context.mounted) {
         AppSnackbar.show(
           context,
-          message: e.toString().contains('user-not-found')
-              ? "User not found"
-              : e.toString().contains('wrong-password')
-                  ? "Incorrect password"
-                  : "Login failed: $e",
+          message: e.toString(),
           type: SnackbarType.error,
         );
       }
@@ -75,8 +79,7 @@ class LoginController extends ChangeNotifier {
   @override
   void dispose() {
     _authProvider.removeListener(notifyListeners);
-    emailController.dispose();
-    passwordController.dispose();
+    phoneController.dispose();
     super.dispose();
   }
 }

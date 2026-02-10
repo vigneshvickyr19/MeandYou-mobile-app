@@ -108,8 +108,9 @@ class UserRepository {
 
   Future<UserModel> verifyAndLoginOtp(
     String verificationId,
-    String smsCode,
-  ) async {
+    String smsCode, {
+    String? displayName,
+  }) async {
     UserCredential credential = await _authService.signInWithOtp(
       verificationId,
       smsCode,
@@ -122,6 +123,7 @@ class UserRepository {
         id: uid,
         email: credential.user?.email ?? '',
         phoneNumber: credential.user?.phoneNumber,
+        fullName: displayName,
         isProfileComplete: false,
         isVerified: true, // Phone verified by default
         createdAt: DateTime.now(),

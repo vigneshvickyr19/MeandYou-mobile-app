@@ -25,14 +25,12 @@ class AuthProvider extends ChangeNotifier {
         id: initialUser.uid,
         email: initialUser.email ?? '',
         phoneNumber: initialUser.phoneNumber,
-        isProfileComplete: true, 
-        isVerified: initialUser.emailVerified || (initialUser.phoneNumber != null),
+        isProfileComplete: false,
+        isVerified:
+            initialUser.emailVerified || (initialUser.phoneNumber != null),
         createdAt: DateTime.now(),
         role: 'user', // Basic user by default
       );
-      _isInitializing = false;
-      // Signal immediately for pre-warmed session
-      DeepLinkService().setAuthResolved(true);
     }
     _init();
   }
@@ -49,7 +47,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       // Skip if we already have this user and subscription is active to avoid flicker
-      if (_currentUser?.id == user.uid && !_isInitializing && _userDocumentSubscription != null) return;
+      if (_currentUser?.id == user.uid &&
+          !_isInitializing &&
+          _userDocumentSubscription != null)
+        return;
 
       // Create a minimal user model from Firebase Auth data
       // This allows immediate navigation to Home without waiting for Firestore
@@ -57,14 +58,15 @@ class AuthProvider extends ChangeNotifier {
         id: user.uid,
         email: user.email ?? '',
         phoneNumber: user.phoneNumber,
-        isProfileComplete: true, // Optimistically true, corrected after fetch
+        isProfileComplete: false, // Default to false until Firestore confirms
         isVerified: user.emailVerified || (user.phoneNumber != null),
         createdAt: DateTime.now(),
-        role: 'user', // Basic user by default
+        role: 'user',
       );
-      
-      _setInitialized();
-      
+
+      _isInitializing = true;
+      notifyListeners();
+
       // Start real-time streaming of user document
       _startUserStreaming(user.uid);
     });
@@ -72,14 +74,16 @@ class AuthProvider extends ChangeNotifier {
 
   void _startUserStreaming(String uid) {
     _userDocumentSubscription?.cancel();
-    _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((userData) {
+    _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((
+      userData,
+    ) {
       if (userData != null) {
         _currentUser = userData;
-        notifyListeners();
+        _setInitialized();
       } else {
         // Handle case where document doesn't exist yet (new account)
         _currentUser = _currentUser?.copyWith(isProfileComplete: false);
-        notifyListeners();
+        _setInitialized();
       }
     });
   }
@@ -94,46 +98,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Login with Email ---
-  Future<void> loginWithEmail(String email, String password) async {
-    _setLoading(true);
-    try {
-      _currentUser = await _userRepository.signInWithEmail(email, password);
-      await _updateFcmToken();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // --- Sign Up with Email ---
-  Future<void> signUpWithEmail({
-    required String email,
-    required String password,
-  }) async {
-    _setLoading(true);
-    try {
-      _currentUser = await _userRepository.signUpWithEmail(
-        email: email,
-        password: password,
-      );
-      await _updateFcmToken();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // --- Login with Google ---
-  Future<void> loginWithGoogle() async {
-    _setLoading(true);
-    try {
-      _currentUser = await _userRepository.signInWithGoogle();
-      await _updateFcmToken();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // --- Login with Phone ---
+  // --- Login with Phone (Request OTP) ---
   Future<void> loginWithPhone(
     String phoneNumber,
     Function(String, int?) codeSent, {
@@ -176,13 +141,46 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // --- Send OTP Wrapper ---
+  Future<void> sendOtp(String phoneNumber) async {
+    final completer = Completer<void>();
+
+    await loginWithPhone(
+      phoneNumber,
+      (verificationId, resendToken) {
+        if (!completer.isCompleted) completer.complete();
+      },
+      onError: (error) {
+        if (!completer.isCompleted) completer.completeError(error);
+      },
+    );
+
+    return completer.future;
+  }
+
+  // --- Login with Google ---
+  Future<void> loginWithGoogle() async {
+    _setLoading(true);
+    try {
+      _currentUser = await _userRepository.signInWithGoogle();
+      await _updateFcmToken();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // --- Verify Phone OTP ---
-  Future<void> verifyOtp(String verificationId, String smsCode) async {
+  Future<void> verifyOtp(
+    String verificationId,
+    String smsCode, {
+    String? displayName,
+  }) async {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.verifyAndLoginOtp(
         verificationId,
         smsCode,
+        displayName: displayName,
       );
       await _updateFcmToken();
     } finally {

@@ -45,28 +45,28 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBRllM8rjTWKm4KJlayTIqBruFpPUF59bI',
-    appId: '1:470989654160:web:REPLACE_WITH_WEB_APP_ID',
-    messagingSenderId: '470989654160',
-    projectId: 'lik-connect',
-    authDomain: 'lik-connect.firebaseapp.com',
-    storageBucket: 'lik-connect.firebasestorage.app',
+    apiKey: 'AIzaSyA94EDKAwwzrnKyyO3DY82Gltv7pZ2QVas',
+    appId: '1:170946286094:web:06209937041b36aa66225f',
+    messagingSenderId: '170946286094',
+    projectId: 'me-and-you-11e89',
+    authDomain: 'me-and-you-11e89.firebaseapp.com',
+    storageBucket: 'me-and-you-11e89.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBRllM8rjTWKm4KJlayTIqBruFpPUF59bI',
-    appId: '1:470989654160:android:20705a7d77b526b5d77015',
-    messagingSenderId: '470989654160',
-    projectId: 'lik-connect',
-    storageBucket: 'lik-connect.firebasestorage.app',
+    apiKey: 'AIzaSyBocnY5mQ-2cEVaTqMnkrCt4jgv4_Ga330',
+    appId: '1:170946286094:android:06209937041b36aa66225f',
+    messagingSenderId: '170946286094',
+    projectId: 'me-and-you-11e89',
+    storageBucket: 'me-and-you-11e89.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBRllM8rjTWKm4KJlayTIqBruFpPUF59bI',
-    appId: '1:470989654160:ios:REPLACE_WITH_IOS_APP_ID',
-    messagingSenderId: '470989654160',
-    projectId: 'lik-connect',
-    storageBucket: 'lik-connect.firebasestorage.app',
-    iosBundleId: 'com.example.lik',
+    apiKey: 'AIzaSyA94EDKAwwzrnKyyO3DY82Gltv7pZ2QVas',
+    appId: '1:170946286094:ios:4878945912b498d666225f',
+    messagingSenderId: '170946286094',
+    projectId: 'me-and-you-11e89',
+    storageBucket: 'me-and-you-11e89.firebasestorage.app',
+    iosBundleId: 'com.meandyou.datingApp',
   );
 }

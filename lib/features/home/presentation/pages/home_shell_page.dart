@@ -41,38 +41,16 @@ class _HomeShellPageState extends State<HomeShellPage> {
 
     // --- Post-Startup Optimization Logic ---
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = context.read<AuthProvider>();
-      
       // 1. Signal that UI is ready for deferred notifications/deep links
       DeepLinkService().setUiReady(true);
-      
+
       // 2. Heavy work: Sync FCM token (Only after UI is rendered)
       NotificationService.instance.syncTokenNow();
-      
-      // 3. Listen for profile completion status
-      // If profile is incomplete, redirect to Setup
-      _checkProfileStatus(authProvider);
-      authProvider.addListener(_authListener);
     });
-  }
-
-  void _authListener() {
-    _checkProfileStatus(context.read<AuthProvider>());
-  }
-
-  void _checkProfileStatus(AuthProvider auth) {
-    if (auth.currentUser != null && !auth.currentUser!.isProfileComplete) {
-      // Redirect to profile setup if incomplete
-      Navigator.of(context).pushReplacementNamed(AppRoutes.profileSetupPage);
-    }
   }
 
   @override
   void dispose() {
-    // Clean up
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.removeListener(_authListener);
-    
     _controller.dispose();
     super.dispose();
   }
@@ -111,7 +89,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
                       ],
                     ),
                   ),
-                  
+
                   // Floating bottom navigation (absolute positioned at bottom)
                   Positioned(
                     bottom: 0,
@@ -129,12 +107,11 @@ class _HomeShellPageState extends State<HomeShellPage> {
   }
 
   Widget _buildFloatingBottomNav(HomeNavigationController controller) {
-    final showAdmin = context.watch<AuthProvider>().currentUser?.role == 'admin';
+    final showAdmin =
+        context.watch<AuthProvider>().currentUser?.role == 'admin';
     return Container(
       // Add internal SafeArea padding for home indicator
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
       // Gradient background for better visibility
       decoration: BoxDecoration(
         gradient: LinearGradient(

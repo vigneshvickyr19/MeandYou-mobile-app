@@ -2,24 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CLIENT_ID</key>
-	<string>470989654160-gv2c1vmdupr8biuppkc9adomf0jgr2m2.apps.googleusercontent.com</string>
-	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.470989654160-gv2c1vmdupr8biuppkc9adomf0jgr2m2</string>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>470989654160-k7g25q7fi3dv445f0t5muk2o3aplsvr3.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDmKT8VWNXYaZcY53M-Wcvp9fitRpL4iS8</string>
+	<string>AIzaSyA94EDKAwwzrnKyyO3DY82Gltv7pZ2QVas</string>
 	<key>GCM_SENDER_ID</key>
-	<string>470989654160</string>
+	<string>170946286094</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.menandyou.like</string>
+	<string>com.meandyou.datingApp</string>
 	<key>PROJECT_ID</key>
-	<string>lik-connect</string>
+	<string>me-and-you-11e89</string>
 	<key>STORAGE_BUCKET</key>
-	<string>lik-connect.firebasestorage.app</string>
+	<string>me-and-you-11e89.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,8 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:470989654160:ios:cd6d492ef238f890d77015</string>
-	<key>DATABASE_URL</key>
-	<string>https://lik-connect-default-rtdb.firebaseio.com</string>
+	<string>1:170946286094:ios:4878945912b498d666225f</string>
 </dict>
 </plist>

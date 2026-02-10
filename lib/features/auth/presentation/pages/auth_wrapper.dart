@@ -4,6 +4,7 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../auth/presentation/pages/get_started_page.dart';
 import '../../../home/presentation/pages/home_shell_page.dart';
 
+import '../../../profile-setup/presentation/pages/profile_setup_page.dart';
 import '../../../splash/presentation/pages/splash_page.dart';
 
 class AuthWrapper extends StatelessWidget {
@@ -25,9 +26,12 @@ class AuthWrapper extends StatelessWidget {
           return const GetStartedPage();
         }
 
-        // 3. User detected - go to Home immediately
-        // Note: fetchFullProfile was already triggered in AuthProvider._init
-        // HomeShellPage will handle the "Profile Incomplete" overlay if needed
+        // 3. User detected - Check profile completion
+        if (!user.isProfileComplete) {
+          return const ProfileSetupPage();
+        }
+
+        // 4. Everything complete - go home
         return const HomeShellPage();
       },
     );

@@ -61,6 +61,9 @@ dependencies:
   dart_geohash: ^2.1.0
   geocoding: ^4.0.0
   url_launcher: ^6.3.2
+  intl_phone_field: ^3.2.0
+  pinput: ^6.0.2
+  sms_autofill: ^2.4.1
 
 dev_dependencies:
   flutter_test:
