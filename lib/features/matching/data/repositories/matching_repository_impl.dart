@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dart_geohash/dart_geohash.dart';
 import 'dart:math' as math;
 import '../../domain/entities/nearby_match_entity.dart';
 import '../../domain/repositories/matching_repository.dart';
@@ -9,101 +10,103 @@ class MatchingRepositoryImpl implements MatchingRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
-  Stream<List<NearbyMatchEntity>> getNearbyMatches({
+  Future<List<NearbyMatchEntity>> getNearbyMatches({
     required UserModel currentUser,
     double radiusInKm = 5.0,
-  }) {
-    // 1. Calculate Geohash Range
+  }) async {
     final String userGeohash = currentUser.geohash ?? '';
+    if (userGeohash.isEmpty) return [];
 
-    if (userGeohash.isEmpty) {
-      return Stream.value([]);
+    // 1. Calculate geohash precision for 5km (Length 5 is ~4.9km)
+    // 9 cells of length 5 cover ~15km x 15km area
+    final String centerHash = userGeohash.length >= 5 
+        ? userGeohash.substring(0, 5) 
+        : userGeohash;
+
+    // 2. Get neighbor hashes (9 cells including center)
+    final GeoHasher hasher = GeoHasher();
+    final Map<String, String> neighbors = hasher.neighbors(centerHash);
+    final List<String> allCells = [centerHash, ...neighbors.values];
+
+    // 3. Execute parallel queries for each cell
+    final List<Future<QuerySnapshot<Map<String, dynamic>>>> queryFutures = [];
+    for (final cell in allCells) {
+      queryFutures.add(
+        _firestore
+            .collection(FirebaseConstants.profileSetup)
+            .orderBy(FirebaseConstants.geohash)
+            .startAt([cell])
+            .endAt(['$cell\uf8ff'])
+            .limit(20) // Limit to avoid massive reads
+            .get(),
+      );
     }
 
-    // We'll use a safer approach for the prefix
-    final String precisionPrefix = userGeohash.length >= 4
-        ? userGeohash.substring(0, 4)
-        : userGeohash;
-    return _firestore
-        .collection(FirebaseConstants.profileSetup)
-        .where('geohash', isGreaterThanOrEqualTo: precisionPrefix)
-        .where('geohash', isLessThanOrEqualTo: '$precisionPrefix\uf8ff')
-        .snapshots()
-        .map((snapshot) {
-          final List<NearbyMatchEntity> matches = [];
+    // 4. Merge results and filter
+    final List<QuerySnapshot<Map<String, dynamic>>> snapshots = 
+        await Future.wait(queryFutures);
+    
+    final Map<String, NearbyMatchEntity> uniqueMatches = {};
 
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
-            final String userId = doc.id;
-            final String userName =
-                data[FirebaseConstants.fullName] ?? 'Unknown';
+    for (var snapshot in snapshots) {
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final String userId = doc.id;
 
-            // Exclude self
-            if (userId == currentUser.id) {
-              continue;
-            }
+        // 5. Filters: Self, Blocked, Swiped
+        if (userId == currentUser.id) continue;
+        if (currentUser.blockedUsers.contains(userId)) continue;
+        if (currentUser.swipedUsers.contains(userId)) continue;
+        if (uniqueMatches.containsKey(userId)) continue;
 
-            // Exclude blocked or swiped users
-            if (currentUser.blockedUsers.contains(userId)) {
-              continue;
-            }
-            if (currentUser.swipedUsers.contains(userId)) {
-              continue;
-            }
+        final double lat = (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
+        final double lng = (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
 
-            final double lat =
-                (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
-            final double lng =
-                (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
+        // 6. Exact distance filtering
+        final double distance = _calculateDistance(
+          currentUser.latitude ?? 0,
+          currentUser.longitude ?? 0,
+          lat,
+          lng,
+        );
 
-            // Calculate distance
-            final double distance = _calculateDistance(
-              currentUser.latitude ?? 0,
-              currentUser.longitude ?? 0,
-              lat,
-              lng,
-            );
+        if (distance > radiusInKm) continue;
 
-            // Filter by radius
-            if (distance > radiusInKm) {
-              continue;
-            }
+        final double matchPercentage = _calculateMatchPercentage(
+          currentUser,
+          data,
+          distance,
+          radiusInKm,
+        );
 
-            // Calculate match percentage
-            final double matchPercentage = _calculateMatchPercentage(
-              currentUser,
-              data,
-              distance,
-              radiusInKm,
-            );
+        uniqueMatches[userId] = NearbyMatchEntity(
+          id: userId,
+          fullName: data[FirebaseConstants.fullName] ?? 'Unknown',
+          profileImageUrl: data[FirebaseConstants.profileImageUrl],
+          distance: distance,
+          matchPercentage: matchPercentage,
+          address: data[FirebaseConstants.address],
+          landmark: data['landmark'],
+          area: data['area'],
+          fullAddress: data[FirebaseConstants.address],
+          age: data[FirebaseConstants.age] ?? 18,
+          latitude: lat,
+          longitude: lng,
+          interests: List<String>.from(data[FirebaseConstants.interests] ?? []),
+        );
+      }
+    }
 
-            matches.add(
-              NearbyMatchEntity(
-                id: userId,
-                fullName: userName,
-                profileImageUrl: data[FirebaseConstants.profileImageUrl],
-                distance: distance,
-                matchPercentage: matchPercentage,
-                address: data[FirebaseConstants.address],
-                landmark: data['landmark'],
-                area: data['area'],
-                fullAddress: data[FirebaseConstants.address],
-                age: data[FirebaseConstants.age] ?? 18,
-                latitude: lat,
-                longitude: lng,
-                interests: List<String>.from(
-                  data[FirebaseConstants.interests] ?? [],
-                ),
-              ),
-            );
-          }
+    final List<NearbyMatchEntity> results = uniqueMatches.values.toList();
+    
+    // Sort: Match Percentage (Primary), Distance (Secondary)
+    results.sort((a, b) {
+      int cmp = b.matchPercentage.compareTo(a.matchPercentage);
+      if (cmp == 0) return a.distance.compareTo(b.distance);
+      return cmp;
+    });
 
-          // Sort by match percentage
-          matches.sort(
-            (a, b) => b.matchPercentage.compareTo(a.matchPercentage),
-          );
-          return matches;
-        });
+    return results;
   }
 
   @override
@@ -125,10 +128,23 @@ class MatchingRepositoryImpl implements MatchingRepository {
       updateData[FirebaseConstants.address] = readableAddress;
     }
 
-    await _firestore
-        .collection(FirebaseConstants.profileSetup)
-        .doc(userId)
-        .update(updateData);
+    // Update profileSetup (for matching engine)
+    final batch = _firestore.batch();
+    
+    final profileRef = _firestore.collection(FirebaseConstants.profileSetup).doc(userId);
+    final userRef = _firestore.collection(FirebaseConstants.users).doc(userId);
+
+    batch.update(profileRef, updateData);
+    
+    // Also update users collection (for AuthProvider/UI state)
+    batch.update(userRef, {
+      FirebaseConstants.latitude: latitude,
+      FirebaseConstants.longitude: longitude,
+      FirebaseConstants.geohash: geohash,
+      FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
   }
 
   double _calculateDistance(

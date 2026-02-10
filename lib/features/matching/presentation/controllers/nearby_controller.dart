@@ -43,19 +43,19 @@ class NearbyController extends ChangeNotifier {
   NearbyMatchEntity? _selectedMatch;
   NearbyMatchEntity? get selectedMatch => _selectedMatch;
 
-  StreamSubscription? _matchesSubscription;
   StreamSubscription? _locationSubscription;
 
   UserModel? _currentUser;
   Position? _lastPosition;
   String? _lastGeohash;
+  bool _isDisposed = false;
 
-  /// Load users and ensure query is reactive to current user changes
+  /// Load users (one-time fetch)
   Future<void> loadUsers(UserModel currentUser) async {
-    // If geohash hasn't changed and we have a subscription, don't restart to avoid flicker
+    // If geohash hasn't changed and we already have users, avoid re-fetching
     if (_currentUser?.id == currentUser.id && 
         _lastGeohash == currentUser.geohash && 
-        _matchesSubscription != null) {
+        _users.isNotEmpty) {
       return;
     }
 
@@ -64,7 +64,7 @@ class NearbyController extends ChangeNotifier {
     
     // Optimization: If we already have the essential data, start matching immediately
     if (_currentUser?.latitude != null && _currentUser?.geohash != null) {
-      _startMatchesSubscription();
+      _fetchMatches();
       _startLocationUpdates(_currentUser!.id);
       return;
     }
@@ -75,32 +75,28 @@ class NearbyController extends ChangeNotifier {
     // 1. Get full profile only if essential data is missing
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
 
-    _startMatchesSubscription();
+    await _fetchMatches();
     _startLocationUpdates(_currentUser!.id);
   }
 
-  void _startMatchesSubscription() {
+  Future<void> _fetchMatches() async {
     if (_currentUser == null) return;
 
-    _matchesSubscription?.cancel();
-    _matchesSubscription =
-        _getNearbyMatchesUseCase(
-          currentUser: _currentUser!,
-          radiusInKm: 10.0,
-        ).listen(
-          (matches) {
-            // Sort by distance (closest first)
-            matches.sort((a, b) => a.distance.compareTo(b.distance));
-            _users = matches;
-            _isLoading = false;
-            notifyListeners();
-          },
-          onError: (error) {
-            _isLoading = false;
-            notifyListeners();
-            debugPrint('Error loading nearby matches: $error');
-          },
-        );
+    try {
+      final matches = await _getNearbyMatchesUseCase(
+        currentUser: _currentUser!,
+        radiusInKm: 10.0,
+      );
+      
+      // Sort by distance (closest first)
+      _users = List.from(matches)..sort((a, b) => a.distance.compareTo(b.distance));
+      _isLoading = false;
+      notifyListeners();
+    } catch (error) {
+      _isLoading = false;
+      notifyListeners();
+      debugPrint('Error loading nearby matches: $error');
+    }
   }
 
   void _startLocationUpdates(String userId) async {
@@ -155,7 +151,7 @@ class NearbyController extends ChangeNotifier {
         geohash: geohash,
       );
       _lastGeohash = geohash;
-      _startMatchesSubscription();
+      _fetchMatches();
     }
 
   // Sync to cloud
@@ -271,8 +267,14 @@ class NearbyController extends ChangeNotifier {
   }
 
   @override
+  void notifyListeners() {
+    if (_isDisposed) return;
+    super.notifyListeners();
+  }
+
+  @override
   void dispose() {
-    _matchesSubscription?.cancel();
+    _isDisposed = true;
     _locationSubscription?.cancel();
     super.dispose();
   }

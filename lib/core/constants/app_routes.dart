@@ -13,4 +13,5 @@ class AppRoutes {
   static const String chatDetail = '/chat-detail';
   static const call = '/call';
   static const likes = '/likes';
+  static const locationPermission = '/location-permission';
 }

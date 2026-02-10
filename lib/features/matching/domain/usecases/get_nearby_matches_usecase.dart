@@ -7,7 +7,7 @@ class GetNearbyMatchesUseCase {
 
   GetNearbyMatchesUseCase(this.repository);
 
-  Stream<List<NearbyMatchEntity>> call({
+  Future<List<NearbyMatchEntity>> call({
     required UserModel currentUser,
     double radiusInKm = 5.0,
   }) {

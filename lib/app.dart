@@ -54,22 +54,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        // Handle initial online status once authenticated
-        if (authProvider.currentUser != null &&
-            authProvider.currentUser!.isOnline == false) {
-          authProvider.setOnlineStatus(true);
-        }
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          navigatorKey: _navigatorKey,
-          home: const AuthWrapper(),
-          theme: AppTheme.darkTheme,
-          routes: AppRouter.routes,
-          onGenerateRoute: AppRouter.onGenerateRoute,
-        );
-      },
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      navigatorKey: _navigatorKey,
+      home: const AuthWrapper(),
+      theme: AppTheme.darkTheme,
+      routes: AppRouter.routes,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }
