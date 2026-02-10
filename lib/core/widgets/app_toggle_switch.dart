@@ -4,13 +4,13 @@ import '../constants/app_colors.dart';
 
 class AppToggleOption {
   final String label;
-  final String svgPath;
   final String value;
+  final String? svgPath;
 
-  AppToggleOption({
+  const AppToggleOption({
     required this.label,
-    required this.svgPath,
     required this.value,
+    this.svgPath,
   });
 }
 
@@ -35,8 +35,8 @@ class AppToggleSwitch extends StatefulWidget {
 class _AppToggleSwitchState extends State<AppToggleSwitch> {
   @override
   Widget build(BuildContext context) {
-    int selectedIndex = widget.options.indexWhere(
-      (option) => option.value == widget.selectedValue,
+    final selectedIndex = widget.options.indexWhere(
+      (o) => o.value == widget.selectedValue,
     );
 
     return Column(
@@ -53,18 +53,17 @@ class _AppToggleSwitchState extends State<AppToggleSwitch> {
         ),
         const SizedBox(height: 12),
 
-        /// Outer Container (keeps your padding, border, radius)
+        /// Toggle Container
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: AppColors.darkOverlay,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white12),
-            backgroundBlendMode: BlendMode.overlay,
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              double optionWidth = constraints.maxWidth / widget.options.length;
+              final optionWidth = constraints.maxWidth / widget.options.length;
 
               return Stack(
                 children: [
@@ -78,42 +77,43 @@ class _AppToggleSwitchState extends State<AppToggleSwitch> {
                     width: optionWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.darkOverlay.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.darkOverlay.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
 
-                  /// Options Row
+                  /// Options
                   Row(
                     children: widget.options.map((option) {
-                      final bool isActive =
-                          option.value == widget.selectedValue;
+                      final isActive = option.value == widget.selectedValue;
 
                       return Expanded(
                         child: GestureDetector(
                           onTap: () => widget.onChanged(option.value),
+                          behavior: HitTestBehavior.opaque,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 10,
-                            ),
-                            color: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SvgPicture.asset(
-                                  option.svgPath,
-                                  height: 20,
-                                  width: 20,
-                                  colorFilter: ColorFilter.mode(
-                                    isActive
-                                        ? AppColors.primary
-                                        : Colors.white54,
-                                    BlendMode.srcIn,
+                                /// ✅ ICON (only if provided)
+                                if (option.svgPath != null) ...[
+                                  SvgPicture.asset(
+                                    option.svgPath!,
+                                    height: 20,
+                                    width: 20,
+                                    colorFilter: ColorFilter.mode(
+                                      isActive
+                                          ? AppColors.primary
+                                          : Colors.white54,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
+                                  const SizedBox(width: 8),
+                                ],
+
+                                /// Text
                                 Text(
                                   option.label,
                                   style: TextStyle(

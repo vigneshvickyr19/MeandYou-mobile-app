@@ -14,7 +14,7 @@ class AppProgressBar extends StatelessWidget {
       child: Stack(
         children: [
           /// Background bar
-          Container(height: height, color: AppColors.greyDark.withOpacity(0.3)),
+          Container(height: height, color: AppColors.greyDark.withValues(alpha: 0.3)),
 
           /// Solid fill
           LayoutBuilder(
@@ -24,12 +24,22 @@ class AppProgressBar extends StatelessWidget {
               return Stack(
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 600),
+                    curve: Curves.easeOutCubic,
                     height: height,
                     width: width,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, AppColors.secondary],
+                      ),
                       borderRadius: BorderRadius.circular(height / 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -42,8 +52,8 @@ class AppProgressBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.primary.withOpacity(0.0),
-                            AppColors.primary.withOpacity(0.6),
+                            AppColors.primary.withValues(alpha: 0.0),
+                            AppColors.primary.withValues(alpha: 0.6),
                             AppColors.primary,
                           ],
                           begin: Alignment.centerLeft,

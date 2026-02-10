@@ -5,7 +5,10 @@ import '../../../../core/constants/app_routes.dart';
 class SplashController {
   static void navigateToHome(BuildContext context) {
     Timer(const Duration(milliseconds: 2200), () {
-      Navigator.pushReplacementNamed(context, AppRoutes.getStarted);
+      // Check if the widget is still mounted and context is valid
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.authWrapper);
+      }
     });
   }
 }

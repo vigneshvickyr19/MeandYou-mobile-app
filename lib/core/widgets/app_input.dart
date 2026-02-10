@@ -9,6 +9,7 @@ class AppInput extends StatefulWidget {
   final String? errorMessage;
   final ValueChanged<String>? onChanged;
   final bool isPassword;
+  final TextInputType? keyboardType;
 
   const AppInput({
     super.key,
@@ -19,6 +20,7 @@ class AppInput extends StatefulWidget {
     this.errorMessage,
     this.onChanged,
     this.isPassword = false,
+    this.keyboardType,
   });
 
   @override
@@ -63,6 +65,7 @@ class _AppInputState extends State<AppInput> {
           controller: widget.controller,
           onChanged: widget.onChanged,
           obscureText: _obscureText,
+          keyboardType: widget.keyboardType, // ✅ USE IT HERE
           cursorColor: AppColors.primary,
           style: const TextStyle(color: AppColors.white, fontSize: 15),
           decoration: InputDecoration(
@@ -76,7 +79,6 @@ class _AppInputState extends State<AppInput> {
               vertical: 14,
             ),
 
-            // Borders
             enabledBorder: _border(AppColors.darkOverlay, 1),
             focusedBorder: _border(
               widget.showError ? AppColors.error : AppColors.primary,
@@ -85,7 +87,6 @@ class _AppInputState extends State<AppInput> {
             errorBorder: _border(AppColors.error, 1.5),
             focusedErrorBorder: _border(AppColors.error, 1.8),
 
-            // Password Toggle
             suffixIcon: widget.isPassword
                 ? IconButton(
                     splashRadius: 20,
@@ -106,7 +107,6 @@ class _AppInputState extends State<AppInput> {
           ),
         ),
 
-        // Error Message
         if (widget.showError && widget.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4),

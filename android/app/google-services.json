@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170946286094",
+    "project_id": "me-and-you-11e89",
+    "storage_bucket": "me-and-you-11e89.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170946286094:android:06209937041b36aa66225f",
+        "android_client_info": {
+          "package_name": "com.meandyou.datingApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBocnY5mQ-2cEVaTqMnkrCt4jgv4_Ga330"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,35 +1,66 @@
 import 'package:flutter/material.dart';
-import 'core/constants/app_routes.dart';
+import 'package:provider/provider.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/splash/presentation/pages/splash_page.dart';
-import 'features/auth/presentation/pages/get_started_page.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/pages/forgotPassword_page.dart';
-import 'features/auth/presentation/pages/sign_up_page.dart';
-import 'features/auth/presentation/pages/verify_code_page.dart';
-import 'features/auth/presentation/pages/create_password_page.dart';
-import 'features/home/presentation/pages/home_shell_page.dart';
+import 'core/services/deep_link_service.dart';
+import 'core/services/notification_service.dart';
+import 'core/providers/auth_provider.dart';
+import 'features/auth/presentation/pages/auth_wrapper.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final DeepLinkService _deepLinkService = DeepLinkService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Initialize services after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _deepLinkService.initialize(_navigatorKey);
+      NotificationService.instance.setNavigatorKey(_navigatorKey);
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _deepLinkService.setUiReady(false);
+    _deepLinkService.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.currentUser != null) {
+      if (state == AppLifecycleState.resumed) {
+        authProvider.setOnlineStatus(true);
+      } else if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.detached) {
+        authProvider.setOnlineStatus(false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.splash,
+      navigatorKey: _navigatorKey,
+      home: const AuthWrapper(),
       theme: AppTheme.darkTheme,
-      routes: {
-        AppRoutes.splash: (_) => const SplashPage(),
-        AppRoutes.getStarted: (_) => const GetStartedPage(),
-        AppRoutes.login: (_) => const LoginPage(),
-        AppRoutes.signUp: (_) => const SignUpPage(),
-        AppRoutes.forgotPassword: (_) => const ForgotPasswordPage(),
-        AppRoutes.verifyCode: (_) => const VerifyCodePage(),
-        AppRoutes.createPassword: (_) => const CreatePasswordPage(),
-
-        AppRoutes.home: (_) => const HomeShellPage(),
-      },
+      routes: AppRouter.routes,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }

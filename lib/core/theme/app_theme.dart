@@ -11,11 +11,11 @@ class AppTheme {
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       error: AppColors.error,
-      background: AppColors.black,
+      surface: AppColors.black,
       onPrimary: AppColors.white,
       onSecondary: AppColors.white,
       onError: AppColors.white,
-      onBackground: AppColors.white,
+      onSurface: AppColors.white,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -38,28 +38,6 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.transparent,
-      hintStyle: const TextStyle(color: Colors.white54),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.secondary.withOpacity(0.6)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.secondary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.error, width: 1.5),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.error, width: 1.5),
-      ),
-      labelStyle: const TextStyle(color: AppColors.white),
     ),
   );
 }

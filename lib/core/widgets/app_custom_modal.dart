@@ -23,12 +23,12 @@ class AppCustomModal extends StatefulWidget {
   });
 
   /// Call this to show the modal
-  static void show(BuildContext context, AppCustomModal modal) {
-    showGeneralDialog(
+  static Future<T?> show<T>(BuildContext context, AppCustomModal modal) {
+    return showGeneralDialog<T>(
       context: context,
       barrierDismissible: false,
       barrierLabel: "Modal",
-      barrierColor: Colors.black.withOpacity(0.4),
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, animation, secondaryAnimation) {
         return Center(child: modal);
@@ -64,8 +64,8 @@ class _AppCustomModalState extends State<AppCustomModal>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               decoration: BoxDecoration(
-                color: AppColors.black.withOpacity(
-                  0.85,
+                color: AppColors.black.withValues(
+                  alpha: 0.85,
                 ), // slightly transparent
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [

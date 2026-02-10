@@ -1,101 +1,213 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/app_back_button.dart';
-import '../../../../core/widgets/app_input.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/otp_input_field.dart';
+import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/constants/app_routes.dart';
-import '../../../../core/widgets/app_snackbar.dart';
+import '../controllers/verify_code_controller.dart';
 
-class VerifyCodePage extends StatefulWidget {
+class VerifyCodePage extends StatelessWidget {
   const VerifyCodePage({super.key});
 
   @override
-  State<VerifyCodePage> createState() => _VerifyCodePageState();
-}
-
-class _VerifyCodePageState extends State<VerifyCodePage> {
-  final TextEditingController _codeController = TextEditingController();
-  bool _showError = false;
-  bool _isButtonEnabled = false;
-
-  void _validateCode(String value) {
-    setState(() {
-      _isButtonEnabled = value.trim().length == 6; // assuming 6-digit code
-      _showError = value.isNotEmpty && !_isButtonEnabled;
-    });
-  }
-
-  void _onSubmit() {
-    final code = _codeController.text.trim();
-    if (!_isButtonEnabled) {
-      setState(() => _showError = true);
-      AppSnackbar.show(
-        context,
-        message: "Please enter a valid 6-digit code",
-        type: SnackbarType.error,
-      );
-      return;
-    }
-
-    // Navigate to create password page
-    Navigator.pushNamed(context, AppRoutes.createPassword);
-  }
-
-  @override
-  void dispose() {
-    _codeController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: AppBackButton(),
-        ),
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final phoneNumber = args?['phoneNumber'] ?? '';
+    final verificationId = args?['verificationId'] ?? '';
+
+    return ChangeNotifierProvider(
+      create: (_) => VerifyCodeController(
+        Provider.of<AuthProvider>(context, listen: false),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            const Text(
-              "Verify Code",
-              style: TextStyle(
-                color: AppColors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Consumer<VerifyCodeController>(
+        builder: (context, controller, _) {
+          // Auto-navigation if verified (e.g., via SMS auto-retrieval)
+          if (controller.isAuthenticated && !controller.isLoading) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  AppRoutes.authWrapper,
+                  (route) => false,
+                );
+              }
+            });
+          }
+
+          return Scaffold(
+            backgroundColor: AppColors.black,
+            body: Stack(
+              children: [
+                // Background Glow
+                Positioned(
+                  top: -50,
+                  right: -50,
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                    ),
+                  ),
+                ),
+
+                SafeArea(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          children: [const AppBackButton(), const Spacer()],
+                        ),
+                      ),
+
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 24),
+                              FadeInDown(
+                                duration: const Duration(milliseconds: 600),
+                                child: const Text(
+                                  "Enter code",
+                                  style: TextStyle(
+                                    color: AppColors.white,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              FadeInDown(
+                                delay: const Duration(milliseconds: 100),
+                                duration: const Duration(milliseconds: 600),
+                                child: Text(
+                                  "We sent a verification code to your phone\n$phoneNumber",
+                                  style: TextStyle(
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    fontSize: 16,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 48),
+
+                              FadeInUp(
+                                delay: const Duration(milliseconds: 200),
+                                duration: const Duration(milliseconds: 600),
+                                child: OtpInputField(
+                                  otpLength: args?['otpLength'] ?? 6,
+                                  showError: controller.showError,
+                                  onOtpComplete: (otp) {
+                                    controller.validateCode(otp);
+                                    if (otp.length ==
+                                        (args?['otpLength'] ?? 6)) {
+                                      controller.verify(
+                                        context,
+                                        phoneNumber,
+                                        verificationId,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              FadeInUp(
+                                delay: const Duration(milliseconds: 300),
+                                duration: const Duration(milliseconds: 600),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    runSpacing: 8,
+                                    children: [
+                                      Text(
+                                        "You didn’t receive any code? ",
+                                        style: TextStyle(
+                                          color: AppColors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: controller.canResend
+                                            ? () => controller.resendOtp(
+                                                context,
+                                                phoneNumber,
+                                              )
+                                            : null,
+                                        child: Text(
+                                          controller.canResend
+                                              ? "Resend Code"
+                                              : "Resend Code in ${controller.resendTimer}s",
+                                          style: TextStyle(
+                                            color: controller.canResend
+                                                ? AppColors.secondary
+                                                : AppColors.secondary
+                                                      .withValues(alpha: 0.5),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              FadeInUp(
+                                delay: const Duration(milliseconds: 400),
+                                child: AppButton(
+                                  text: "Verify OTP",
+                                  onPressed: () => controller.verify(
+                                    context,
+                                    phoneNumber,
+                                    verificationId,
+                                  ),
+                                  isEnabled: controller.isButtonEnabled,
+                                  isLoading: controller.isLoading,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text(
-              "Enter the 6-digit code sent to your email.",
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            const SizedBox(height: 32),
-            AppInput(
-              label: "Verification Code",
-              hint: "Enter code",
-              controller: _codeController,
-              showError: _showError,
-              errorMessage: "Invalid code",
-              onChanged: _validateCode,
-            ),
-            const Spacer(),
-            AppButton(
-              text: "Verify",
-              onPressed: _onSubmit,
-              isEnabled: _isButtonEnabled,
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
