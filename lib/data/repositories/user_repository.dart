@@ -177,4 +177,9 @@ class UserRepository {
   Future<void> updateOnlineStatus(String userId, bool isOnline) async {
     await _dbService.updateOnlineStatus(userId, isOnline);
   }
+
+  // Delete User Account (Firestore parts)
+  Future<void> deleteUserAccount(String userId) async {
+    await _dbService.deleteUserAccount(userId);
+  }
 }

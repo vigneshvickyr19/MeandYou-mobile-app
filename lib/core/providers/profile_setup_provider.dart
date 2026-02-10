@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../../data/repositories/user_repository.dart';
 import '../services/notification_service.dart';
+import '../services/storage_service.dart';
 
 class ProfileSetupProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -111,7 +113,31 @@ class ProfileSetupProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Save Profile Setup data
+      // 1. Upload photos if they are local paths
+      List<String> uploadedUrls = [];
+      if (_draftProfile!.photos != null) {
+        for (int i = 0; i < _draftProfile!.photos!.length; i++) {
+          String photo = _draftProfile!.photos![i];
+          if (photo.isEmpty) continue;
+          
+          if (photo.startsWith('http')) {
+            uploadedUrls.add(photo);
+          } else {
+            // It's a local path from StepPhotos
+            final url = await StorageService.instance.uploadProfileImage(
+              userId: currentUser.id,
+              file: File(photo),
+              index: i,
+            );
+            uploadedUrls.add(url);
+          }
+        }
+      }
+
+      // 2. Update draft with download URLs
+      _draftProfile = _draftProfile!.copyWith(photos: uploadedUrls);
+
+      // 3. Save Profile Setup data
       await _userRepository.saveProfileSetup(_draftProfile!);
 
       // 2. Update User Account status & sync core details

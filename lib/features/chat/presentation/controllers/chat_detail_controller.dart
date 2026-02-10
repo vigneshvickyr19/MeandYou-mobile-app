@@ -14,6 +14,7 @@ import '../../../../core/services/notification_payload_builder.dart';
 import '../../../notifications/data/services/notification_storage_service.dart';
 import '../../../notifications/data/models/notification_model.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/services/storage_service.dart';
 
 class ChatDetailController extends ChangeNotifier {
   final ChatRepository _chatRepository = ChatRepository();
@@ -188,15 +189,15 @@ class ChatDetailController extends ChangeNotifier {
   }
 
   Future<void> sendVoiceMessage(String path, Duration duration) async {
-    final fileName = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    final ref = FirebaseStorage.instance.ref().child('chat_audio').child(fileName);
-    
+    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+
     try {
-      final uploadTask = ref.putFile(File(path));
-      await uploadTask;
-      final downloadUrl = await ref.getDownloadURL();
+      final downloadUrl = await StorageService.instance.uploadChatAudio(
+        userId: _currentUserId,
+        messageId: tempId,
+        file: File(path),
+      );
       
-      final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
       final message = MessageModel(
         id: tempId,
         chatRoomId: _chatRoomId,
@@ -233,9 +234,10 @@ class ChatDetailController extends ChangeNotifier {
     if (content.trim().isEmpty && _selectedImages.isEmpty) return;
 
     final imagesToSend = _selectedImages.take(10).toList();
+    final tempId = 'msg_${DateTime.now().millisecondsSinceEpoch}';
 
-    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
-    final message = MessageModel(
+    // 1. Create message model (initially with local paths for optimism)
+    var message = MessageModel(
       id: tempId,
       chatRoomId: _chatRoomId,
       senderId: _currentUserId,
@@ -247,32 +249,44 @@ class ChatDetailController extends ChangeNotifier {
       imageUrls: imagesToSend.map((img) => img.path).toList(),
     );
 
+    // 2. Optimistic Update
     _optimisticMessages.insert(0, message);
     _needsRebuildCache = true;
     _selectedImages = [];
     notifyListeners();
 
     try {
+      // 3. Upload images if any
+      if (imagesToSend.isNotEmpty) {
+        final List<String> uploadedUrls = [];
+        for (int i = 0; i < imagesToSend.length; i++) {
+          final url = await StorageService.instance.uploadChatImage(
+            userId: _currentUserId,
+            messageId: tempId,
+            file: File(imagesToSend[i].path),
+            index: i,
+          );
+          uploadedUrls.add(url);
+        }
+        
+        // Update message with download URLs
+        message = message.copyWith(
+          imageUrl: uploadedUrls.first,
+          imageUrls: uploadedUrls,
+        );
+      }
+
+      // 4. Send to Repository
       await _chatRepository.sendMessage(message);
 
-      // Send notification with proper message type
-      String messageType;
-      String messagePreview;
-      int? imageCount;
-
-      if (imagesToSend.isNotEmpty) {
-        messageType = 'image';
-        messagePreview = '';
-        imageCount = imagesToSend.length;
-      } else {
-        messageType = 'text';
-        messagePreview = content.trim();
-      }
+      // 5. Send notification
+      String messageType = imagesToSend.isNotEmpty ? 'image' : 'text';
+      String messagePreview = imagesToSend.isNotEmpty ? '' : content.trim();
 
       await _sendChatNotification(
         messageType: messageType,
         messagePreview: messagePreview,
-        imageCount: imageCount,
+        imageCount: imagesToSend.isNotEmpty ? imagesToSend.length : null,
       );
     } catch (e) {
       _optimisticMessages.removeWhere((m) => m.id == tempId);

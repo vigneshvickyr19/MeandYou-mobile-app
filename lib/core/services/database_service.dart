@@ -150,4 +150,19 @@ class DatabaseService {
       debugPrint('Error saving location: $e');
     }
   }
+
+  // Delete User Account (Firestore Documents)
+  Future<void> deleteUserAccount(String userId) async {
+    try {
+      final batch = _db.batch();
+      batch.delete(_usersCollection.doc(userId));
+      batch.delete(_profileSetupCollection.doc(userId));
+      batch.delete(_db.collection(FirebaseConstants.currentLocations).doc(userId));
+      
+      await batch.commit();
+    } catch (e) {
+      debugPrint('Error deleting user account from Firestore: $e');
+      rethrow;
+    }
+  }
 }

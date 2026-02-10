@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
 import '../services/notification_service.dart';
 import '../services/deep_link_service.dart';
+import '../services/storage_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -197,6 +198,40 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = null;
       // Reset auth resolution for next login/session
       DeepLinkService().setAuthResolved(false);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // --- Delete Account & Cleanup ---
+  Future<void> deleteAccount() async {
+    if (_currentUser == null) return;
+    
+    final userId = _currentUser!.id;
+    _setLoading(true);
+
+    try {
+      // 1. Cleanup Storage (Scoped folders)
+      await StorageService.instance.deleteUserStorageDetails(userId);
+
+      // 2. Cleanup Firestore (User & Profile docs)
+      await _userRepository.deleteUserAccount(userId);
+
+      // 3. Delete Firebase Auth User
+      // Note: Re-authentication might be required by Firebase for sensitive ops
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.uid == userId) {
+         await user.delete();
+      }
+
+      _currentUser = null;
+      _userDocumentSubscription?.cancel();
+      DeepLinkService().setAuthResolved(false);
+      
+      debugPrint('Account deleted successfully for user: $userId');
+    } catch (e) {
+      debugPrint('Error during account deletion: $e');
+      rethrow;
     } finally {
       _setLoading(false);
     }
