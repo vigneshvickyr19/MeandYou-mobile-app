@@ -37,7 +37,7 @@ class _OtpInputFieldState extends State<OtpInputField> with CodeAutoFill {
       // Get app signature for Android SMS Retriever API
       _appSignature = await SmsAutoFill().getAppSignature;
       debugPrint("App Signature for SMS Retriever: $_appSignature");
-      
+
       // Start listening for SMS
       listenForCode();
       setState(() {});

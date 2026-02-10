@@ -7,7 +7,7 @@ import '../../../../core/constants/app_routes.dart';
 
 class VerifyCodeController extends ChangeNotifier {
   final AuthProvider _authProvider;
-  
+
   final TextEditingController codeController = TextEditingController();
   bool _showError = false;
   bool _isButtonEnabled = false;
@@ -35,7 +35,7 @@ class VerifyCodeController extends ChangeNotifier {
     _resendTimer = 60;
     _canResend = false;
     _safeNotifyListeners();
-    
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_resendTimer > 0) {
         _resendTimer--;
@@ -64,31 +64,43 @@ class VerifyCodeController extends ChangeNotifier {
 
   Future<void> resendOtp(BuildContext context, String phoneNumber) async {
     if (!_canResend || isLoading) return;
-    
+
     try {
       await _authProvider.sendOtp(phoneNumber);
       _startResendTimer();
       if (context.mounted) {
-        AppSnackbar.show(context, message: "Code resent successfully!", type: SnackbarType.success);
+        AppSnackbar.show(
+          context,
+          message: "Code resent successfully!",
+          type: SnackbarType.success,
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        AppSnackbar.show(context, message: e.toString(), type: SnackbarType.error);
+        AppSnackbar.show(
+          context,
+          message: e.toString(),
+          type: SnackbarType.error,
+        );
       }
     }
   }
 
-  Future<void> verify(BuildContext context, String phoneNumber, String verificationId) async {
+  Future<void> verify(
+    BuildContext context,
+    String phoneNumber,
+    String verificationId,
+  ) async {
     if (isLoading) return;
 
     final code = _otp.isEmpty ? codeController.text.trim() : _otp;
-    
+
     if (verificationId.isEmpty) {
       if (context.mounted) {
         AppSnackbar.show(
-          context, 
-          message: "Empty verification ID. Please go back and try again.", 
-          type: SnackbarType.error
+          context,
+          message: "Empty verification ID. Please go back and try again.",
+          type: SnackbarType.error,
         );
       }
       return;
@@ -102,16 +114,13 @@ class VerifyCodeController extends ChangeNotifier {
 
     try {
       debugPrint("Verifying OTP: $code for ID: $verificationId");
-      await _authProvider.verifyOtp(
-        verificationId,
-        code,
-      );
+      await _authProvider.verifyOtp(verificationId, code);
 
       if (context.mounted) {
         debugPrint("OTP Verified Successfully. Navigating to AuthWrapper...");
         // Reset stack and let AuthWrapper decide (Home vs Profile Setup)
         Navigator.pushNamedAndRemoveUntil(
-          context, 
+          context,
           AppRoutes.authWrapper,
           (route) => false,
         );
@@ -124,7 +133,8 @@ class VerifyCodeController extends ChangeNotifier {
           if (e.code == 'invalid-verification-code') {
             msg = "The code you entered is invalid.";
           } else if (e.code == 'session-expired') {
-            msg = "The verification code has expired. Please request a new one.";
+            msg =
+                "The verification code has expired. Please request a new one.";
           } else if (e.code == 'network-request-failed') {
             msg = "Network error. Please check your connection.";
           } else {
@@ -134,12 +144,8 @@ class VerifyCodeController extends ChangeNotifier {
           // Strip 'Exception: ' prefix for cleaner UI messages if it exists
           msg = e.toString().replaceFirst('Exception: ', '');
         }
-        
-        AppSnackbar.show(
-          context, 
-          message: msg, 
-          type: SnackbarType.error
-        );
+
+        AppSnackbar.show(context, message: msg, type: SnackbarType.error);
       }
     }
   }

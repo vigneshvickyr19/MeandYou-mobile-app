@@ -15,13 +15,17 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. Initial Initialization Check
-    final isInitializing = context.select<AuthProvider, bool>((p) => p.isInitializing);
+    final isInitializing = context.select<AuthProvider, bool>(
+      (p) => p.isInitializing,
+    );
     if (isInitializing) {
       return const SplashPage();
     }
 
     // 2. Auth State Check
-    final userId = context.select<AuthProvider, String?>((p) => p.currentUser?.id);
+    final userId = context.select<AuthProvider, String?>(
+      (p) => p.currentUser?.id,
+    );
     if (userId == null) {
       return const GetStartedPage();
     }
@@ -39,7 +43,8 @@ class AuthWrapper extends StatelessWidget {
           return const ProfileSetupPage();
         }
 
-        bool hasLocationData = state.geohash != null && state.geohash!.isNotEmpty;
+        bool hasLocationData =
+            state.geohash != null && state.geohash!.isNotEmpty;
 
         if (state.hasLocationAccess && hasLocationData) {
           return const HomeShellPage();
