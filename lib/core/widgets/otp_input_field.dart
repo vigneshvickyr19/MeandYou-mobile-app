@@ -92,6 +92,7 @@ class _OtpInputFieldState extends State<OtpInputField> with CodeAutoFill {
     );
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Pinput(
           length: widget.otpLength,
@@ -120,11 +121,14 @@ class _OtpInputFieldState extends State<OtpInputField> with CodeAutoFill {
         ),
         if (_appSignature != null) ...[
           const SizedBox(height: 12),
-          Text(
-            "Waiting for SMS...",
-            style: TextStyle(
-              color: AppColors.white.withValues(alpha: 0.3),
-              fontSize: 10,
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              "Waiting for SMS...",
+              style: TextStyle(
+                color: AppColors.white.withValues(alpha: 0.3),
+                fontSize: 10,
+              ),
             ),
           ),
         ],

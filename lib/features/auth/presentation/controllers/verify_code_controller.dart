@@ -25,6 +25,7 @@ class VerifyCodeController extends ChangeNotifier {
   bool get showError => _showError;
   bool get isButtonEnabled => _isButtonEnabled;
   bool get isLoading => _authProvider.isLoading;
+  bool get isAuthenticated => _authProvider.isAuthenticated;
   int get resendTimer => _resendTimer;
   bool get canResend => _canResend;
   String get otp => _otp;

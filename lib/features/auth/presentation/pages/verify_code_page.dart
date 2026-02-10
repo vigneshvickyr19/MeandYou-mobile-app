@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/otp_input_field.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../controllers/verify_code_controller.dart';
 
 class VerifyCodePage extends StatelessWidget {
@@ -21,6 +22,19 @@ class VerifyCodePage extends StatelessWidget {
       create: (_) => VerifyCodeController(Provider.of<AuthProvider>(context, listen: false)),
       child: Consumer<VerifyCodeController>(
         builder: (context, controller, _) {
+          // Auto-navigation if verified (e.g., via SMS auto-retrieval)
+          if (controller.isAuthenticated && !controller.isLoading) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context, 
+                  AppRoutes.authWrapper, 
+                  (route) => false
+                );
+              }
+            });
+          }
+
           return Scaffold(
             backgroundColor: AppColors.black,
             body: Stack(
@@ -101,38 +115,44 @@ class VerifyCodePage extends StatelessWidget {
                                 ),
                               ),
                               
-                              const SizedBox(height: 48),
+                              const SizedBox(height: 32),
                               
                               FadeInUp(
                                 delay: const Duration(milliseconds: 300),
                                 duration: const Duration(milliseconds: 600),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      "You didn’t receive any code? ",
-                                      style: TextStyle(
-                                        color: AppColors.white.withValues(alpha: 0.7),
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: controller.canResend 
-                                        ? () => controller.resendOtp(context, phoneNumber)
-                                        : null,
-                                      child: Text(
-                                        controller.canResend 
-                                          ? "Resend Code" 
-                                          : "Resend Code in ${controller.resendTimer}s",
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Wrap(
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    runSpacing: 8,
+                                    children: [
+                                      Text(
+                                        "You didn’t receive any code? ",
                                         style: TextStyle(
-                                          color: controller.canResend 
-                                            ? AppColors.secondary 
-                                            : AppColors.secondary.withValues(alpha: 0.5),
+                                          color: AppColors.white.withValues(alpha: 0.7),
                                           fontSize: 16,
-                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      GestureDetector(
+                                        onTap: controller.canResend 
+                                          ? () => controller.resendOtp(context, phoneNumber)
+                                          : null,
+                                        child: Text(
+                                          controller.canResend 
+                                            ? "Resend Code" 
+                                            : "Resend Code in ${controller.resendTimer}s",
+                                          style: TextStyle(
+                                            color: controller.canResend 
+                                              ? AppColors.secondary 
+                                              : AppColors.secondary.withValues(alpha: 0.5),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
