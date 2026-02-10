@@ -289,9 +289,7 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser == null) return;
     try {
       await PresenceService.instance.setStatus(isOnline);
-      // We still update Firestore for "last seen" if needed, 
-      // but the real-time "Online" state is now in RTDB.
-      _currentUser = _currentUser!.copyWith(isOnline: isOnline);
+      // Online state is now in RTDB, Firestore document remains lean.
       notifyListeners();
     } catch (e) {
       debugPrint("Error setting online status: $e");

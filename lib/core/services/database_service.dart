@@ -126,17 +126,6 @@ class DatabaseService {
     });
   }
   
-  // Update Online Status
-  Future<void> updateOnlineStatus(String userId, bool isOnline) async {
-    try {
-      await _usersCollection.doc(userId).update({
-        'isOnline': isOnline,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Error updating online status: $e');
-    }
-  }
   
   // Save User Location
   Future<void> saveUserLocation(String userId, double lat, double lng) async {

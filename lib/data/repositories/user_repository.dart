@@ -173,10 +173,6 @@ class UserRepository {
     await _dbService.updateUserField(userId, {'voipToken': token});
   }
 
-  // Update Online Status
-  Future<void> updateOnlineStatus(String userId, bool isOnline) async {
-    await _dbService.updateOnlineStatus(userId, isOnline);
-  }
 
   // Delete User Account (Firestore parts)
   Future<void> deleteUserAccount(String userId) async {
