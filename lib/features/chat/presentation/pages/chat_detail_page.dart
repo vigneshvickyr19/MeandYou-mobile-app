@@ -145,8 +145,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                       child: Row(
                         children: [
                           ChatAvatar(
+                            userId: widget.otherUser.id,
                             imageUrl: widget.otherUser.profileImageUrl,
-                            isOnline: _isUserOnline(controller.otherUserStatus),
                             size: 36,
                           ),
                           const SizedBox(width: 12),

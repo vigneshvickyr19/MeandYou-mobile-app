@@ -14,13 +14,27 @@ class MatchingRepositoryImpl implements MatchingRepository {
     required UserModel currentUser,
     double radiusInKm = 5.0,
   }) async {
+    // 0. Fetch Current User Profile from profileSetup (Single source of truth for matching)
+    final profileSnapshot = await _firestore
+        .collection(FirebaseConstants.profileSetup)
+        .doc(currentUser.id)
+        .get();
+    
+    final Map<String, dynamic> profileData = profileSnapshot.data() ?? {};
+    
+    // Extract preferences directly from profile document
+    final String? myLookingFor = profileData['lookingFor'];
+    final int myMinAge = profileData['minAge'] ?? 18;
+    final int myMaxAge = profileData['maxAge'] ?? 99;
+    final List<String> myInterests = List<String>.from(profileData['interests'] ?? []);
+
     final String userGeohash = currentUser.geohash ?? '';
     if (userGeohash.isEmpty) return [];
 
     // 1. Calculate geohash precision for 5km (Length 5 is ~4.9km)
     // 9 cells of length 5 cover ~15km x 15km area
-    final String centerHash = userGeohash.length >= 5 
-        ? userGeohash.substring(0, 5) 
+    final String centerHash = userGeohash.length >= 5
+        ? userGeohash.substring(0, 5)
         : userGeohash;
 
     // 2. Get neighbor hashes (9 cells including center)
@@ -43,9 +57,9 @@ class MatchingRepositoryImpl implements MatchingRepository {
     }
 
     // 4. Merge results and filter
-    final List<QuerySnapshot<Map<String, dynamic>>> snapshots = 
+    final List<QuerySnapshot<Map<String, dynamic>>> snapshots =
         await Future.wait(queryFutures);
-    
+
     final Map<String, NearbyMatchEntity> uniqueMatches = {};
 
     for (var snapshot in snapshots) {
@@ -55,12 +69,12 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
         // 5. Filters: Self, Blocked, Swiped
         if (userId == currentUser.id) continue;
-        if (currentUser.blockedUsers.contains(userId)) continue;
-        if (currentUser.swipedUsers.contains(userId)) continue;
         if (uniqueMatches.containsKey(userId)) continue;
 
-        final double lat = (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
-        final double lng = (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
+        final double lat =
+            (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
+        final double lng =
+            (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
 
         // 6. Exact distance filtering
         final double distance = _calculateDistance(
@@ -73,10 +87,13 @@ class MatchingRepositoryImpl implements MatchingRepository {
         if (distance > radiusInKm) continue;
 
         final double matchPercentage = _calculateMatchPercentage(
-          currentUser,
-          data,
-          distance,
-          radiusInKm,
+          myLookingFor: myLookingFor,
+          myMinAge: myMinAge,
+          myMaxAge: myMaxAge,
+          myInterests: myInterests,
+          otherData: data,
+          distance: distance,
+          radiusInKm: radiusInKm,
         );
 
         uniqueMatches[userId] = NearbyMatchEntity(
@@ -98,7 +115,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
     }
 
     final List<NearbyMatchEntity> results = uniqueMatches.values.toList();
-    
+
     // Sort: Match Percentage (Primary), Distance (Secondary)
     results.sort((a, b) {
       int cmp = b.matchPercentage.compareTo(a.matchPercentage);
@@ -130,12 +147,14 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
     // Update profileSetup (for matching engine)
     final batch = _firestore.batch();
-    
-    final profileRef = _firestore.collection(FirebaseConstants.profileSetup).doc(userId);
+
+    final profileRef = _firestore
+        .collection(FirebaseConstants.profileSetup)
+        .doc(userId);
     final userRef = _firestore.collection(FirebaseConstants.users).doc(userId);
 
     batch.update(profileRef, updateData);
-    
+
     // Also update users collection (for AuthProvider/UI state)
     batch.update(userRef, {
       FirebaseConstants.latitude: latitude,
@@ -164,37 +183,37 @@ class MatchingRepositoryImpl implements MatchingRepository {
     return 12742 * math.asin(math.sqrt(a));
   }
 
-  double _calculateMatchPercentage(
-    UserModel currentUser,
-    Map<String, dynamic> otherData,
-    double distance,
-    double radiusInKm,
-  ) {
+  double _calculateMatchPercentage({
+    required String? myLookingFor,
+    required int myMinAge,
+    required int myMaxAge,
+    required List<String> myInterests,
+    required Map<String, dynamic> otherData,
+    required double distance,
+    required double radiusInKm,
+  }) {
     double score = 0;
     // 1. Interests (40%)
     final otherInterests = List<String>.from(
       otherData[FirebaseConstants.interests] ?? [],
     );
-    if (currentUser.interests.isNotEmpty) {
-      final common = currentUser.interests
+    if (myInterests.isNotEmpty) {
+      final common = myInterests
           .where((i) => otherInterests.contains(i))
           .length;
-      final interestScore = (common / currentUser.interests.length) * 40;
+      final interestScore = (common / myInterests.length) * 40;
       score += interestScore;
     }
 
-    // 2. Preferences (30%)
+    // 2. Preferences - lookingFor (30%)
     final otherGender = otherData[FirebaseConstants.gender];
-    final myLookingFor = currentUser.preferences?['lookingFor'];
     if (myLookingFor == otherGender) {
       score += 30;
     }
 
     // 3. Age Range (20%)
     final otherAge = otherData[FirebaseConstants.age] ?? 18;
-    final minAge = currentUser.preferences?['minAge'] ?? 18;
-    final maxAge = currentUser.preferences?['maxAge'] ?? 99;
-    if (otherAge >= minAge && otherAge <= maxAge) {
+    if (otherAge >= myMinAge && otherAge <= myMaxAge) {
       score += 20;
     }
 

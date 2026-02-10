@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/presence_service.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/user_model.dart';
 import 'distance_badge.dart';
@@ -69,17 +70,23 @@ class UserAvatar extends StatelessWidget {
               Positioned(
                 right: 2,
                 bottom: 2,
-                child: Container(
-                  width: size * 0.22,
-                  height: size * 0.22,
-                  decoration: BoxDecoration(
-                    color: user.isOnline ? const Color(0xFF4CAF50) : Colors.grey,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.black,
-                      width: 2,
-                    ),
-                  ),
+                child: StreamBuilder<Map<String, dynamic>?>(
+                  stream: PresenceService.instance.streamUserStatus(user.id),
+                  builder: (context, snapshot) {
+                    final isOnline = snapshot.data?['state'] == 'online';
+                    return Container(
+                      width: size * 0.22,
+                      height: size * 0.22,
+                      decoration: BoxDecoration(
+                        color: isOnline ? const Color(0xFF4CAF50) : Colors.grey,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.black,
+                          width: 2,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],

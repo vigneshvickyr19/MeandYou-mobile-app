@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/user_model.dart';
+import '../../../../core/services/presence_service.dart';
 
 class UserCard extends StatelessWidget {
   final UserModel user;
@@ -148,26 +149,32 @@ class UserCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: user.isOnline ? const Color(0xFF4CAF50) : Colors.grey,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        user.isOnline ? 'Online' : 'Offline',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  StreamBuilder<Map<String, dynamic>?>(
+                    stream: PresenceService.instance.streamUserStatus(user.id),
+                    builder: (context, snapshot) {
+                      final isOnline = snapshot.data?['state'] == 'online';
+                      return Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isOnline ? const Color(0xFF4CAF50) : Colors.grey,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isOnline ? 'Online' : 'Offline',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Text(
