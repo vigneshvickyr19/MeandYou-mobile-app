@@ -43,7 +43,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 1. Signal that UI is ready for deferred notifications/deep links
       DeepLinkService().setUiReady(true);
-      
+
       // 2. Heavy work: Sync FCM token (Only after UI is rendered)
       NotificationService.instance.syncTokenNow();
     });
@@ -89,7 +89,7 @@ class _HomeShellPageState extends State<HomeShellPage> {
                       ],
                     ),
                   ),
-                  
+
                   // Floating bottom navigation (absolute positioned at bottom)
                   Positioned(
                     bottom: 0,
@@ -107,12 +107,11 @@ class _HomeShellPageState extends State<HomeShellPage> {
   }
 
   Widget _buildFloatingBottomNav(HomeNavigationController controller) {
-    final showAdmin = context.watch<AuthProvider>().currentUser?.role == 'admin';
+    final showAdmin =
+        context.watch<AuthProvider>().currentUser?.role == 'admin';
     return Container(
       // Add internal SafeArea padding for home indicator
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
       // Gradient background for better visibility
       decoration: BoxDecoration(
         gradient: LinearGradient(

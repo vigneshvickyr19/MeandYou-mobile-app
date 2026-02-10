@@ -14,7 +14,8 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => LoginController(Provider.of<AuthProvider>(context, listen: false)),
+      create: (_) =>
+          LoginController(Provider.of<AuthProvider>(context, listen: false)),
       child: Consumer<LoginController>(
         builder: (context, controller, _) {
           return Scaffold(
@@ -35,20 +36,19 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 SafeArea(
                   child: Column(
                     children: [
                       // Header
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          children: [
-                            const AppBackButton(),
-                          ],
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
+                        child: Row(children: [const AppBackButton()]),
                       ),
-                      
+
                       Expanded(
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -76,14 +76,16 @@ class LoginPage extends StatelessWidget {
                                 child: Text(
                                   "Discover meaningful connections. Enter your phone number to get started.",
                                   style: TextStyle(
-                                    color: AppColors.white.withValues(alpha: 0.6),
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.6,
+                                    ),
                                     fontSize: 16,
                                     height: 1.5,
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 48),
-                              
+
                               // Reusable Country Phone Input
                               FadeInUp(
                                 delay: const Duration(milliseconds: 200),
@@ -93,20 +95,22 @@ class LoginPage extends StatelessWidget {
                                   hint: "Enter your phone number",
                                   controller: controller.phoneController,
                                   onFullNumberChanged: (phone) {
-                                    controller.phoneNumber = phone.completeNumber;
+                                    controller.phoneNumber =
+                                        phone.completeNumber;
                                     controller.validateInputs();
                                   },
                                   showError: controller.showPhoneError,
-                                  errorMessage: "Please enter a valid phone number",
+                                  errorMessage:
+                                      "Please enter a valid phone number",
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 32),
                             ],
                           ),
                         ),
                       ),
-                      
+
                       // Bottom Actions
                       SafeArea(
                         child: Padding(
@@ -130,7 +134,9 @@ class LoginPage extends StatelessWidget {
                                   "By continuing, you agree to our Terms of Service and Privacy Policy.",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: AppColors.white.withValues(alpha: 0.3),
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     fontSize: 12,
                                   ),
                                 ),

@@ -117,8 +117,10 @@ class _GetStartedPageState extends State<GetStartedPage> {
                 Align(
                   alignment: Alignment.topRight,
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: FadeInRight(
                       child: TextButton(
                         onPressed: () =>
@@ -180,8 +182,10 @@ class _GetStartedPageState extends State<GetStartedPage> {
 
                 // Bottom "Get Started" primary CTA button
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 24,
+                  ),
                   child: FadeInUp(
                     delay: const Duration(milliseconds: 400),
                     child: AppButton(
@@ -200,5 +204,3 @@ class _GetStartedPageState extends State<GetStartedPage> {
     );
   }
 }
-
-

@@ -25,8 +25,9 @@ class AuthProvider extends ChangeNotifier {
         id: initialUser.uid,
         email: initialUser.email ?? '',
         phoneNumber: initialUser.phoneNumber,
-        isProfileComplete: false, 
-        isVerified: initialUser.emailVerified || (initialUser.phoneNumber != null),
+        isProfileComplete: false,
+        isVerified:
+            initialUser.emailVerified || (initialUser.phoneNumber != null),
         createdAt: DateTime.now(),
         role: 'user', // Basic user by default
       );
@@ -46,7 +47,10 @@ class AuthProvider extends ChangeNotifier {
       }
 
       // Skip if we already have this user and subscription is active to avoid flicker
-      if (_currentUser?.id == user.uid && !_isInitializing && _userDocumentSubscription != null) return;
+      if (_currentUser?.id == user.uid &&
+          !_isInitializing &&
+          _userDocumentSubscription != null)
+        return;
 
       // Create a minimal user model from Firebase Auth data
       // This allows immediate navigation to Home without waiting for Firestore
@@ -59,10 +63,10 @@ class AuthProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
         role: 'user',
       );
-      
+
       _isInitializing = true;
       notifyListeners();
-      
+
       // Start real-time streaming of user document
       _startUserStreaming(user.uid);
     });
@@ -70,7 +74,9 @@ class AuthProvider extends ChangeNotifier {
 
   void _startUserStreaming(String uid) {
     _userDocumentSubscription?.cancel();
-    _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((userData) {
+    _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((
+      userData,
+    ) {
       if (userData != null) {
         _currentUser = userData;
         _setInitialized();
@@ -138,7 +144,7 @@ class AuthProvider extends ChangeNotifier {
   // --- Send OTP Wrapper ---
   Future<void> sendOtp(String phoneNumber) async {
     final completer = Completer<void>();
-    
+
     await loginWithPhone(
       phoneNumber,
       (verificationId, resendToken) {
@@ -148,7 +154,7 @@ class AuthProvider extends ChangeNotifier {
         if (!completer.isCompleted) completer.completeError(error);
       },
     );
-    
+
     return completer.future;
   }
 
@@ -163,9 +169,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-
   // --- Verify Phone OTP ---
-  Future<void> verifyOtp(String verificationId, String smsCode, {String? displayName}) async {
+  Future<void> verifyOtp(
+    String verificationId,
+    String smsCode, {
+    String? displayName,
+  }) async {
     _setLoading(true);
     try {
       _currentUser = await _userRepository.verifyAndLoginOtp(
