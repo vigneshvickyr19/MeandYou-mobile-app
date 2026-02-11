@@ -68,6 +68,8 @@ class _StepAboutMeState extends State<StepAboutMe> {
               label: 'Your Bio',
               hint: 'I love traveling, coffee, and meaningful conversations...',
               controller: bioCtrl,
+              showError: profileProvider.errors.containsKey('bio'),
+              errorMessage: profileProvider.errors['bio'],
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(bio: v)),
             ),
           ),

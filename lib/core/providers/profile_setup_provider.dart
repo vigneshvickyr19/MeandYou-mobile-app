@@ -14,13 +14,17 @@ class ProfileSetupProvider extends ChangeNotifier {
   int _currentStep = 0;
   static const int totalSteps = 8;
 
+  Map<String, String> _errors = {};
+
   ProfileModel? get draftProfile => _draftProfile;
   bool get isSaving => _isSaving;
   int get currentStep => _currentStep;
   double get progress => (_currentStep + 1) / totalSteps;
+  Map<String, String> get errors => _errors;
 
   void initialize(String userId) {
-    _draftProfile = ProfileModel(userId: userId);
+    _draftProfile = ProfileModel(userId: userId, gender: 'male');
+    _errors.clear();
     notifyListeners();
   }
 
@@ -52,6 +56,126 @@ class ProfileSetupProvider extends ChangeNotifier {
   }
 
   // Validation for each step
+  bool validateCurrentStep() {
+    if (_draftProfile == null) return false;
+    final p = _draftProfile!;
+    _errors.clear();
+
+    bool isValid = true;
+
+    switch (_currentStep) {
+      case 0: // Step 1: Basic Identity
+        if (p.fullName == null || p.fullName!.isEmpty) {
+          _errors['fullName'] = "Please enter your Full Name.";
+          isValid = false;
+        }
+        if (p.dob == null) {
+          _errors['dob'] = "Please select your Date of Birth.";
+          isValid = false;
+        }
+        if (p.gender == null) {
+          _errors['gender'] = "Please select your Gender.";
+          isValid = false;
+        }
+        break;
+      case 1: // Step 2: Photos
+        final validPhotosCount = p.photos?.where((photo) => photo.isNotEmpty).length ?? 0;
+        if (validPhotosCount < 2) {
+          _errors['photos'] = "Please upload at least 2 photos.";
+          isValid = false;
+        }
+        break;
+      case 2: // Step 3: Address
+        if (p.addressLine1 == null || p.addressLine1!.isEmpty) {
+          _errors['addressLine1'] = "Please enter Address Line 1.";
+          isValid = false;
+        }
+        if (p.city == null || p.city!.isEmpty) {
+          _errors['city'] = "Please enter City.";
+          isValid = false;
+        }
+        if (p.state == null || p.state!.isEmpty) {
+          _errors['state'] = "Please enter State.";
+          isValid = false;
+        }
+        if (p.country == null || p.country!.isEmpty) {
+          _errors['country'] = "Please enter Country.";
+          isValid = false;
+        }
+        if (p.pinCode == null || p.pinCode!.isEmpty) {
+          _errors['pinCode'] = "Please enter Pin Code.";
+          isValid = false;
+        }
+        break;
+      case 3: // Step 4: Bio
+        if (p.bio == null || p.bio!.isEmpty) {
+          _errors['bio'] = "Please enter your Bio.";
+          isValid = false;
+        }
+        break;
+      case 4: // Step 5: Quick Stats
+        if (p.height == null) {
+          _errors['height'] = "Please select Height.";
+          isValid = false;
+        }
+        if (p.jobTitle == null || p.jobTitle!.isEmpty) {
+          _errors['jobTitle'] = "Please enter Job Title.";
+          isValid = false;
+        }
+        if (p.education == null) {
+          _errors['education'] = "Please select Education.";
+          isValid = false;
+        }
+        if (p.hometown == null || p.hometown!.isEmpty) {
+          _errors['hometown'] = "Please enter Hometown.";
+          isValid = false;
+        }
+        break;
+      case 5: // Step 6: Lifestyle
+        if (p.smoking == null) {
+          _errors['smoking'] = "Please select smoking habit.";
+          isValid = false;
+        }
+        if (p.drinking == null) {
+          _errors['drinking'] = "Please select drinking habit.";
+          isValid = false;
+        }
+        if (p.exercise == null) {
+          _errors['exercise'] = "Please select exercise habit.";
+          isValid = false;
+        }
+        if (p.diet == null) {
+          _errors['diet'] = "Please select diet.";
+          isValid = false;
+        }
+        if (p.pets == null) {
+          _errors['pets'] = "Please select pets.";
+          isValid = false;
+        }
+        if (p.language == null) {
+          _errors['language'] = "Please select language.";
+          isValid = false;
+        }
+        break;
+      case 6: // Step 7: Preferences & Interests
+        if (p.lookingFor == null) {
+          _errors['lookingFor'] = "Please select what you are looking for.";
+          isValid = false;
+        }
+        if (p.interests == null || p.interests!.isEmpty) {
+          _errors['interests'] = "Please select at least one Interest.";
+          isValid = false;
+        }
+        break;
+      case 7: // Step 8: Verification & Socials
+        isValid = true;
+        break;
+    }
+
+    notifyListeners();
+    return isValid;
+  }
+
   bool isStepValid(int step) {
     if (_draftProfile == null) return false;
     final p = _draftProfile!;

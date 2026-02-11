@@ -51,6 +51,8 @@ class StepDatingPreferences extends StatelessWidget {
               label: 'Looking For',
               hint: 'Select option',
               selectedValue: profile?.lookingFor,
+              showError: profileProvider.errors.containsKey('lookingFor'),
+              errorMessage: profileProvider.errors['lookingFor'],
               items: AppDataConstants.lookingForOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(lookingFor: v)),
             ),
@@ -102,6 +104,12 @@ class StepDatingPreferences extends StatelessWidget {
               },
             ),
           ),
+          const SizedBox(height: 12),
+          if (profileProvider.errors.containsKey('interests'))
+            Text(
+              profileProvider.errors['interests']!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+            ),
           const SizedBox(height: 32),
         ],
       ),

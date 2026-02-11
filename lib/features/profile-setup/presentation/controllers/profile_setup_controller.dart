@@ -12,9 +12,8 @@ class ProfileSetupController {
 
   Future<void> handleContinue(BuildContext context) async {
     // 1. Validate Current Step
-    if (!provider.isStepValid(provider.currentStep)) {
-      String errorMsg = _getStepErrorMessage(provider.currentStep);
-      AppSnackbar.show(context, message: errorMsg, type: SnackbarType.error);
+    if (!provider.validateCurrentStep()) {
+      // Errors are now shown in-line under widgets
       return;
     }
 

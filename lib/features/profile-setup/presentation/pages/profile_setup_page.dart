@@ -87,6 +87,8 @@ class ProfileSetupPage extends StatelessWidget {
                         vertical: 20,
                       ),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           /// TOP BAR
                           Row(
@@ -120,6 +122,18 @@ class ProfileSetupPage extends StatelessWidget {
                               duration: const Duration(milliseconds: 400),
                               switchInCurve: Curves.easeOut,
                               switchOutCurve: Curves.easeIn,
+                              layoutBuilder: (currentChild, previousChildren) {
+                                return Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Stack(
+                                    alignment: Alignment.topCenter,
+                                    children: [
+                                      ...previousChildren,
+                                      if (currentChild != null) currentChild,
+                                    ],
+                                  ),
+                                );
+                              },
                               transitionBuilder: (child, animation) {
                                 return FadeTransition(
                                   opacity: animation,
@@ -146,8 +160,8 @@ class ProfileSetupPage extends StatelessWidget {
                             duration: const Duration(milliseconds: 600),
                             child: AppButton(
                               text: profileProvider.currentStep == 7
-                                  ? 'Finish Registration'
-                                  : 'Continue',
+                                  ? 'Finish Registration (8/8)'
+                                  : 'Continue (${profileProvider.currentStep + 1}/8)',
                               isLoading: profileProvider.isSaving,
                               onPressed: () =>
                                   controller.handleContinue(context),

@@ -72,6 +72,8 @@ class _StepBasicIdentityState extends State<StepBasicIdentity> {
               label: 'Display Name',
               hint: 'What should we call you?',
               controller: nameCtrl,
+              showError: profileProvider.errors.containsKey('fullName'),
+              errorMessage: profileProvider.errors['fullName'],
               onChanged: (v) {
                 profileProvider.updateProfile((p) => p.copyWith(fullName: v));
               },
@@ -84,6 +86,8 @@ class _StepBasicIdentityState extends State<StepBasicIdentity> {
             child: AppDatePicker(
               label: 'Birth Date',
               selectedDate: profile?.dob,
+              showError: profileProvider.errors.containsKey('dob'),
+              errorMessage: profileProvider.errors['dob'],
               onDateSelected: (d) {
                 profileProvider.updateProfile((p) => p.copyWith(dob: d));
               },
