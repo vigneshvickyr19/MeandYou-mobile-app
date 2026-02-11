@@ -18,6 +18,8 @@ class MessageInput extends StatefulWidget {
   final Future<String?> Function()? onStopRecording;
   final VoidCallback? onCancelRecording;
   final Function(String path, Duration duration)? onSendVoiceMessage;
+  final String? initialText;
+  final VoidCallback? onCancelEdit;
 
   const MessageInput({
     super.key,
@@ -31,6 +33,8 @@ class MessageInput extends StatefulWidget {
     this.onStopRecording,
     this.onCancelRecording,
     this.onSendVoiceMessage,
+    this.initialText,
+    this.onCancelEdit,
   });
 
   @override
@@ -57,6 +61,26 @@ class _MessageInputState extends State<MessageInput> {
         setState(() => _showEmoji = false);
       }
     });
+
+    if (widget.initialText != null) {
+      _controller.text = widget.initialText!;
+      _hasText = widget.initialText!.isNotEmpty;
+    }
+  }
+
+  @override
+  void didUpdateWidget(MessageInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialText != oldWidget.initialText) {
+      if (widget.initialText != null) {
+        _controller.text = widget.initialText!;
+        _hasText = widget.initialText!.isNotEmpty;
+        _focusNode.requestFocus();
+      } else {
+        _controller.clear();
+        _hasText = false;
+      }
+    }
   }
 
   void _onTextChanged() {
@@ -215,9 +239,9 @@ class _MessageInputState extends State<MessageInput> {
       _isRecording = true;
       _recordDuration = Duration.zero;
     });
-    _recordTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _recordTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
-        _recordDuration = Duration(seconds: timer.tick);
+        _recordDuration = Duration(milliseconds: timer.tick * 100);
       });
     });
   }

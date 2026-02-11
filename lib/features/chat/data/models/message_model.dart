@@ -3,7 +3,7 @@ import '../../../../core/constants/firebase_constants.dart';
 
 enum MessageType { text, image, video, audio }
 
-enum MessageStatus { sent, delivered, seen }
+enum MessageStatus { sending, sent, delivered, seen, error }
 
 class MessageModel {
   final String id;
@@ -18,9 +18,16 @@ class MessageModel {
   final List<String> imageUrls;
   final String? audioUrl;
   final String? duration;
-  final List<String> reactions;
+  final Map<String, String> emojiReactions;
   final int likeCount;
   final bool isDeleted;
+  final String? replyToMessageId;
+  final String? replyToContent;
+  final String? replyToSenderName;
+  final bool isPinned;
+  final bool isEdited;
+  final bool isUnsent;
+  final List<String> deletedFor;
 
   MessageModel({
     required this.id,
@@ -35,9 +42,16 @@ class MessageModel {
     this.imageUrls = const [],
     this.audioUrl,
     this.duration,
-    this.reactions = const [],
+    this.emojiReactions = const {},
     this.likeCount = 0,
     this.isDeleted = false,
+    this.replyToMessageId,
+    this.replyToContent,
+    this.replyToSenderName,
+    this.isPinned = false,
+    this.isEdited = false,
+    this.isUnsent = false,
+    this.deletedFor = const [],
   });
 
   factory MessageModel.fromMap(Map<String, dynamic> map, String id) {
@@ -64,9 +78,20 @@ class MessageModel {
           : const [],
       audioUrl: map['audioUrl'],
       duration: map['duration'],
-      reactions: map[FirebaseConstants.reactions] != null ? List<String>.from(map[FirebaseConstants.reactions]) : const [],
+      emojiReactions: map[FirebaseConstants.emojiReactions] != null 
+          ? Map<String, String>.from(map[FirebaseConstants.emojiReactions]) 
+          : {},
       likeCount: map[FirebaseConstants.likeCount] ?? 0,
       isDeleted: map[FirebaseConstants.isDeleted] ?? false,
+      replyToMessageId: map[FirebaseConstants.replyToMessageId],
+      replyToContent: map[FirebaseConstants.replyToContent],
+      replyToSenderName: map[FirebaseConstants.replyToSenderName],
+      isPinned: map[FirebaseConstants.isPinned] ?? false,
+      isEdited: map[FirebaseConstants.isEdited] ?? false,
+      isUnsent: map[FirebaseConstants.isUnsent] ?? false,
+      deletedFor: map[FirebaseConstants.deletedFor] != null 
+          ? List<String>.from(map[FirebaseConstants.deletedFor]) 
+          : const [],
     );
   }
 
@@ -83,9 +108,16 @@ class MessageModel {
       'imageUrls': imageUrls,
       'audioUrl': audioUrl,
       'duration': duration,
-      FirebaseConstants.reactions: reactions,
+      FirebaseConstants.emojiReactions: emojiReactions,
       FirebaseConstants.likeCount: likeCount,
       FirebaseConstants.isDeleted: isDeleted,
+      FirebaseConstants.replyToMessageId: replyToMessageId,
+      FirebaseConstants.replyToContent: replyToContent,
+      FirebaseConstants.replyToSenderName: replyToSenderName,
+      FirebaseConstants.isPinned: isPinned,
+      FirebaseConstants.isEdited: isEdited,
+      FirebaseConstants.isUnsent: isUnsent,
+      FirebaseConstants.deletedFor: deletedFor,
     };
   }
 
@@ -102,9 +134,16 @@ class MessageModel {
     List<String>? imageUrls,
     String? audioUrl,
     String? duration,
-    List<String>? reactions,
+    Map<String, String>? emojiReactions,
     int? likeCount,
     bool? isDeleted,
+    String? replyToMessageId,
+    String? replyToContent,
+    String? replyToSenderName,
+    bool? isPinned,
+    bool? isEdited,
+    bool? isUnsent,
+    List<String>? deletedFor,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -119,9 +158,16 @@ class MessageModel {
       imageUrls: imageUrls ?? this.imageUrls,
       audioUrl: audioUrl ?? this.audioUrl,
       duration: duration ?? this.duration,
-      reactions: reactions ?? this.reactions,
+      emojiReactions: emojiReactions ?? this.emojiReactions,
       likeCount: likeCount ?? this.likeCount,
       isDeleted: isDeleted ?? this.isDeleted,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      replyToContent: replyToContent ?? this.replyToContent,
+      replyToSenderName: replyToSenderName ?? this.replyToSenderName,
+      isPinned: isPinned ?? this.isPinned,
+      isEdited: isEdited ?? this.isEdited,
+      isUnsent: isUnsent ?? this.isUnsent,
+      deletedFor: deletedFor ?? this.deletedFor,
     );
   }
 }

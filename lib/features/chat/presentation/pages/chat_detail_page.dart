@@ -11,6 +11,9 @@ import '../widgets/chat_avatar.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/date_separator.dart';
 import '../widgets/message_input.dart';
+import '../widgets/chat_reply_preview.dart';
+import '../widgets/chat_edit_preview.dart';
+import '../widgets/chat_pinned_bar.dart';
 import '../../../../core/widgets/app_image_preview_modal.dart';
 import '../../../../core/widgets/app_back_button.dart';
 
@@ -303,6 +306,24 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                     message.id,
                                     reaction,
                                   ),
+                                  onResend: () => controller.resendMessage(message.id),
+                                  onReply: () => controller.setReplyingTo(message),
+                                  onTogglePin: () => controller.togglePin(message),
+                                  onUnsend: () => controller.unsendMessage(message.id),
+                                  onDeleteForMe: () => controller.deleteForMe(message.id),
+                                  onEdit: () => controller.startEditing(message),
+                                  onScrollToReply: () {
+                                    if (message.replyToMessageId != null) {
+                                      final index = controller.messages.indexWhere((m) => m.id == message.replyToMessageId);
+                                      if (index != -1) {
+                                        _scrollController.animateTo(
+                                          index * 60.0, // Rough estimate
+                                          duration: const Duration(milliseconds: 300),
+                                          curve: Curves.easeInOut,
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
                               ],
                             );
@@ -312,11 +333,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   ),
                 ),
 
+                // Pinned Message Bar
+                if (controller.chatRoom?.pinnedMessageId != null)
+                  _buildPinnedBar(controller),
+
                 // Bottom Section (Typing + Input)
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (controller.replyingTo != null)
+                      _buildReplyPreview(controller),
+                    
+                    if (controller.editingMessage != null)
+                      _buildEditPreview(controller),
+
                     if (controller.isOtherUserTyping)
                       FadeInUp(
                         duration: const Duration(milliseconds: 200),
@@ -370,6 +401,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                          await controller.sendVoiceMessage(path, duration);
                          _scrollToBottom();
                       },
+                      initialText: controller.editingMessage?.content,
+                      onCancelEdit: controller.cancelEditing,
                     ),
                   ],
                 ),
@@ -378,6 +411,53 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           );
         },
       ),
+    );
+  }
+  Widget _buildPinnedBar(ChatDetailController controller) {
+    return ChatPinnedBar(
+      onTap: () {
+        // Scroll to pinned message
+        final pinnedId = controller.chatRoom?.pinnedMessageId;
+        if (pinnedId != null) {
+          final index = controller.messages.indexWhere((m) => m.id == pinnedId);
+          if (index != -1) {
+            _scrollController.animateTo(
+              index * 60.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+      },
+      onClose: () {
+        // Unpin the message
+        final pinnedId = controller.chatRoom?.pinnedMessageId;
+        if (pinnedId != null) {
+          final message = controller.messages.firstWhere(
+            (m) => m.id == pinnedId,
+            orElse: () => controller.messages.first,
+          );
+          controller.togglePin(message);
+        }
+      },
+    );
+  }
+
+  Widget _buildReplyPreview(ChatDetailController controller) {
+    final replyingTo = controller.replyingTo!;
+    return ChatReplyPreview(
+      senderName: widget.otherUser.fullName,
+      content: replyingTo.content,
+      currentUserId: controller.currentUserId,
+      senderId: replyingTo.senderId,
+      onCancel: () => controller.setReplyingTo(null),
+    );
+  }
+
+  Widget _buildEditPreview(ChatDetailController controller) {
+    return ChatEditPreview(
+      content: controller.editingMessage!.content,
+      onCancel: controller.cancelEditing,
     );
   }
 }

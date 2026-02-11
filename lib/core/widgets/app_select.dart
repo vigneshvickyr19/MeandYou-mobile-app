@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../core/constants/app_colors.dart';
 
 class AppSelect<T> extends StatefulWidget {
@@ -111,9 +112,13 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
         if (widget.showError && widget.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4),
-            child: Text(
-              widget.errorMessage!,
-              style: const TextStyle(color: AppColors.error, fontSize: 12),
+            child: FadeInLeft(
+              duration: const Duration(milliseconds: 300),
+              from: 10,
+              child: Text(
+                widget.errorMessage!,
+                style: const TextStyle(color: AppColors.error, fontSize: 12),
+              ),
             ),
           ),
       ],

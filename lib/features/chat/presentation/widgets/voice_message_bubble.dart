@@ -22,6 +22,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
   bool _isPlaying = false;
   Duration _position = Duration.zero;
   Duration _totalDuration = Duration.zero;
+  double _playbackRate = 1.0;
 
   @override
   void initState() {
@@ -77,11 +78,28 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
         } else {
           source = DeviceFileSource(widget.audioUrl);
         }
+        await _audioPlayer.setPlaybackRate(_playbackRate);
         await _audioPlayer.play(source);
       } else {
         await _audioPlayer.resume();
       }
     }
+  }
+
+  Future<void> _toggleRate() async {
+    double newRate = 1.0;
+    if (_playbackRate == 1.0) {
+      newRate = 1.5;
+    } else if (_playbackRate == 1.5) {
+      newRate = 2.0;
+    } else {
+      newRate = 1.0;
+    }
+
+    setState(() {
+      _playbackRate = newRate;
+    });
+    await _audioPlayer.setPlaybackRate(newRate);
   }
 
   String _formatDuration(Duration d) {
@@ -113,10 +131,11 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     // Determine max value for slider safely
     final double maxDuration = displayDuration.inMilliseconds.toDouble();
     final double currentPosition = _position.inMilliseconds.toDouble();
-    final double sliderValue = currentPosition.clamp(0.0, maxDuration > 0 ? maxDuration : 1.0);
+    final double sliderValue =
+        currentPosition.clamp(0.0, maxDuration > 0 ? maxDuration : 1.0);
 
     return Container(
-      width: 220, // specific width for audio bubble
+      width: 260, // Widened slightly to accommodate speed button
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -157,7 +176,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   ),
                   child: Slider(
                     value: sliderValue,
-                    max: maxDuration > 0 ? maxDuration : 1.0, 
+                    max: maxDuration > 0 ? maxDuration : 1.0,
                     onChanged: (value) async {
                       final position = Duration(milliseconds: value.toInt());
                       await _audioPlayer.seek(position);
@@ -187,6 +206,28 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: _toggleRate,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              child: Text(
+                "${_playbackRate.toStringAsFixed(1)}x",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],

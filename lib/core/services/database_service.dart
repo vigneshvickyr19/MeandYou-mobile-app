@@ -65,26 +65,30 @@ class DatabaseService {
     }
   }
 
-  // Update specific user field
   Future<void> updateUserField(String uid, Map<String, dynamic> data) async {
     try {
-      await _usersCollection.doc(uid).update({
-        ...data,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _usersCollection.doc(uid).set(
+        {
+          ...data,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     } catch (e) {
       debugPrint('Error updating user field: $e');
       rethrow;
     }
   }
 
-  // Update specific profile fields
   Future<void> updateProfileFields(String uid, Map<String, dynamic> data) async {
     try {
-      await _profileSetupCollection.doc(uid).update({
-        ...data,
-        'profileUpdatedAt': FieldValue.serverTimestamp(),
-      });
+      await _profileSetupCollection.doc(uid).set(
+        {
+          ...data,
+          'profileUpdatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     } catch (e) {
       debugPrint('Error updating profile field: $e');
       rethrow;

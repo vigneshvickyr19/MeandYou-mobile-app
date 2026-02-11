@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animate_do/animate_do.dart';
 import '../constants/app_colors.dart';
 
 class AppInput extends StatefulWidget {
@@ -133,12 +134,16 @@ class _AppInputState extends State<AppInput> {
         if (widget.showError && widget.errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4),
-            child: Text(
-              widget.errorMessage!,
-              style: const TextStyle(
-                color: AppColors.error,
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
+            child: FadeInLeft(
+              duration: const Duration(milliseconds: 300),
+              from: 10,
+              child: Text(
+                widget.errorMessage!,
+                style: const TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ),

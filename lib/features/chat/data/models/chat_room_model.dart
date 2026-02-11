@@ -15,6 +15,7 @@ class ChatRoomModel {
   final String? groupName;
   final String? groupImage;
   final Map<String, DateTime> lastReadAt;
+  final String? pinnedMessageId;
 
   ChatRoomModel({
     required this.id,
@@ -30,6 +31,7 @@ class ChatRoomModel {
     this.groupName,
     this.groupImage,
     this.lastReadAt = const <String, DateTime>{},
+    this.pinnedMessageId,
   });
 
   factory ChatRoomModel.fromMap(Map<String, dynamic> map, String id) {
@@ -59,6 +61,7 @@ class ChatRoomModel {
             (key, value) => MapEntry(key as String, (value as Timestamp).toDate()),
           ) ??
           <String, DateTime>{},
+      pinnedMessageId: map[FirebaseConstants.pinnedMessageId],
     );
   }
 
@@ -76,6 +79,7 @@ class ChatRoomModel {
       FirebaseConstants.groupName: groupName,
       FirebaseConstants.groupImage: groupImage,
       'lastReadAt': lastReadAt.map((key, value) => MapEntry(key, Timestamp.fromDate(value))),
+      FirebaseConstants.pinnedMessageId: pinnedMessageId,
     };
   }
 
@@ -93,6 +97,7 @@ class ChatRoomModel {
     String? groupName,
     String? groupImage,
     Map<String, DateTime>? lastReadAt,
+    String? pinnedMessageId,
   }) {
     return ChatRoomModel(
       id: id ?? this.id,
@@ -108,6 +113,7 @@ class ChatRoomModel {
       groupName: groupName ?? this.groupName,
       groupImage: groupImage ?? this.groupImage,
       lastReadAt: lastReadAt ?? this.lastReadAt,
+      pinnedMessageId: pinnedMessageId ?? this.pinnedMessageId,
     );
   }
 

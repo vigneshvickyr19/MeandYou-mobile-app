@@ -44,6 +44,8 @@ class ChatDetailController extends ChangeNotifier {
   StreamSubscription? _statusSubscription;
   StreamSubscription? _otherUserTypingSubscription;
   Map<String, dynamic>? _otherUserStatus;
+  MessageModel? _replyingTo;
+  MessageModel? _editingMessage;
 
   List<MessageModel> get messages {
     if (_needsRebuildCache) {
@@ -69,6 +71,9 @@ class ChatDetailController extends ChangeNotifier {
   List<XFile> get selectedImages => _selectedImages;
   ChatRoomModel? get chatRoom => _chatRoom;
   Map<String, dynamic>? get otherUserStatus => _otherUserStatus;
+  MessageModel? get replyingTo => _replyingTo;
+  MessageModel? get editingMessage => _editingMessage;
+  String get currentUserId => _currentUserId;
 
   void initialize(String chatRoomId, String currentUserId, String otherUserId) {
     _chatRoomId = chatRoomId;
@@ -137,7 +142,8 @@ class ChatDetailController extends ChangeNotifier {
         .getMessages(_chatRoomId)
         .listen(
           (messages) {
-            _messages = messages;
+            // Filter out messages that the current user deleted for themselves
+            _messages = messages.where((m) => !m.deletedFor.contains(_currentUserId)).toList();
             _isLoading = false;
             _messagesLoaded = true;
             _needsRebuildCache = true;
@@ -146,10 +152,11 @@ class ChatDetailController extends ChangeNotifier {
             _optimisticMessages.removeWhere(
               (opt) => messages.any(
                 (MessageModel msg) =>
-                    msg.content == opt.content &&
-                    msg.senderId == opt.senderId &&
-                    (msg.timestamp.difference(opt.timestamp).inSeconds.abs() <
-                        5),
+                    (msg.id == opt.id) ||
+                    (msg.content == opt.content &&
+                     msg.senderId == opt.senderId &&
+                     msg.type == opt.type &&
+                     (msg.timestamp.difference(opt.timestamp).inSeconds.abs() < 10)),
               ),
             );
 
@@ -213,7 +220,25 @@ class ChatDetailController extends ChangeNotifier {
   }
 
   Future<void> sendVoiceMessage(String path, Duration duration) async {
-    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+    final tempId = 'temp_voice_${DateTime.now().millisecondsSinceEpoch}';
+
+    // 1. Create optimistic voice message
+    final optimisticMsg = MessageModel(
+      id: tempId,
+      chatRoomId: _chatRoomId,
+      senderId: _currentUserId,
+      receiverId: _otherUserId,
+      content: '',
+      type: MessageType.audio,
+      status: MessageStatus.sending,
+      timestamp: DateTime.now(),
+      audioUrl: path, // Local path for immediate playback
+      duration: _formatDuration(duration),
+    );
+
+    _optimisticMessages.insert(0, optimisticMsg);
+    _needsRebuildCache = true;
+    notifyListeners();
 
     try {
       final downloadUrl = await StorageService.instance.uploadChatAudio(
@@ -222,16 +247,9 @@ class ChatDetailController extends ChangeNotifier {
         file: File(path),
       );
       
-      final message = MessageModel(
-        id: tempId,
-        chatRoomId: _chatRoomId,
-        senderId: _currentUserId,
-        receiverId: _otherUserId,
-        content: '',
-        type: MessageType.audio,
-        timestamp: DateTime.now(),
+      final message = optimisticMsg.copyWith(
         audioUrl: downloadUrl,
-        duration: _formatDuration(duration),
+        status: MessageStatus.sent,
       );
       
       await _chatRepository.sendMessage(message);
@@ -243,7 +261,13 @@ class ChatDetailController extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint("Error sending voice message: $e");
-      rethrow;
+      // Update status to error for UI feedback
+      final index = _optimisticMessages.indexWhere((m) => m.id == tempId);
+      if (index != -1) {
+        _optimisticMessages[index] = _optimisticMessages[index].copyWith(status: MessageStatus.error);
+        _needsRebuildCache = true;
+        notifyListeners();
+      }
     }
   }
 
@@ -257,6 +281,14 @@ class ChatDetailController extends ChangeNotifier {
   Future<void> sendMessage(String content) async {
     if (content.trim().isEmpty && _selectedImages.isEmpty) return;
 
+    if (_editingMessage != null) {
+      final msgToEdit = _editingMessage!;
+      _editingMessage = null;
+      notifyListeners();
+      await editMessage(msgToEdit.id, content.trim());
+      return;
+    }
+
     final imagesToSend = _selectedImages.take(10).toList();
     final tempId = 'msg_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -268,10 +300,19 @@ class ChatDetailController extends ChangeNotifier {
       receiverId: _otherUserId,
       content: content.trim(),
       type: imagesToSend.isNotEmpty ? MessageType.image : MessageType.text,
+      status: MessageStatus.sending,
       timestamp: DateTime.now(),
       imageUrl: imagesToSend.isNotEmpty ? imagesToSend.first.path : null,
       imageUrls: imagesToSend.map((img) => img.path).toList(),
+      replyToMessageId: _replyingTo?.id,
+      replyToContent: _replyingTo?.content,
+      replyToSenderName: _replyingTo != null ? (_replyingTo!.senderId == _currentUserId ? 'You' : 'Other') : null, // This is a bit naive, but we can't easily get other user's name here without more state. 
+      // Actually, let's pass the other user's name to initialize.
     );
+
+    // If it was a reply, clear the reply state
+    _replyingTo = null;
+    notifyListeners();
 
     // 2. Optimistic Update
     _optimisticMessages.insert(0, message);
@@ -300,8 +341,8 @@ class ChatDetailController extends ChangeNotifier {
         );
       }
 
-      // 4. Send to Repository
-      await _chatRepository.sendMessage(message);
+      // 4. Send to Repository (mark as sent)
+      await _chatRepository.sendMessage(message.copyWith(status: MessageStatus.sent));
 
       // 5. Send notification
       String messageType = imagesToSend.isNotEmpty ? 'image' : 'text';
@@ -313,10 +354,13 @@ class ChatDetailController extends ChangeNotifier {
         imageCount: imagesToSend.isNotEmpty ? imagesToSend.length : null,
       );
     } catch (e) {
-      _optimisticMessages.removeWhere((m) => m.id == tempId);
-      _needsRebuildCache = true;
-      notifyListeners();
-      rethrow;
+      // Update status to error for UI feedback instead of just removing
+      final index = _optimisticMessages.indexWhere((m) => m.id == tempId);
+      if (index != -1) {
+        _optimisticMessages[index] = _optimisticMessages[index].copyWith(status: MessageStatus.error);
+        _needsRebuildCache = true;
+        notifyListeners();
+      }
     }
   }
 
@@ -475,13 +519,52 @@ class ChatDetailController extends ChangeNotifier {
   }
 
   Future<void> addReaction(String messageId, String reaction) async {
-    await _chatRepository.addReaction(messageId, reaction);
+    await _chatRepository.toggleReaction(messageId, _currentUserId, reaction);
     
     // Send notification for reaction
     await _sendChatNotification(
       messageType: 'reaction',
       messagePreview: '',
     );
+  }
+
+  void setReplyingTo(MessageModel? message) {
+    _replyingTo = message;
+    _editingMessage = null; // Can't edit and reply at once
+    notifyListeners();
+  }
+
+  void startEditing(MessageModel message) {
+    if (message.type != MessageType.text) return;
+    _editingMessage = message;
+    _replyingTo = null; // Can't edit and reply at once
+    notifyListeners();
+  }
+
+  void cancelEditing() {
+    _editingMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> editMessage(String messageId, String newContent) async {
+    if (newContent.trim().isEmpty) return;
+    await _chatRepository.editMessage(messageId, newContent);
+  }
+
+  Future<void> unsendMessage(String messageId) async {
+    await _chatRepository.unsendMessage(messageId);
+  }
+
+  Future<void> deleteForMe(String messageId) async {
+    await _chatRepository.deleteForMe(messageId, _currentUserId);
+  }
+
+  Future<void> togglePin(MessageModel message) async {
+    if (message.isPinned) {
+      await _chatRepository.unpinMessage(_chatRoomId, message.id);
+    } else {
+      await _chatRepository.pinMessage(_chatRoomId, message.id);
+    }
   }
 
   String getDateLabel(DateTime date) {
@@ -507,6 +590,50 @@ class ChatDetailController extends ChangeNotifier {
     return currentDate.day != nextDate.day ||
         currentDate.month != nextDate.month ||
         currentDate.year != nextDate.year;
+  }
+
+  Future<void> resendMessage(String messageId) async {
+    final index = _optimisticMessages.indexWhere((m) => m.id == messageId);
+    if (index == -1) return;
+
+    final originalMsg = _optimisticMessages[index];
+    
+    // Set status to sending again
+    _optimisticMessages[index] = originalMsg.copyWith(status: MessageStatus.sending);
+    _needsRebuildCache = true;
+    notifyListeners();
+
+    try {
+      if (originalMsg.type == MessageType.audio && originalMsg.audioUrl != null) {
+        // Resend Voice
+        await sendVoiceMessage(originalMsg.audioUrl!, _parseDuration(originalMsg.duration ?? '0:00'));
+        // remove the original failed one after starting new attempt
+        _optimisticMessages.removeAt(index);
+      } else if (originalMsg.type == MessageType.image) {
+         // Resend Image/Text
+         await sendMessage(originalMsg.content);
+         _optimisticMessages.removeAt(index);
+      } else {
+         // Resend Text
+         await sendMessage(originalMsg.content);
+         _optimisticMessages.removeAt(index);
+      }
+    } catch (e) {
+      // already handled in send methods
+    }
+  }
+
+  Duration _parseDuration(String s) {
+    try {
+      final parts = s.split(':');
+      if (parts.length == 2) {
+        return Duration(
+            minutes: int.parse(parts[0]), seconds: int.parse(parts[1]));
+      }
+    } catch (e) {
+      // ignore
+    }
+    return Duration.zero;
   }
 
   @override

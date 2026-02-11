@@ -182,9 +182,23 @@ class ChatRepository {
     });
   }
 
-  Future<void> addReaction(String messageId, String reaction) async {
+  Future<void> toggleReaction(String messageId, String userId, String reaction) async {
+    final doc = await _messagesCollection.doc(messageId).get();
+    if (!doc.exists) return;
+
+    final data = doc.data() as Map<String, dynamic>;
+    final currentReactions = Map<String, String>.from(data[FirebaseConstants.emojiReactions] ?? {});
+
+    if (currentReactions[userId] == reaction) {
+      // Remove if same emoji
+      currentReactions.remove(userId);
+    } else {
+      // Add or replace emoji
+      currentReactions[userId] = reaction;
+    }
+
     await _messagesCollection.doc(messageId).update({
-      FirebaseConstants.reactions: FieldValue.arrayUnion([reaction]),
+      FirebaseConstants.emojiReactions: currentReactions,
     });
   }
 
@@ -198,6 +212,66 @@ class ChatRepository {
     await _messagesCollection.doc(messageId).update({
       FirebaseConstants.isDeleted: true,
       FirebaseConstants.content: 'This message was deleted',
+    });
+  }
+
+  Future<void> pinMessage(String chatRoomId, String messageId) async {
+    // 1. Unpin any currently pinned message in this chat (if we track it in messages)
+    // Instagram usually allows one pin. We can store pinnedMessageId in ChatRoom.
+    final batch = _firestore.batch();
+    
+    // Reset all messages isPinned to false in this room (not strictly necessary if we only trust the chat room's pinnedMessageId, but cleaner)
+    // Actually, it's better to just update the chat room.
+    
+    batch.update(_chatsCollection.doc(chatRoomId), {
+      FirebaseConstants.pinnedMessageId: messageId,
+      FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Also mark the specific message as pinned
+    batch.update(_messagesCollection.doc(messageId), {
+      FirebaseConstants.isPinned: true,
+    });
+
+    await batch.commit();
+  }
+
+  Future<void> unpinMessage(String chatRoomId, String messageId) async {
+    final batch = _firestore.batch();
+    
+    batch.update(_chatsCollection.doc(chatRoomId), {
+      FirebaseConstants.pinnedMessageId: FieldValue.delete(),
+    });
+
+    batch.update(_messagesCollection.doc(messageId), {
+      FirebaseConstants.isPinned: false,
+    });
+
+    await batch.commit();
+  }
+
+  Future<void> editMessage(String messageId, String newContent) async {
+    await _messagesCollection.doc(messageId).update({
+      FirebaseConstants.content: newContent,
+      FirebaseConstants.isEdited: true,
+      FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> unsendMessage(String messageId) async {
+    await _messagesCollection.doc(messageId).update({
+      FirebaseConstants.isUnsent: true,
+      FirebaseConstants.content: 'This message was unsent',
+      FirebaseConstants.type: MessageType.text.toString().split('.').last,
+      FirebaseConstants.imageUrl: FieldValue.delete(),
+      'imageUrls': FieldValue.delete(),
+      'audioUrl': FieldValue.delete(),
+    });
+  }
+
+  Future<void> deleteForMe(String messageId, String userId) async {
+    await _messagesCollection.doc(messageId).update({
+      FirebaseConstants.deletedFor: FieldValue.arrayUnion([userId]),
     });
   }
 }

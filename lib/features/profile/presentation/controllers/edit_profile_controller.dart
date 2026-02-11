@@ -123,7 +123,10 @@ class EditProfileController extends ChangeNotifier {
         }
         
         if (userSync.isNotEmpty) {
-          await _db.collection(FirebaseConstants.users).doc(userId).update(userSync);
+          await _db
+              .collection(FirebaseConstants.users)
+              .doc(userId)
+              .set(userSync, SetOptions(merge: true));
         }
       }
 

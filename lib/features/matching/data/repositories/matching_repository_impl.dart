@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'dart:math' as math;
 import '../../domain/entities/nearby_match_entity.dart';
@@ -31,10 +32,11 @@ class MatchingRepositoryImpl implements MatchingRepository {
     final String userGeohash = currentUser.geohash ?? '';
     if (userGeohash.isEmpty) return [];
 
-    // 1. Calculate geohash precision for 5km (Length 5 is ~4.9km)
-    // 9 cells of length 5 cover ~15km x 15km area
-    final String centerHash = userGeohash.length >= 5
-        ? userGeohash.substring(0, 5)
+    // 1. Calculate geohash precision
+    // Length 4 covers ~39km x 39km. Better for a 10km radius search.
+    // Length 5 covers only ~4.9km, which might miss users 10km away even with neighbors.
+    final String centerHash = userGeohash.length >= 4 
+        ? userGeohash.substring(0, 4) 
         : userGeohash;
 
     // 2. Get neighbor hashes (9 cells including center)
@@ -51,7 +53,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
             .orderBy(FirebaseConstants.geohash)
             .startAt([cell])
             .endAt(['$cell\uf8ff'])
-            .limit(20) // Limit to avoid massive reads
+            .limit(50) // Increased limit for broader cells
             .get(),
       );
     }
@@ -69,6 +71,10 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
         // 5. Filters: Self, Blocked, Swiped
         if (userId == currentUser.id) continue;
+        
+        // Skip users that current user has already interacted with (blocked/swiped)
+        // Note: These fields should be added to UserModel or fetched from a separate collection
+        // For now, we continue with local deduplication
         if (uniqueMatches.containsKey(userId)) continue;
 
         final double lat =
@@ -86,6 +92,25 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
         if (distance > radiusInKm) continue;
 
+        // 5. Extract Profile Image (from photos list)
+        String? profilePic;
+        if (data['photos'] != null && (data['photos'] as List).isNotEmpty) {
+          profilePic = (data['photos'] as List).first;
+        }
+
+        // 6. Calculate Age from DOB
+        int userAge = 18;
+        if (data['dob'] != null) {
+          final DateTime? dob = (data['dob'] as Timestamp?)?.toDate();
+          if (dob != null) {
+            final now = DateTime.now();
+            userAge = now.year - dob.year;
+            if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+              userAge--;
+            }
+          }
+        }
+
         final double matchPercentage = _calculateMatchPercentage(
           myLookingFor: myLookingFor,
           myMinAge: myMinAge,
@@ -99,14 +124,14 @@ class MatchingRepositoryImpl implements MatchingRepository {
         uniqueMatches[userId] = NearbyMatchEntity(
           id: userId,
           fullName: data[FirebaseConstants.fullName] ?? 'Unknown',
-          profileImageUrl: data[FirebaseConstants.profileImageUrl],
+          profileImageUrl: profilePic,
           distance: distance,
           matchPercentage: matchPercentage,
           address: data[FirebaseConstants.address],
           landmark: data['landmark'],
           area: data['area'],
           fullAddress: data[FirebaseConstants.address],
-          age: data[FirebaseConstants.age] ?? 18,
+          age: userAge,
           latitude: lat,
           longitude: lng,
           interests: List<String>.from(data[FirebaseConstants.interests] ?? []),
@@ -115,6 +140,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
     }
 
     final List<NearbyMatchEntity> results = uniqueMatches.values.toList();
+    debugPrint('[MatchingRepository] Found ${results.length} matches in geographic vicinity.');
 
     // Sort: Match Percentage (Primary), Distance (Secondary)
     results.sort((a, b) {
@@ -153,15 +179,19 @@ class MatchingRepositoryImpl implements MatchingRepository {
         .doc(userId);
     final userRef = _firestore.collection(FirebaseConstants.users).doc(userId);
 
-    batch.update(profileRef, updateData);
+    batch.set(profileRef, updateData, SetOptions(merge: true));
 
     // Also update users collection (for AuthProvider/UI state)
-    batch.update(userRef, {
-      FirebaseConstants.latitude: latitude,
-      FirebaseConstants.longitude: longitude,
-      FirebaseConstants.geohash: geohash,
-      FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
-    });
+    batch.set(
+      userRef,
+      {
+        FirebaseConstants.latitude: latitude,
+        FirebaseConstants.longitude: longitude,
+        FirebaseConstants.geohash: geohash,
+        FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
 
     await batch.commit();
   }
@@ -206,13 +236,31 @@ class MatchingRepositoryImpl implements MatchingRepository {
     }
 
     // 2. Preferences - lookingFor (30%)
-    final otherGender = otherData[FirebaseConstants.gender];
-    if (myLookingFor == otherGender) {
-      score += 30;
+    // Matches relationship intentions (e.g., both looking for 'Relationship' or 'Marriage')
+    final otherLookingFor = otherData['lookingFor'];
+    if (myLookingFor != null && otherLookingFor != null) {
+       if (myLookingFor == otherLookingFor) {
+         score += 30;
+       } else if (myLookingFor == 'Marriage' && otherLookingFor == 'Relationship') {
+         score += 20; // High compatibility
+       } else if (myLookingFor == 'Relationship' && otherLookingFor == 'Marriage') {
+         score += 20;
+       }
     }
 
     // 3. Age Range (20%)
-    final otherAge = otherData[FirebaseConstants.age] ?? 18;
+    int otherAge = 18;
+    if (otherData['dob'] != null) {
+      final DateTime? dob = (otherData['dob'] as Timestamp?)?.toDate();
+      if (dob != null) {
+        final now = DateTime.now();
+        otherAge = now.year - dob.year;
+        if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+          otherAge--;
+        }
+      }
+    }
+
     if (otherAge >= myMinAge && otherAge <= myMaxAge) {
       score += 20;
     }
