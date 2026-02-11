@@ -104,7 +104,7 @@ class _StepVerificationState extends State<StepVerification> {
             delay: const Duration(milliseconds: 400),
             child: AppInput(
               label: 'Instagram',
-              hint: '@username',
+              hintText: '@username',
               controller: instaCtrl,
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(instagram: v)),
             ),
@@ -115,7 +115,7 @@ class _StepVerificationState extends State<StepVerification> {
             delay: const Duration(milliseconds: 500),
             child: AppInput(
               label: 'LinkedIn',
-              hint: 'linkedin.com/in/username',
+              hintText: 'linkedin.com/in/username',
               controller: lnCtrl,
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(linkedin: v)),
             ),
@@ -126,7 +126,7 @@ class _StepVerificationState extends State<StepVerification> {
             delay: const Duration(milliseconds: 600),
             child: AppInput(
               label: 'Facebook',
-              hint: 'facebook.com/username',
+              hintText: 'facebook.com/username',
               controller: fbCtrl,
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(facebook: v)),
             ),
@@ -137,7 +137,7 @@ class _StepVerificationState extends State<StepVerification> {
             delay: const Duration(milliseconds: 700),
             child: AppInput(
               label: 'X (Twitter)',
-              hint: '@username',
+              hintText: '@username',
               controller: xCtrl,
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(x: v)),
             ),

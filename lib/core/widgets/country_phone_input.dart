@@ -8,7 +8,7 @@ import '../constants/app_colors.dart';
 /// Supports country selection with flags, custom styling, and callbacks.
 class CountryPhoneInput extends StatelessWidget {
   final String label;
-  final String hint;
+  final String hintText;
   final TextEditingController controller;
   final Function(String countryCode)? onCountryChanged;
   final Function(PhoneNumber phoneNumber)? onFullNumberChanged;
@@ -19,7 +19,7 @@ class CountryPhoneInput extends StatelessWidget {
   const CountryPhoneInput({
     super.key,
     required this.label,
-    required this.hint,
+    required this.hintText,
     required this.controller,
     this.onCountryChanged,
     this.onFullNumberChanged,
@@ -87,7 +87,7 @@ class CountryPhoneInput extends StatelessWidget {
             ),
           ),
           decoration: InputDecoration(
-            hintText: hint,
+            hintText: hintText,
             hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
             filled: true,
             fillColor: Colors.transparent,

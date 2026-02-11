@@ -78,6 +78,19 @@ class DatabaseService {
     }
   }
 
+  // Update specific profile fields
+  Future<void> updateProfileFields(String uid, Map<String, dynamic> data) async {
+    try {
+      await _profileSetupCollection.doc(uid).update({
+        ...data,
+        'profileUpdatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Error updating profile field: $e');
+      rethrow;
+    }
+  }
+
   // Stream of user account
   Stream<UserModel?> streamUserAccount(String uid) {
     return _usersCollection.doc(uid).snapshots().map((doc) {

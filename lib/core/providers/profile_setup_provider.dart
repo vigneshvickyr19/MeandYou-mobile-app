@@ -22,6 +22,8 @@ class ProfileSetupProvider extends ChangeNotifier {
   double get progress => (_currentStep + 1) / totalSteps;
   Map<String, String> get errors => _errors;
 
+  int? get age => _draftProfile?.age;
+
   void initialize(String userId) {
     _draftProfile = ProfileModel(userId: userId, gender: 'male');
     _errors.clear();

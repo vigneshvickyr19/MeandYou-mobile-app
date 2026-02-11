@@ -10,6 +10,7 @@ class FirebaseConstants {
   static const String helpCenter = 'help_center';
   static const String announcements = 'announcements';
   static const String dailyStats = 'daily_stats';
+  static const String profileImages = 'profile_images';
 
   // Field Names
   static const String lastMessageAt = 'lastMessageAt';

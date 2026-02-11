@@ -49,14 +49,5 @@ class ProfileController extends ChangeNotifier {
   }
 
   // Helper to calculate age from DOB
-  int? get age {
-    if (_profile?.dob == null) return null;
-    final now = DateTime.now();
-    int age = now.year - _profile!.dob!.year;
-    if (now.month < _profile!.dob!.month ||
-        (now.month == _profile!.dob!.month && now.day < _profile!.dob!.day)) {
-      age--;
-    }
-    return age;
-  }
+  int? get age => _profile?.age;
 }

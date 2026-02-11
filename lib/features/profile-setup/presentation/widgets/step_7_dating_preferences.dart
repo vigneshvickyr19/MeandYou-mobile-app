@@ -49,7 +49,7 @@ class StepDatingPreferences extends StatelessWidget {
             delay: const Duration(milliseconds: 200),
             child: AppSelect<String>(
               label: 'Looking For',
-              hint: 'Select option',
+              hintText: 'Select option',
               selectedValue: profile?.lookingFor,
               showError: profileProvider.errors.containsKey('lookingFor'),
               errorMessage: profileProvider.errors['lookingFor'],
@@ -63,7 +63,7 @@ class StepDatingPreferences extends StatelessWidget {
             delay: const Duration(milliseconds: 300),
             child: AppSelect<int>(
               label: 'Min Preferred Age',
-              hint: 'Select age',
+              hintText: 'Select age',
               selectedValue: profile?.minAge,
               items: List.generate(50, (index) => index + 18).map((age) {
                 return DropdownMenuItem(value: age, child: Text('$age+'));
@@ -72,12 +72,12 @@ class StepDatingPreferences extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
+ 
           FadeInUp(
             delay: const Duration(milliseconds: 400),
             child: AppSelect<int>(
               label: 'Distance Preference (km)',
-              hint: 'Select range',
+              hintText: 'Select range',
               selectedValue: profile?.distance,
               items: AppDataConstants.distanceOptions.map((d) {
                 return DropdownMenuItem(value: d, child: Text('$d km'));

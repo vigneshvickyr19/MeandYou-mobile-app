@@ -81,7 +81,7 @@ class _StepLocationState extends State<StepLocation> {
             delay: const Duration(milliseconds: 200),
             child: AppInput(
               label: 'Address Line 1',
-              hint: 'Street, Building, Flat...',
+              hintText: 'Street, Building, Flat...',
               controller: address1Ctrl,
               showError: profileProvider.errors.containsKey('addressLine1'),
               errorMessage: profileProvider.errors['addressLine1'],
@@ -94,7 +94,7 @@ class _StepLocationState extends State<StepLocation> {
             delay: const Duration(milliseconds: 300),
             child: AppInput(
               label: 'City',
-              hint: 'e.g. New York',
+              hintText: 'e.g. New York',
               controller: cityCtrl,
               showError: profileProvider.errors.containsKey('city'),
               errorMessage: profileProvider.errors['city'],
@@ -110,7 +110,7 @@ class _StepLocationState extends State<StepLocation> {
                 Expanded(
                   child: AppInput(
                     label: 'State',
-                    hint: 'NY',
+                    hintText: 'NY',
                     controller: stateCtrl,
                     showError: profileProvider.errors.containsKey('state'),
                     errorMessage: profileProvider.errors['state'],
@@ -121,7 +121,7 @@ class _StepLocationState extends State<StepLocation> {
                 Expanded(
                   child: AppInput(
                     label: 'Pin Code',
-                    hint: '10001',
+                    hintText: '10001',
                     controller: pinCodeCtrl,
                     showError: profileProvider.errors.containsKey('pinCode'),
                     errorMessage: profileProvider.errors['pinCode'],
@@ -138,7 +138,7 @@ class _StepLocationState extends State<StepLocation> {
             delay: const Duration(milliseconds: 500),
             child: AppInput(
               label: 'Country',
-              hint: 'e.g. United States',
+              hintText: 'e.g. United States',
               controller: countryCtrl,
               showError: profileProvider.errors.containsKey('country'),
               errorMessage: profileProvider.errors['country'],

@@ -7,7 +7,7 @@ import '../../core/constants/app_images.dart';
 class AppDatePicker extends StatefulWidget {
   final String label;
   final DateTime? selectedDate;
-  final String hint;
+  final String hintText;
   final bool showError;
   final String? errorMessage;
   final ValueChanged<DateTime> onDateSelected;
@@ -17,7 +17,7 @@ class AppDatePicker extends StatefulWidget {
     required this.label,
     required this.selectedDate,
     required this.onDateSelected,
-    this.hint = 'DD/MM/YYYY',
+    this.hintText = 'DD/MM/YYYY',
     this.showError = false,
     this.errorMessage,
   });
@@ -71,7 +71,7 @@ class _AppDatePickerState extends State<AppDatePicker> {
 
     final String text = widget.selectedDate != null
         ? DateFormat('dd/MM/yyyy').format(widget.selectedDate!)
-        : widget.hint;
+        : widget.hintText;
 
     Color borderColor() {
       if (widget.showError) return AppColors.error;
@@ -90,14 +90,14 @@ class _AppDatePickerState extends State<AppDatePicker> {
         // Label
         Text(
           widget.label,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.2,
+          style: TextStyle(
+            color: AppColors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         // Date Field
         GestureDetector(
@@ -105,8 +105,9 @@ class _AppDatePickerState extends State<AppDatePicker> {
           child: Focus(
             focusNode: _focusNode,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor(), width: borderWidth()),
               ),
@@ -119,7 +120,7 @@ class _AppDatePickerState extends State<AppDatePicker> {
                         fontSize: 15,
                         color: widget.selectedDate != null
                             ? AppColors.white
-                            : Colors.white54,
+                            : Colors.white24,
                       ),
                     ),
                   ),

@@ -4,7 +4,7 @@ import '../../core/constants/app_colors.dart';
 class AppSelect<T> extends StatefulWidget {
   final String label;
   final T? selectedValue;
-  final String hint;
+  final String hintText;
   final bool showError;
   final String? errorMessage;
   final List<DropdownMenuItem<T>> items;
@@ -16,7 +16,7 @@ class AppSelect<T> extends StatefulWidget {
     required this.items,
     required this.onChanged,
     this.selectedValue,
-    this.hint = 'Select',
+    this.hintText = 'Select',
     this.showError = false,
     this.errorMessage,
   });
@@ -54,14 +54,14 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
         // Label
         Text(
           widget.label,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.2,
+          style: TextStyle(
+            color: AppColors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         // Dropdown Field
         Focus(
@@ -69,6 +69,7 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: borderColor(), width: borderWidth()),
             ),
@@ -77,8 +78,8 @@ class _AppSelectState<T> extends State<AppSelect<T>> {
                 isExpanded: true,
                 value: widget.selectedValue,
                 hint: Text(
-                  widget.hint,
-                  style: const TextStyle(color: Colors.white54),
+                  widget.hintText,
+                  style: const TextStyle(color: Colors.white24, fontSize: 14),
                 ),
                 icon: AnimatedRotation(
                   turns: _isOpen ? 0.5 : 0, // Rotate arrow when open

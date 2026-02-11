@@ -75,7 +75,7 @@ class _StepQuickStatsState extends State<StepQuickStats> {
             delay: const Duration(milliseconds: 200),
             child: AppInput(
               label: 'Height (cm)',
-              hint: '175',
+              hintText: '175',
               controller: heightCtrl,
               showError: profileProvider.errors.containsKey('height'),
               errorMessage: profileProvider.errors['height'],
@@ -89,7 +89,7 @@ class _StepQuickStatsState extends State<StepQuickStats> {
             delay: const Duration(milliseconds: 300),
             child: AppInput(
               label: 'Job Title',
-              hint: 'e.g. Software Engineer',
+              hintText: 'e.g. Software Engineer',
               controller: jobCtrl,
               showError: profileProvider.errors.containsKey('jobTitle'),
               errorMessage: profileProvider.errors['jobTitle'],
@@ -102,7 +102,7 @@ class _StepQuickStatsState extends State<StepQuickStats> {
             delay: const Duration(milliseconds: 400),
             child: AppInput(
               label: 'Education',
-              hint: 'e.g. Bachelors in Science',
+              hintText: 'e.g. Bachelors in Science',
               controller: eduCtrl,
               showError: profileProvider.errors.containsKey('education'),
               errorMessage: profileProvider.errors['education'],
@@ -115,7 +115,7 @@ class _StepQuickStatsState extends State<StepQuickStats> {
             delay: const Duration(milliseconds: 500),
             child: AppInput(
               label: 'Hometown',
-              hint: 'e.g. New York',
+              hintText: 'e.g. New York',
               controller: homeCtrl,
               showError: profileProvider.errors.containsKey('hometown'),
               errorMessage: profileProvider.errors['hometown'],

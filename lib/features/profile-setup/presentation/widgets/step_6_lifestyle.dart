@@ -48,7 +48,7 @@ class StepLifestyle extends StatelessWidget {
             delay: const Duration(milliseconds: 200),
             child: AppSelect<String>(
               label: 'Smoking',
-              hint: 'Select option',
+              hintText: 'Select option',
               selectedValue: profile?.smoking,
               showError: profileProvider.errors.containsKey('smoking'),
               errorMessage: profileProvider.errors['smoking'],
@@ -62,7 +62,7 @@ class StepLifestyle extends StatelessWidget {
             delay: const Duration(milliseconds: 300),
             child: AppSelect<String>(
               label: 'Drinking',
-              hint: 'Select option',
+              hintText: 'Select option',
               selectedValue: profile?.drinking,
               showError: profileProvider.errors.containsKey('drinking'),
               errorMessage: profileProvider.errors['drinking'],
@@ -76,7 +76,7 @@ class StepLifestyle extends StatelessWidget {
             delay: const Duration(milliseconds: 400),
             child: AppSelect<String>(
               label: 'Exercise',
-              hint: 'Select option',
+              hintText: 'Select option',
               selectedValue: profile?.exercise,
               showError: profileProvider.errors.containsKey('exercise'),
               errorMessage: profileProvider.errors['exercise'],
@@ -90,7 +90,7 @@ class StepLifestyle extends StatelessWidget {
             delay: const Duration(milliseconds: 500),
             child: AppSelect<String>(
               label: 'Diet',
-              hint: 'Select option',
+              hintText: 'Select option',
               selectedValue: profile?.diet,
               showError: profileProvider.errors.containsKey('diet'),
               errorMessage: profileProvider.errors['diet'],
@@ -104,7 +104,7 @@ class StepLifestyle extends StatelessWidget {
             delay: const Duration(milliseconds: 600),
             child: AppSelect<String>(
               label: 'Pets',
-              hint: 'Select option',
+              hintText: 'Select option',
               selectedValue: profile?.pets,
               showError: profileProvider.errors.containsKey('pets'),
               errorMessage: profileProvider.errors['pets'],
@@ -118,19 +118,19 @@ class StepLifestyle extends StatelessWidget {
             delay: const Duration(milliseconds: 700),
             child: AppSelect<String>(
               label: 'Religion (Optional)',
-              hint: 'Select religion',
+              hintText: 'Select religion',
               selectedValue: profile?.religion,
               items: AppDataConstants.religionOptions.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
               onChanged: (v) => profileProvider.updateProfile((p) => p.copyWith(religion: v)),
             ),
           ),
           const SizedBox(height: 16),
-
+ 
           FadeInUp(
             delay: const Duration(milliseconds: 800),
             child: AppSelect<String>(
               label: 'Language',
-              hint: 'Select language',
+              hintText: 'Select language',
               selectedValue: profile?.language,
               showError: profileProvider.errors.containsKey('language'),
               errorMessage: profileProvider.errors['language'],

@@ -92,7 +92,7 @@ class LoginPage extends StatelessWidget {
                                 duration: const Duration(milliseconds: 600),
                                 child: CountryPhoneInput(
                                   label: "Phone Number",
-                                  hint: "Enter your phone number",
+                                  hintText: "Enter your phone number",
                                   controller: controller.phoneController,
                                   onFullNumberChanged: (phone) {
                                     controller.phoneNumber =

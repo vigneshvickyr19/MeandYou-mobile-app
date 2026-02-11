@@ -9,6 +9,7 @@ import '../controllers/profile_controller.dart';
 import '../widgets/profile_skeleton.dart';
 import '../widgets/own_profile_view.dart';
 import '../widgets/other_profile_view.dart';
+import 'edit_profile_page.dart';
 import '../../../home/presentation/controllers/home_navigation_controller.dart';
 import '../../../../core/services/like_action_service.dart';
 import '../../../home/presentation/widgets/heart_flow_overlay.dart';
@@ -130,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ? Opacity(
                   opacity: _appBarOpacity,
                   child: Text(
-                    profile.fullName ?? 'Profile',
+                    "${profile.fullName}${_controller.age != null ? ', ${_controller.age}' : ''}",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -139,9 +140,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 )
-              : const Text(
-                  'Profile Details',
-                  style: TextStyle(
+              : Text(
+                  "${profile.fullName}${_controller.age != null ? ', ${_controller.age}' : ''}",
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -207,7 +208,17 @@ class _ProfilePageState extends State<ProfilePage> {
               ListTile(
                 leading: const Icon(Icons.edit_outlined, color: Colors.white),
                 title: const Text("Edit Profile", style: TextStyle(color: Colors.white)),
-                onTap: () => Navigator.pop(context),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                  );
+
+                  if (result == true) {
+                    controller.loadProfile(widget.userId);
+                  }
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.privacy_tip_outlined, color: Colors.white),

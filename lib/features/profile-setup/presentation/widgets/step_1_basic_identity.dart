@@ -70,7 +70,7 @@ class _StepBasicIdentityState extends State<StepBasicIdentity> {
             delay: const Duration(milliseconds: 200),
             child: AppInput(
               label: 'Display Name',
-              hint: 'What should we call you?',
+              hintText: 'What should we call you?',
               controller: nameCtrl,
               showError: profileProvider.errors.containsKey('fullName'),
               errorMessage: profileProvider.errors['fullName'],
@@ -84,7 +84,7 @@ class _StepBasicIdentityState extends State<StepBasicIdentity> {
           FadeInUp(
             delay: const Duration(milliseconds: 300),
             child: AppDatePicker(
-              label: 'Birth Date',
+              label: 'Birth Date${profileProvider.age != null ? ' (Age: ${profileProvider.age})' : ''}',
               selectedDate: profile?.dob,
               showError: profileProvider.errors.containsKey('dob'),
               errorMessage: profileProvider.errors['dob'],

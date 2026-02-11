@@ -3,8 +3,9 @@ import '../constants/app_colors.dart';
 
 class AppInput extends StatefulWidget {
   final String label;
-  final String hint;
-  final TextEditingController controller;
+  final String? hintText;
+  final TextEditingController? controller;
+  final String? initialValue;
   final bool showError;
   final String? errorMessage;
   final ValueChanged<String>? onChanged;
@@ -14,8 +15,9 @@ class AppInput extends StatefulWidget {
   const AppInput({
     super.key,
     required this.label,
-    required this.hint,
-    required this.controller,
+    this.hintText,
+    this.controller,
+    this.initialValue,
     this.showError = false,
     this.errorMessage,
     this.onChanged,
@@ -29,11 +31,32 @@ class AppInput extends StatefulWidget {
 
 class _AppInputState extends State<AppInput> {
   late bool _obscureText;
+  late TextEditingController _effectiveController;
 
   @override
   void initState() {
     super.initState();
     _obscureText = widget.isPassword;
+    _effectiveController = widget.controller ?? TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void didUpdateWidget(AppInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      if (oldWidget.controller == null) {
+        _effectiveController.dispose();
+      }
+      _effectiveController = widget.controller ?? TextEditingController(text: widget.initialValue);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller == null) {
+      _effectiveController.dispose();
+    }
+    super.dispose();
   }
 
   OutlineInputBorder _border(Color color, double width) {
@@ -51,41 +74,41 @@ class _AppInputState extends State<AppInput> {
         // Label
         Text(
           widget.label,
-          style: const TextStyle(
-            color: AppColors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.2,
+          style: TextStyle(
+            color: AppColors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         // Input Field
         TextField(
-          controller: widget.controller,
+          controller: _effectiveController,
           onChanged: widget.onChanged,
           obscureText: _obscureText,
-          keyboardType: widget.keyboardType, // ✅ USE IT HERE
+          keyboardType: widget.keyboardType,
           cursorColor: AppColors.primary,
           style: const TextStyle(color: AppColors.white, fontSize: 15),
           decoration: InputDecoration(
-            hintText: widget.hint,
-            hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
+            hintText: widget.hintText,
+            hintStyle: const TextStyle(color: Colors.white24, fontSize: 14),
             filled: true,
-            fillColor: Colors.transparent,
+            fillColor: Colors.white.withValues(alpha: 0.03),
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 14,
+              vertical: 16,
             ),
 
-            enabledBorder: _border(AppColors.darkOverlay, 1),
+            enabledBorder: _border(Colors.white.withValues(alpha: 0.08), 1),
             focusedBorder: _border(
               widget.showError ? AppColors.error : AppColors.primary,
-              1.8,
+              1.5,
             ),
-            errorBorder: _border(AppColors.error, 1.5),
-            focusedErrorBorder: _border(AppColors.error, 1.8),
+            errorBorder: _border(AppColors.error.withValues(alpha: 0.5), 1),
+            focusedErrorBorder: _border(AppColors.error, 1.5),
 
             suffixIcon: widget.isPassword
                 ? IconButton(

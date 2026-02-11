@@ -12,4 +12,8 @@ class ProfileRepository {
   Future<UserModel?> getUser(String userId) async {
     return await _dbService.getUserById(userId);
   }
+
+  Future<void> updateProfile(String userId, Map<String, dynamic> data) async {
+    await _dbService.updateProfileFields(userId, data);
+  }
 }

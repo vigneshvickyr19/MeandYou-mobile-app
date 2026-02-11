@@ -9,6 +9,7 @@ class AppUploadBox extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onRemove;
   final File? imageFile;
+  final String? imageUrl;
   final bool isPrimary;
 
   const AppUploadBox({
@@ -17,6 +18,7 @@ class AppUploadBox extends StatelessWidget {
     this.onTap,
     this.onRemove,
     this.imageFile,
+    this.imageUrl,
     this.isPrimary = false,
   });
 
@@ -31,30 +33,46 @@ class AppUploadBox extends StatelessWidget {
             height: size,
             width: size,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white24, width: 1.2),
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
               image: imageFile != null
                   ? DecorationImage(
                       image: FileImage(imageFile!),
                       fit: BoxFit.cover,
                     )
+                  : (imageUrl != null && imageUrl!.isNotEmpty)
+                  ? DecorationImage(
+                      image: NetworkImage(imageUrl!),
+                      fit: BoxFit.cover,
+                    )
                   : null,
             ),
-            child: imageFile == null
+            child:
+                (imageFile == null && (imageUrl == null || imageUrl!.isEmpty))
                 ? Center(
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        SvgPicture.asset(
-                          AppImages.addImageIcon,
-                          width: 28,
-                          height: 28,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.03),
+                            shape: BoxShape.circle,
+                          ),
+                          child: SvgPicture.asset(
+                            AppImages.addImageIcon,
+                            width: 24,
+                            height: 24,
+                          ),
                         ),
-
                         if (isPrimary)
                           Positioned(
-                            bottom: 10,
-                            right: 10,
+                            bottom: 0,
+                            right: 0,
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(
@@ -68,7 +86,7 @@ class AppUploadBox extends StatelessWidget {
                               ),
                               child: const Icon(
                                 Icons.add,
-                                size: 14,
+                                size: 12,
                                 color: AppColors.black,
                               ),
                             ),
@@ -80,7 +98,7 @@ class AppUploadBox extends StatelessWidget {
           ),
 
           /// ❌ REMOVE BUTTON (TOP RIGHT)
-          if (imageFile != null)
+          if (imageFile != null || (imageUrl != null && imageUrl!.isNotEmpty))
             Positioned(
               top: 6,
               right: 6,

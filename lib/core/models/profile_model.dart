@@ -49,6 +49,7 @@ class ProfileModel {
   final String? linkedin;
   final String? facebook;
   final String? x;
+  final DateTime? profileUpdatedAt;
 
   ProfileModel({
     required this.userId,
@@ -83,6 +84,7 @@ class ProfileModel {
     this.linkedin,
     this.facebook,
     this.x,
+    this.profileUpdatedAt,
   });
 
   factory ProfileModel.fromMap(Map<String, dynamic> data, String userId) {
@@ -119,6 +121,7 @@ class ProfileModel {
       linkedin: data['linkedin'],
       facebook: data['facebook'],
       x: data['x'],
+      profileUpdatedAt: (data['profileUpdatedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -155,6 +158,7 @@ class ProfileModel {
       'linkedin': linkedin,
       'facebook': facebook,
       'x': x,
+      'profileUpdatedAt': profileUpdatedAt != null ? Timestamp.fromDate(profileUpdatedAt!) : null,
     };
   }
 
@@ -190,6 +194,7 @@ class ProfileModel {
     String? linkedin,
     String? facebook,
     String? x,
+    DateTime? profileUpdatedAt,
   }) {
     return ProfileModel(
       userId: userId,
@@ -224,6 +229,18 @@ class ProfileModel {
       linkedin: linkedin ?? this.linkedin,
       facebook: facebook ?? this.facebook,
       x: x ?? this.x,
+      profileUpdatedAt: profileUpdatedAt ?? this.profileUpdatedAt,
     );
+  }
+
+  int? get age {
+    if (dob == null) return null;
+    final now = DateTime.now();
+    int age = now.year - dob!.year;
+    if (now.month < dob!.month ||
+        (now.month == dob!.month && now.day < dob!.day)) {
+      age--;
+    }
+    return age;
   }
 }

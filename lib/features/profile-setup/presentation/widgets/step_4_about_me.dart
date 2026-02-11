@@ -66,7 +66,7 @@ class _StepAboutMeState extends State<StepAboutMe> {
             delay: const Duration(milliseconds: 200),
             child: AppTextArea(
               label: 'Your Bio',
-              hint: 'I love traveling, coffee, and meaningful conversations...',
+              hintText: 'I love traveling, coffee, and meaningful conversations...',
               controller: bioCtrl,
               showError: profileProvider.errors.containsKey('bio'),
               errorMessage: profileProvider.errors['bio'],
