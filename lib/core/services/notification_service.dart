@@ -226,8 +226,15 @@ class NotificationService {
     // Listen to token refresh
     _firebaseMessaging.onTokenRefresh.listen((newToken) {
       _fcmToken = newToken;
-      if (kDebugMode) {}
+      if (kDebugMode) {
+        print('NotificationService: Token refreshed: $newToken');
+      }
       _saveTokenToFirestore(newToken);
+      
+      // Re-subscribe to topics if user is logged in
+      if (FirebaseAuth.instance.currentUser != null) {
+        subscribeToGlobalTopic();
+      }
     });
   }
 
@@ -572,6 +579,64 @@ class NotificationService {
       }
     } catch (e) {
       if (kDebugMode) {}
+    }
+  }
+
+  // -----------------------------------------------------------------------------
+  // TOPIC SUBSCRIPTION MANAGEMENT
+  // -----------------------------------------------------------------------------
+
+  /// Subscribe to a specific topic
+  Future<void> subscribeToTopic(String topic) async {
+    try {
+      await _firebaseMessaging.subscribeToTopic(topic);
+      if (kDebugMode) {
+        print('NotificationService: Subscribed to topic: $topic');
+      }
+    } catch (e) {
+      debugPrint('NotificationService: Error subscribing to topic $topic: $e');
+    }
+  }
+
+  /// Unsubscribe from a specific topic
+  Future<void> unsubscribeFromTopic(String topic) async {
+    try {
+      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      if (kDebugMode) {
+        print('NotificationService: Unsubscribed from topic: $topic');
+      }
+    } catch (e) {
+      debugPrint('NotificationService: Error unsubscribing from topic $topic: $e');
+    }
+  }
+
+  /// Subscribe to the global "all_users" topic
+  Future<void> subscribeToGlobalTopic() async {
+    await subscribeToTopic(NotificationConstants.topicAllUsers);
+  }
+
+  /// Unsubscribe from the global "all_users" topic
+  Future<void> unsubscribeFromGlobalTopic() async {
+    await unsubscribeFromTopic(NotificationConstants.topicAllUsers);
+  }
+
+  /// Subscribe to gender-based topics
+  Future<void> subscribeToGenderTopic(String gender) async {
+    final normalizedGender = gender.toLowerCase();
+    if (normalizedGender == 'male') {
+      await subscribeToTopic(NotificationConstants.topicMale);
+    } else if (normalizedGender == 'female') {
+      await subscribeToTopic(NotificationConstants.topicFemale);
+    }
+  }
+
+  /// Unsubscribe from gender-based topics
+  Future<void> unsubscribeFromGenderTopic(String gender) async {
+    final normalizedGender = gender.toLowerCase();
+    if (normalizedGender == 'male') {
+      await unsubscribeFromTopic(NotificationConstants.topicMale);
+    } else if (normalizedGender == 'female') {
+      await unsubscribeFromTopic(NotificationConstants.topicFemale);
     }
   }
 }

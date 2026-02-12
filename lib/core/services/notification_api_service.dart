@@ -75,4 +75,33 @@ class NotificationApiService {
       rethrow;
     }
   }
+
+  /// Send a broadcast notification to a topic
+  Future<void> sendBroadcastNotification({
+    required String title,
+    required String body,
+    required String targetAudience, // 'all', 'male', 'female'
+    Map<String, dynamic>? data,
+  }) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('Sending broadcast ($targetAudience): $title');
+      }
+      
+      await _dio.post(
+        '/api/notifications/broadcast',
+        data: {
+          'title': title,
+          'body': body,
+          'targetAudience': targetAudience,
+          'data': data ?? {},
+        },
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error sending broadcast notification: $e');
+      }
+      rethrow;
+    }
+  }
 }

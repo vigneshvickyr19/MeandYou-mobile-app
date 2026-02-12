@@ -275,8 +275,15 @@ class ProfileSetupProvider extends ChangeNotifier {
             : null,
         isProfileComplete: true,
         fcmToken: fcmToken,
+        gender: _draftProfile!.gender, // Sync gender to User Model
+        age: _draftProfile!.age,       // Sync age if available
       );
       await _userRepository.updateUserAccount(updatedUser);
+
+      // Subscribe to gender-based topic immediately
+      if (_draftProfile!.gender != null) {
+        await NotificationService.instance.subscribeToGenderTopic(_draftProfile!.gender!);
+      }
 
       // Also ensure FCM token is saved separately if available
       if (fcmToken != null) {

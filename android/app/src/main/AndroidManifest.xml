@@ -10,9 +10,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" android:minSdkVersion="34" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <application
-        android:label="me_and_you"
+        android:label="meAndyou"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

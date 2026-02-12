@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/admin_settings_model.dart';
+import '../../../../core/models/admin_settings_model.dart';
 import '../../../../core/services/admin_service.dart';
+import '../../../../core/services/notification_api_service.dart';
+import '../../../../core/constants/app_routes.dart';
 
 class AdminController extends ChangeNotifier {
   final AdminService _adminService = AdminService.instance;
@@ -64,7 +67,7 @@ class AdminController extends ChangeNotifier {
     try {
       final overrides = Map<String, int>.from(_settings!.userOverrides);
       overrides[userId] = limit;
-      
+
       final updated = AdminSettings(
         maleFreeLikes: _settings!.maleFreeLikes,
         femaleFreeLikes: _settings!.femaleFreeLikes,
@@ -77,7 +80,12 @@ class AdminController extends ChangeNotifier {
     }
   }
 
-  Future<void> createAnnouncement(String title, String message, String type, String targetAudience) async {
+  Future<void> createAnnouncement(
+    String title,
+    String message,
+    String type,
+    String targetAudience,
+  ) async {
     _setLoading(true);
     try {
       final ann = Announcement(
@@ -89,6 +97,18 @@ class AdminController extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
       await _adminService.createAnnouncement(ann);
+
+      // Trigger Push Notification Broadcast
+      String audience = 'all'; // Default to all
+      if (targetAudience == 'male') audience = 'male';
+      if (targetAudience == 'female') audience = 'female';
+
+      await NotificationApiService.instance.sendBroadcastNotification(
+        title: title,
+        body: message,
+        targetAudience: audience,
+        data: {'route': AppRoutes.home, 'type': 'BROADCAST'},
+      );
     } finally {
       _setLoading(false);
     }

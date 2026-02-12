@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../constants/app_images.dart';
 
 class AppLogo extends StatelessWidget {
-  const AppLogo({super.key});
+  final double size;
+  const AppLogo({super.key, this.size = 100});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      width: 100,
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: const Icon(
-        Icons.favorite,
-        color: AppColors.primary,
-        size: 60,
-      ),
+    return SvgPicture.asset(
+      AppImages.appIcon,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
     );
   }
 }

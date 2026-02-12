@@ -86,6 +86,10 @@ class AuthProvider extends ChangeNotifier {
     ) {
       if (userData != null) {
         _currentUser = userData;
+
+        // Ensure subscriptions are synced
+        _syncSubscriptions();
+
         _setInitialized();
       } else {
         // Handle case where document doesn't exist yet (new account)
@@ -93,6 +97,20 @@ class AuthProvider extends ChangeNotifier {
         _setInitialized();
       }
     });
+  }
+
+  /// Syncs FCM topic subscriptions based on current user profile
+  Future<void> _syncSubscriptions() async {
+    if (_currentUser == null) return;
+    
+    // Always subscribe to global topic for authenticated users
+    await NotificationService.instance.subscribeToGlobalTopic();
+
+    // Subscribe to gender topic if available
+    if (_currentUser?.gender != null) {
+      await NotificationService.instance.subscribeToGenderTopic(_currentUser!.gender!);
+      debugPrint("AuthProvider: Synced gender subscription for ${_currentUser!.gender}");
+    }
   }
 
   void _setInitialized() {
@@ -171,6 +189,8 @@ class AuthProvider extends ChangeNotifier {
     try {
       _currentUser = await _userRepository.signInWithGoogle();
       await _updateFcmToken();
+      // Sync all subscriptions
+      await _syncSubscriptions();
     } finally {
       _setLoading(false);
     }
@@ -190,6 +210,8 @@ class AuthProvider extends ChangeNotifier {
         displayName: displayName,
       );
       await _updateFcmToken();
+      // Sync all subscriptions
+      await _syncSubscriptions();
     } finally {
       _setLoading(false);
     }
@@ -204,6 +226,14 @@ class AuthProvider extends ChangeNotifier {
       PresenceService.instance.setStatus(false);
       PresenceService.instance.dispose();
       
+      // Unsubscribe from global notifications
+      await NotificationService.instance.unsubscribeFromGlobalTopic();
+
+      // Unsubscribe from gender topic if available
+      if (_currentUser?.gender != null) {
+        await NotificationService.instance.unsubscribeFromGenderTopic(_currentUser!.gender!);
+      }
+
       await _userRepository.signOut();
       _currentUser = null;
       // Reset auth resolution for next login/session
@@ -235,6 +265,14 @@ class AuthProvider extends ChangeNotifier {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.uid == userId) {
          await user.delete();
+      }
+      
+      // Unsubscribe from global notifications
+      await NotificationService.instance.unsubscribeFromGlobalTopic();
+
+      // Unsubscribe from gender topic if available
+      if (_currentUser?.gender != null) {
+        await NotificationService.instance.unsubscribeFromGenderTopic(_currentUser!.gender!);
       }
 
       _currentUser = null;

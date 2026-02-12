@@ -55,6 +55,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'meAndyou',
       debugShowCheckedModeBanner: false,
       navigatorKey: _navigatorKey,
       home: const AuthWrapper(),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/app_logo.dart';
+import '../../../../core/constants/app_images.dart';
 
 class SplashContent extends StatefulWidget {
   const SplashContent({super.key});
@@ -24,10 +24,10 @@ class _SplashContentState extends State<SplashContent>
       duration: const Duration(milliseconds: 1400),
     );
 
-    // Move from center → top
+    // Move from center → top (Disabled for fullscreen splash)
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(0, -0.45),
+      end: Offset.zero,
     ).animate(
       CurvedAnimation(
         parent: _controller,
@@ -69,31 +69,18 @@ class _SplashContentState extends State<SplashContent>
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                AppLogo(),
-                SizedBox(height: 20),
-                Text(
-                  "LoveConnect",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "Find your perfect match",
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Image.asset(
+              AppImages.splashImage,
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
             ),
           ),
         ),

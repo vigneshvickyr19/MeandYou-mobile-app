@@ -43,4 +43,9 @@ class NotificationConstants {
   // Profile Interaction Descriptions
   static const String profileDescriptionLike = 'Liked your profile';
   static const String profileDescriptionMatch = 'You have a new match!';
+
+  // Topic Names
+  static const String topicAllUsers = 'all_users';
+  static const String topicMale = 'male';
+  static const String topicFemale = 'female';
 }

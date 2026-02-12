@@ -1,5 +1,7 @@
 class AppImages {
   static const getStarted = 'assets/images/get_started.png';
+  static const appIcon = 'assets/images/app-icon.svg';
+  static const splashImage = 'assets/images/splash-image.gif';
 
   // App Icons
   static const google = 'assets/images/google_icon.svg';
