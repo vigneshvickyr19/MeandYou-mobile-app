@@ -14,7 +14,7 @@ class ProfileSetupProvider extends ChangeNotifier {
   int _currentStep = 0;
   static const int totalSteps = 8;
 
-  Map<String, String> _errors = {};
+  final Map<String, String> _errors = {};
 
   ProfileModel? get draftProfile => _draftProfile;
   bool get isSaving => _isSaving;

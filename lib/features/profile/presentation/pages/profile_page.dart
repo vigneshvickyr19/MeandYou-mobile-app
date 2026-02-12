@@ -289,7 +289,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (context.mounted) {
         Navigator.pop(context);
       }
-    } on LikeLimitReachedException catch (e) {
+    } on LikeLimitReachedException {
       if (!context.mounted) return;
       HapticFeedback.vibrate();
       SubscriptionBottomSheet.show(context);

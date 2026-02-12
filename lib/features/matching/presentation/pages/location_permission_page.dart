@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import '../../../../core/providers/location_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
-import '../../../../core/providers/auth_provider.dart';
 import '../controllers/location_permission_controller.dart';
 
 class LocationPermissionPage extends StatefulWidget {
@@ -20,11 +18,8 @@ class _LocationPermissionPageState extends State<LocationPermissionPage> with Ti
   late AnimationController _entranceController;
   
   late Animation<double> _titleOpacity;
-  late Animation<Offset> _titleSlide;
   late Animation<double> _descOpacity;
-  late Animation<Offset> _descSlide;
   late Animation<double> _buttonOpacity;
-  late Animation<Offset> _buttonSlide;
 
   @override
   void initState() {
@@ -43,24 +38,15 @@ class _LocationPermissionPageState extends State<LocationPermissionPage> with Ti
     _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entranceController, curve: const Interval(0.1, 0.5, curve: Curves.easeOut))
     );
-    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _entranceController, curve: const Interval(0.1, 0.5, curve: Curves.easeOut))
-    );
 
     // Description: 0.3 to 0.7 of duration
     _descOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _entranceController, curve: const Interval(0.3, 0.7, curve: Curves.easeOut))
-    );
-    _descSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
       CurvedAnimation(parent: _entranceController, curve: const Interval(0.3, 0.7, curve: Curves.easeOut))
     );
 
     // Buttons: 0.5 to 1.0 of duration
     _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entranceController, curve: const Interval(0.5, 1.0, curve: Curves.easeOut))
-    );
-    _buttonSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _entranceController, curve: const Interval(0.5, 1.0, curve: Curves.easeOutQuad))
     );
 
     _entranceController.forward();

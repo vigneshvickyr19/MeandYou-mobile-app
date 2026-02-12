@@ -4,7 +4,6 @@ import '../../../../core/models/user_model.dart';
 import '../../../../core/services/database_service.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../../home/data/models/like_model.dart';
-import '../../../home/data/services/home_service.dart';
 import '../../data/models/match_model.dart';
 import '../../data/services/links_service.dart';
 import '../../../../core/services/like_action_service.dart';
@@ -25,7 +24,6 @@ class LikeItem {
 
 class LikeController extends ChangeNotifier {
   final LinksService _linksService = LinksService();
-  final HomeService _homeService = HomeService();
   final ChatRepository _chatRepository = ChatRepository();
   final DatabaseService _databaseService = DatabaseService();
 
@@ -65,7 +63,9 @@ class LikeController extends ChangeNotifier {
       _matches = [];
       _receivedLikes = [];
       _userCache.clear();
-      for (var sub in _userSubscriptions.values) sub.cancel();
+      for (var sub in _userSubscriptions.values) {
+        sub.cancel();
+      }
       _userSubscriptions.clear();
     }
     

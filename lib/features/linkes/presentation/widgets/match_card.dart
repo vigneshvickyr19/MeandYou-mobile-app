@@ -51,7 +51,7 @@ class MatchCard extends StatelessWidget {
                           ? Image.network(
                               user.profileImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, _, __) => _buildPlaceholder(),
+                              errorBuilder: (context, _, _) => _buildPlaceholder(),
                             )
                           : _buildPlaceholder(),
                     ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 
 /// Reaction pill widget displaying emoji reactions and like count
 class MessageReactionPill extends StatelessWidget {

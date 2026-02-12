@@ -4,7 +4,6 @@ import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/providers/auth_provider.dart';
-import '../../../home/data/models/like_result.dart';
 import '../controllers/like_controller.dart';
 import '../widgets/match_card.dart';
 import '../widgets/received_like_card.dart';

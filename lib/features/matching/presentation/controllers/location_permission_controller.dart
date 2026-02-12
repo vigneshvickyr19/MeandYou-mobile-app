@@ -49,12 +49,17 @@ class LocationPermissionController {
 
     // 3. Permission granted - get current location
     try {
+      // Read provider before async operation to avoid context issues
+      // ignore: use_build_context_synchronously
+      final authProvider = context.read<AuthProvider>();
+      
       final Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       // 4. Update Firestore once successfully
-      final authProvider = context.read<AuthProvider>();
       if (authProvider.currentUser != null) {
         final String geohash = GeoHasher().encode(
           position.longitude,

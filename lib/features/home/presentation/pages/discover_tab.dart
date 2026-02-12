@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vector_math/vector_math_64.dart' as vm;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/utils/location_formatter.dart';
@@ -177,8 +178,8 @@ class _DiscoverTabState extends State<DiscoverTab>
         // 3D Matrix Transformation for modern sliding effect
         final matrix = Matrix4.identity()
           ..setEntry(3, 2, 0.001) // perspective
-          ..rotateY(delta * 0.4) // subtle Y-axis rotation
-          ..scale(scale, scale, 1.0);
+          ..rotateY(delta * 0.4); // subtle Y-axis rotation
+        matrix.scaleByVector3(vm.Vector3(scale, scale, 1.0));
 
         return Center(
           child: Transform(
@@ -259,7 +260,7 @@ class _DiscoverTabState extends State<DiscoverTab>
       builder: (context, child) {
         final double delta = index - _currentPageValue;
         return Container(
-          transform: Matrix4.identity()..translate(delta * 40, 0.0, 0.0), // Parallax shift
+          transform: Matrix4.identity()..translateByVector3(vm.Vector3(delta * 40, 0.0, 0.0)), // Parallax shift
           child: match.profileImageUrl != null && match.profileImageUrl!.isNotEmpty
               ? Image.network(
                   match.profileImageUrl!,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_routes.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/deep_link_service.dart';
@@ -12,7 +11,6 @@ import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../admin/presentation/pages/admin_panel_page.dart';
 import '../controllers/home_navigation_controller.dart';
 import 'home_page.dart';
-import '../../../matching/presentation/pages/location_permission_page.dart';
 import '../../../../core/providers/location_provider.dart';
 
 class HomeShellPage extends StatefulWidget {

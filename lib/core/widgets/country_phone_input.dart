@@ -80,7 +80,7 @@ class CountryPhoneInput extends StatelessWidget {
               hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
               prefixIcon: const Icon(Icons.search, color: Colors.white54),
               filled: true,
-              fillColor: AppColors.darkOverlay.withOpacity(0.1),
+              fillColor: AppColors.darkOverlay.withValues(alpha: 0.1),
               enabledBorder: _border(AppColors.darkOverlay, 1),
               focusedBorder: _border(AppColors.primary, 1.5),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),

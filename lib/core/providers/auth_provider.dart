@@ -51,8 +51,9 @@ class AuthProvider extends ChangeNotifier {
       // Skip if we already have this user and subscription is active to avoid flicker
       if (_currentUser?.id == user.uid &&
           !_isInitializing &&
-          _userDocumentSubscription != null)
+          _userDocumentSubscription != null) {
         return;
+      }
 
       // Create a minimal user model from Firebase Auth data
       // This allows immediate navigation to Home without waiting for Firestore
