@@ -24,6 +24,10 @@ class AppColors {
   static const navBg = Color(0xFF121212);
   static const navItemBg = Color(0xFF1E1E1E);
 
+  static const surface = Color(0xFF141414);
+  static const card = Color(0xFF1E1E1E);
+  static final divider = white.withValues(alpha: 0.08);
+
   static final darkOverlay = const Color.fromARGB(
     255,
     43,

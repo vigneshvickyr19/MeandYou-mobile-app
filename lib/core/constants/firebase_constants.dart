@@ -11,6 +11,9 @@ class FirebaseConstants {
   static const String announcements = 'announcements';
   static const String dailyStats = 'daily_stats';
   static const String profileImages = 'profile_images';
+  static const String benefits = 'benefits';
+  static const String subscriptionPlans = 'subscription_plans';
+  static const String userSubscriptions = 'user_subscriptions';
 
   // Field Names
   static const String lastMessageAt = 'lastMessageAt';

@@ -6,6 +6,9 @@ import '../controllers/profile_controller.dart';
 import 'profile_gallery.dart';
 import 'profile_content_widgets.dart';
 import '../pages/help_center_page.dart';
+import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import 'package:provider/provider.dart';
 
 class OwnProfileView extends StatelessWidget {
   final ProfileModel profile;
@@ -69,6 +72,8 @@ class OwnProfileView extends StatelessWidget {
                     _buildDatingSection(),
                     const SizedBox(height: 24),
                     ProfileContentWidgets.buildInterestsSection(profile),
+                    const SizedBox(height: 24),
+                    _buildSubscriptionSection(context),
                     const SizedBox(height: 24),
                     _buildVerificationSection(context),
                     const SizedBox(height: 120),
@@ -241,6 +246,93 @@ class OwnProfileView extends StatelessWidget {
         ProfileContentWidgets.buildStatTile(Icons.people_outline_rounded, "Age Range", "${profile.minAge ?? 18} - ${profile.maxAge ?? 50}"),
         ProfileContentWidgets.buildStatTile(Icons.map_outlined, "Distance", "Up to ${profile.distance ?? 50} km"),
       ],
+    );
+  }
+
+  Widget _buildSubscriptionSection(BuildContext context) {
+    return Consumer<SubscriptionController>(
+      builder: (context, subController, child) {
+        final isPremium = subController.isPremium;
+        
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isPremium 
+                ? [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)] 
+                : [AppColors.white.withValues(alpha: 0.05), AppColors.white.withValues(alpha: 0.02)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isPremium ? Colors.transparent : AppColors.white.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isPremium ? Colors.white.withValues(alpha: 0.2) : AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPremium ? Icons.star_rounded : Icons.workspace_premium_rounded,
+                      color: isPremium ? Colors.white : AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isPremium ? 'Premium Active' : 'Get Premium',
+                          style: TextStyle(
+                            color: isPremium ? Colors.white : AppColors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          isPremium ? 'Enjoy all your exclusive benefits' : 'Unlock unlimited likes & more',
+                          style: TextStyle(
+                            color: isPremium ? Colors.white.withValues(alpha: 0.8) : AppColors.white.withValues(alpha: 0.4),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isPremium)
+                    TextButton(
+                      onPressed: () => SubscriptionUpsellSheet.show(
+                        context,
+                        title: 'Unlock Premium',
+                        subtitle: 'Upgrade to experience the best of our app',
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text(
+                        'Upgrade',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 

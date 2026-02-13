@@ -13,6 +13,7 @@ import 'features/linkes/presentation/controllers/like_controller.dart';
 import 'features/admin/presentation/controllers/admin_controller.dart';
 import 'core/providers/startup_provider.dart';
 import 'core/providers/location_provider.dart';
+import 'features/subscription/presentation/controllers/subscription_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LikeController()),
         ChangeNotifierProvider(create: (_) => AdminController()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => SubscriptionController()),
       ],
       child: const MyApp(),
     ),
