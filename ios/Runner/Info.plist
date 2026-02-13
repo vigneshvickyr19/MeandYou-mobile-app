@@ -35,6 +35,15 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>app-1-170946286094-ios-29f9530dc6f1a52866225f</string>
+    </array>
+  </dict>
+</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
