@@ -44,13 +44,11 @@ class _HomeShellPageState extends State<HomeShellPage>
     // --- Post-Startup Optimization Logic ---
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 1. Signal that UI is ready for deferred notifications/deep links
+      // This allows DeepLinkService to process any pending payloads
       DeepLinkService().setUiReady(true);
 
       // 2. Heavy work: Sync FCM token (Only after UI is rendered)
       NotificationService.instance.syncTokenNow();
-
-      // 3. Initial location check
-      context.read<LocationProvider>().refreshStatus();
     });
   }
 

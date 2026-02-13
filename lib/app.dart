@@ -25,6 +25,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Initialize services after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _deepLinkService.initialize(_navigatorKey);
+      _deepLinkService.setUiReady(true); // Enable handling of pending links
       NotificationService.instance.setNavigatorKey(_navigatorKey);
     });
   }

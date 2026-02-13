@@ -11,6 +11,7 @@ import 'core/providers/profile_setup_provider.dart';
 import 'features/notifications/presentation/controllers/notification_controller.dart';
 import 'features/linkes/presentation/controllers/like_controller.dart';
 import 'features/admin/presentation/controllers/admin_controller.dart';
+import 'core/providers/startup_provider.dart';
 import 'core/providers/location_provider.dart';
 
 void main() async {
@@ -25,8 +26,9 @@ void main() async {
   // We check the cache immediately to avoid even a single frame of Splash if possible
   final initialUser = FirebaseAuth.instance.currentUser;
 
-  // 3. Optimization: Start NotificationService in parallel (non-blocking)
-  NotificationService.instance.initialize();
+  // 3. Ensure NotificationService is initialized BEFORE runApp
+  // This is crucial to know if we launched from a notification
+  await NotificationService.instance.initialize();
 
   runApp(
     MultiProvider(
@@ -36,6 +38,7 @@ void main() async {
           create: (_) => AuthProvider(initialUser: initialUser), 
           lazy: false,
         ),
+        ChangeNotifierProvider(create: (_) => StartupProvider()),
         ChangeNotifierProvider(create: (_) => ProfileSetupProvider()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
         ChangeNotifierProvider(create: (_) => LikeController()),
