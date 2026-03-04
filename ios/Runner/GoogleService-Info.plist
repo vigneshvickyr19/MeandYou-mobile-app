@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>170946286094-5nc678f0hjs3ei1hdsrm3tv3ef15agan.apps.googleusercontent.com</string>
+	<string>170946286094-irf69e6ofq3oqe3qvg28ejaalb1g95f5.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.170946286094-5nc678f0hjs3ei1hdsrm3tv3ef15agan</string>
+	<string>com.googleusercontent.apps.170946286094-irf69e6ofq3oqe3qvg28ejaalb1g95f5</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>170946286094-mjfkjrn5ou5gls4n36pq79t5odtsuoml.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.meandyou.dating</string>
+	<string>com.meandyou.datingapp</string>
 	<key>PROJECT_ID</key>
 	<string>me-and-you-11e89</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,7 +31,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:170946286094:ios:29f9530dc6f1a52866225f</string>
+	<string>1:170946286094:ios:f5012f9f5eacf17166225f</string>
 	<key>DATABASE_URL</key>
 	<string>https://me-and-you-11e89-default-rtdb.firebaseio.com</string>
 </dict>

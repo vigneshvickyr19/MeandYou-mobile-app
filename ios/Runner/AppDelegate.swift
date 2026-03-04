@@ -26,15 +26,32 @@ import FirebaseAuth
 //    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
 //  }
     override func application(_ application: UIApplication,
-                              didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-        print("✅ APNs Token:", token)
-        Auth.auth().setAPNSToken(deviceToken, type: .prod)
-        super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
-    }
+                          didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+
+    let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+    print("✅ APNs Token:", token)
+
+    #if DEBUG
+    Auth.auth().setAPNSToken(deviceToken, type: .sandbox)
+    #else
+    Auth.auth().setAPNSToken(deviceToken, type: .prod)
+    #endif
+
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+}
 
     override func application(_ application: UIApplication,
                               didFailToRegisterForRemoteNotificationsWithError error: Error) {
         print("❌ Failed to register APNs:", error)
     }
+    override func application(_ app: UIApplication,
+                          open url: URL,
+                          options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+
+  if Auth.auth().canHandle(url) {
+    return true
+  }
+
+  return super.application(app, open: url, options: options)
+}
 }
