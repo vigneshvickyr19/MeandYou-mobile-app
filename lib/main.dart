@@ -25,6 +25,9 @@ void main() async {
 
   // 2. Pre-warmed state check for "Zero-Gap" startup
   // We check the cache immediately to avoid even a single frame of Splash if possible
+  // await FirebaseAuth.instance.setSettings(
+  //   forceRecaptchaFlow: true,
+  // );
   final initialUser = FirebaseAuth.instance.currentUser;
 
   // 3. Ensure NotificationService is initialized BEFORE runApp

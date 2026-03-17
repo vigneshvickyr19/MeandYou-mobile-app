@@ -31,6 +31,10 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   
+  # Firebase Auth reCAPTCHA fallback dependency
+  pod 'RecaptchaInterop'
+  pod 'RecaptchaEnterprise'
+
   target 'RunnerTests' do
     inherit! :search_paths
   end

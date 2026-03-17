@@ -47,7 +47,7 @@
     <string>Editor</string>
     <key>CFBundleURLSchemes</key>
     <array>
-        <string>app-170946286094-ios-f5012f9f5eacf17166225f</string>
+        <string>app-1-170946286094-ios-f5012f9f5eacf17166225f</string>
     </array>
 </dict>
 	</array>
@@ -79,6 +79,11 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+<dict>
+  <key>NSAllowsArbitraryLoads</key>
+  <true/>
+</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

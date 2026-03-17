@@ -65,11 +65,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA94EDKAwwzrnKyyO3DY82Gltv7pZ2QVas',
-    appId: '1:170946286094:ios:29f9530dc6f1a52866225f',
+    appId: '1:170946286094:ios:f5012f9f5eacf17166225f',
     messagingSenderId: '170946286094',
     projectId: 'me-and-you-11e89',
     storageBucket: 'me-and-you-11e89.firebasestorage.app',
-    iosBundleId: 'com.meandyou.dating',
+    iosBundleId: 'com.meandyou.datingapp',
     databaseURL: 'https://me-and-you-11e89-default-rtdb.firebaseio.com',
   );
 }
