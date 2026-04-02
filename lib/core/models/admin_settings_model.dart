@@ -3,13 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AdminSettings {
   final int maleFreeLikes;
   final int femaleFreeLikes;
-  final Map<String, int> userOverrides;
+  final double nearbyRadiusInKm;
   final DateTime updatedAt;
 
   AdminSettings({
     this.maleFreeLikes = 5,
     this.femaleFreeLikes = 10,
-    this.userOverrides = const {},
+    this.nearbyRadiusInKm = 10.0,
     required this.updatedAt,
   });
 
@@ -17,7 +17,7 @@ class AdminSettings {
     return AdminSettings(
       maleFreeLikes: data['maleFreeLikes'] ?? 5,
       femaleFreeLikes: data['femaleFreeLikes'] ?? 10,
-      userOverrides: Map<String, int>.from(data['userOverrides'] ?? {}),
+      nearbyRadiusInKm: (data['nearbyRadiusInKm'] as num?)?.toDouble() ?? 10.0,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -26,7 +26,7 @@ class AdminSettings {
     return {
       'maleFreeLikes': maleFreeLikes,
       'femaleFreeLikes': femaleFreeLikes,
-      'userOverrides': userOverrides,
+      'nearbyRadiusInKm': nearbyRadiusInKm,
       'updatedAt': updatedAt,
     };
   }

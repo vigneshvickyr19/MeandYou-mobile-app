@@ -13,6 +13,7 @@ import '../widgets/discover_action_button.dart';
 import '../widgets/heart_flow_overlay.dart';
 import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 
 class NearbyTab extends StatefulWidget {
   const NearbyTab({super.key});
@@ -81,8 +82,10 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     } catch (e) {
       debugPrint("Error liking user: $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error liking profile. Please try again.')),
+      AppSnackbar.show(
+        context,
+        message: 'Error liking profile. Please try again.',
+        type: SnackbarType.error,
       );
     }
   }
@@ -100,7 +103,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
           final users = controller.users;
 
           if (users.isEmpty) {
-            return _buildEmptyState();
+            return _buildEmptyState(controller.radius);
           }
 
           return Stack(
@@ -451,7 +454,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(double radius) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -492,7 +495,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 12),
             Text(
-              'Check back later for new people\nwithin 10km',
+              'Check back later for new people\nwithin ${radius.toInt()}km',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.5),

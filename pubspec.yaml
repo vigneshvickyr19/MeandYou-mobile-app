@@ -66,6 +66,7 @@ dependencies:
   intl_phone_field: ^3.2.0
   pinput: ^6.0.2
   sms_autofill: ^2.4.1
+  shared_preferences: ^2.5.2
 
 dev_dependencies:
   flutter_test:

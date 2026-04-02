@@ -14,6 +14,7 @@ import '../../../home/presentation/controllers/home_navigation_controller.dart';
 import '../../../../core/services/like_action_service.dart';
 import '../../../home/presentation/widgets/heart_flow_overlay.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
@@ -275,13 +276,12 @@ class _ProfilePageState extends State<ProfilePage> {
       
       if (!context.mounted) return;
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Profile Liked!'),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+      if (!context.mounted) return;
+      
+      AppSnackbar.show(
+        context,
+        message: 'Profile Liked!',
+        type: SnackbarType.success,
       );
 
       // Brief delay to show animation before navigating back
@@ -295,8 +295,10 @@ class _ProfilePageState extends State<ProfilePage> {
       SubscriptionBottomSheet.show(context);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error liking profile. Please try again.')),
+      AppSnackbar.show(
+        context,
+        message: 'Error liking profile. Please try again.',
+        type: SnackbarType.error,
       );
     }
   }

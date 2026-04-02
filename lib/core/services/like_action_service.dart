@@ -50,9 +50,8 @@ class LikeActionService {
       
       final gender = userAccount?.gender?.toLowerCase() ?? 'male';
       
-      // Determine max likes (Check user override first, then gender default)
-      int maxLikes = adminSettings.userOverrides[currentUserId] ?? 
-                    (gender == 'female' ? adminSettings.femaleFreeLikes : adminSettings.maleFreeLikes);
+      // Determine max likes (Gender default)
+      int maxLikes = (gender == 'female' ? adminSettings.femaleFreeLikes : adminSettings.maleFreeLikes);
       
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       final dailyLikesRef = FirebaseFirestore.instance
@@ -71,7 +70,8 @@ class LikeActionService {
         }
       }
 
-      if (currentCount >= maxLikes) {
+      // Check Daily Limit (skip if -1)
+      if (maxLikes != -1 && currentCount >= maxLikes) {
         throw LikeLimitReachedException("You've reached your daily free like limit.");
       }
 

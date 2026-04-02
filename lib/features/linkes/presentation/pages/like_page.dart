@@ -9,6 +9,7 @@ import '../widgets/match_card.dart';
 import '../widgets/received_like_card.dart';
 import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import 'package:flutter/services.dart';
 
 class LikePage extends StatefulWidget {
@@ -278,7 +279,7 @@ class _LikePageState extends State<LikePage>
           backgroundColor: const Color(0xFF1E1E1E),
           color: AppColors.primary,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
@@ -325,7 +326,7 @@ class _LikePageState extends State<LikePage>
           backgroundColor: const Color(0xFF1E1E1E),
           color: AppColors.primary,
           child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
@@ -496,22 +497,18 @@ class _LikePageState extends State<LikePage>
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.error,
-        content: Text(message),
-      ),
+    AppSnackbar.show(
+      context,
+      message: message,
+      type: SnackbarType.error,
     );
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.success,
-        content: Text(message),
-      ),
+    AppSnackbar.show(
+      context,
+      message: message,
+      type: SnackbarType.success,
     );
   }
 }

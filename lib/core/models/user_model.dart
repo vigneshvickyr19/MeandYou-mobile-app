@@ -21,6 +21,9 @@ class UserModel {
   final String? gender;
   final DateTime? lastLocationUpdate;
   final String role;
+  final String? lookingFor;
+  final int? minAge;
+  final int? maxAge;
 
   UserModel({
     required this.id,
@@ -42,6 +45,9 @@ class UserModel {
     this.gender,
     this.lastLocationUpdate,
     this.role = 'user',
+    this.lookingFor,
+    this.minAge,
+    this.maxAge,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -68,6 +74,13 @@ class UserModel {
       lastLocationUpdate:
           (data[FirebaseConstants.lastLocationUpdate] as Timestamp?)?.toDate(),
       role: data[FirebaseConstants.role] ?? 'user',
+      lookingFor: data[FirebaseConstants.lookingFor],
+      minAge: data[FirebaseConstants.minAge] is int
+          ? data[FirebaseConstants.minAge]
+          : int.tryParse(data[FirebaseConstants.minAge]?.toString() ?? ''),
+      maxAge: data[FirebaseConstants.maxAge] is int
+          ? data[FirebaseConstants.maxAge]
+          : int.tryParse(data[FirebaseConstants.maxAge]?.toString() ?? ''),
     );
   }
 
@@ -95,6 +108,9 @@ class UserModel {
           ? Timestamp.fromDate(lastLocationUpdate!)
           : null,
       FirebaseConstants.role: role,
+      FirebaseConstants.lookingFor: lookingFor,
+      FirebaseConstants.minAge: minAge,
+      FirebaseConstants.maxAge: maxAge,
     };
   }
 
@@ -120,6 +136,9 @@ class UserModel {
     String? gender,
     DateTime? lastLocationUpdate,
     String? role,
+    String? lookingFor,
+    int? minAge,
+    int? maxAge,
   }) {
     return UserModel(
       id: id,
@@ -141,6 +160,9 @@ class UserModel {
       gender: gender ?? this.gender,
       lastLocationUpdate: lastLocationUpdate ?? this.lastLocationUpdate,
       role: role ?? this.role,
+      lookingFor: lookingFor ?? this.lookingFor,
+      minAge: minAge ?? this.minAge,
+      maxAge: maxAge ?? this.maxAge,
     );
   }
 }

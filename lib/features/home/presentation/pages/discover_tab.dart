@@ -13,6 +13,8 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import '../../../../core/widgets/app_snackbar.dart';
+import '../widgets/match_compatibility_sheet.dart';
 
 /// Discover Tab - iOS-style carousel with smooth animations
 ///
@@ -96,8 +98,10 @@ class _DiscoverTabState extends State<DiscoverTab>
     } catch (e) {
       debugPrint("Error liking user: $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error liking profile. Please try again.')),
+      AppSnackbar.show(
+        context,
+        message: 'Error liking profile. Please try again.',
+        type: SnackbarType.error,
       );
     }
   }
@@ -431,52 +435,70 @@ class _DiscoverTabState extends State<DiscoverTab>
   }
 
   Widget _buildMatchPercentageBadge(NearbyMatchEntity match) {
+    final double pct = match.matchPercentage;
+    final bool isHighMatch = pct >= 80;
+    final bool isMediumMatch = pct >= 50;
+
+    final Color mainColor = isHighMatch 
+        ? const Color(0xFFE85D04) 
+        : isMediumMatch 
+            ? const Color(0xFFFF8C42) 
+            : Colors.white60;
+
     return Positioned(
       top: 24,
       left: 24,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.2),
-                  const Color(0xFFFF8C42).withValues(alpha: 0.2),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          debugPrint('[DiscoverTab] Match chip tapped for: ${match.fullName}');
+          final authProvider = context.read<AuthProvider>();
+          if (authProvider.currentUser != null) {
+            MatchCompatibilitySheet.show(context, match, authProvider.currentUser!);
+          }
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: mainColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: mainColor.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [
+                        mainColor,
+                        mainColor.withValues(alpha: 0.7),
+                      ],
+                    ).createShader(bounds),
+                    child: Icon(
+                      isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${pct.toInt()}% Match',
+                    style: TextStyle(
+                      color: isHighMatch ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Color(0xFFE85D04), Color(0xFFFF8C42)],
-                  ).createShader(bounds),
-                  child: const Icon(
-                    Icons.bolt_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${match.matchPercentage.toInt()}% Match',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
             ),
           ),
         ),

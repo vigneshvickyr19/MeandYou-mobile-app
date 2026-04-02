@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:math';
 import '../models/like_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/constants/firebase_constants.dart';
@@ -28,18 +29,36 @@ class HomeService {
   // Get users from profileSetup collection
   Stream<List<UserModel>> getUsersNearby(
     String currentUserId, {
-    double? maxDistance,
+    double? maxDistance, // in KM
     double? userLat,
     double? userLng,
   }) {
     return _firestore
-        .collection(FirebaseConstants.profileSetup)
+        .collection(FirebaseConstants.users) // Use users collection for consistency
         .where(FieldPath.documentId, isNotEqualTo: currentUserId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
+      final List<UserModel> allUsers = snapshot.docs
           .map((doc) => UserModel.fromMap(doc.data(), doc.id))
           .toList();
+
+      if (maxDistance == null || userLat == null || userLng == null) {
+        return allUsers;
+      }
+
+      // Filter by distance
+      return allUsers.where((user) {
+        if (user.latitude == null || user.longitude == null) return false;
+        
+        final distance = calculateDistance(
+          userLat,
+          userLng,
+          user.latitude!,
+          user.longitude!,
+        );
+        
+        return distance <= maxDistance;
+      }).toList();
     });
   }
 
@@ -148,15 +167,16 @@ class HomeService {
     await _firestore.collection(_likesCollection).doc(likeId).delete();
   }
 
-  // Calculate distance between two points (placeholder)
   double calculateDistance(
     double lat1,
     double lng1,
     double lat2,
     double lng2,
   ) {
-    // TODO: Implement Haversine formula
-    // For now, return random distance for UI
-    return (lat1 - lat2).abs() * 100;
+    const p = 0.017453292519943295; // Pi/180
+    final a = 0.5 -
+        cos((lat2 - lat1) * p) / 2 +
+        cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lng2 - lng1) * p)) / 2;
+    return 12742 * asin(sqrt(a)); // 2 * R; R = 6371 km
   }
 }

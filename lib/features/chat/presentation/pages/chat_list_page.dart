@@ -98,6 +98,7 @@ class _ChatListPageState extends State<ChatListPage> {
                           ),
                         )
                       : ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 120),
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: controller.chatRooms.length,
                           itemBuilder: (context, index) {

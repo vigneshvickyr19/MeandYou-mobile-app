@@ -29,7 +29,7 @@ class ManageBenefitsPage extends StatelessWidget {
           body: controller.benefits.isEmpty
               ? _buildEmptyState()
               : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
                   itemCount: controller.benefits.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {

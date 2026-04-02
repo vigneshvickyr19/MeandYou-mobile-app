@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/usecases/update_location_usecase.dart';
 import '../../data/repositories/matching_repository_impl.dart';
 
@@ -96,12 +97,10 @@ class LocationPermissionController {
   }
 
   void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.redAccent,
-      ),
+    AppSnackbar.show(
+      context,
+      message: message,
+      type: SnackbarType.error,
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../services/startup_service.dart';
 import 'auth_provider.dart';
 import 'location_provider.dart';
@@ -78,7 +77,7 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   void _startSplashTimer() {
-    _splashTimer = Timer(const Duration(seconds: 5), () {
+    _splashTimer = Timer(const Duration(milliseconds: 1500), () {
       debugPrint('AppStateProvider: Branding splash complete, transitioning...');
       _isSplashTimerComplete = true;
       _startupService.completeSplash();

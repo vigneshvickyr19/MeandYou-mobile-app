@@ -10,10 +10,11 @@ import '../../../notifications/data/models/notification_model.dart';
 import '../../../../data/repositories/chat_repository.dart';
 import '../../../chat/data/models/message_model.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
-import '../../../matching/domain/usecases/get_nearby_matches_usecase.dart';
+import '../../../matching/domain/usecases/get_discover_matches_usecase.dart';
 import '../../../matching/domain/usecases/get_current_user_profile_usecase.dart';
 import '../../../matching/data/repositories/matching_repository_impl.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/services/admin_service.dart';
 import '../../data/services/home_service.dart';
 import '../../data/models/like_result.dart';
 
@@ -26,8 +27,8 @@ class DiscoverController extends ChangeNotifier {
   final NotificationStorageService _notificationStorageService =
       NotificationStorageService();
 
-  final GetNearbyMatchesUseCase _getNearbyMatchesUseCase =
-      GetNearbyMatchesUseCase(MatchingRepositoryImpl());
+  final GetDiscoverMatchesUseCase _getDiscoverMatchesUseCase =
+      GetDiscoverMatchesUseCase(MatchingRepositoryImpl());
   final GetCurrentUserProfileUseCase _getCurrentUserProfileUseCase =
       GetCurrentUserProfileUseCase();
 
@@ -43,6 +44,8 @@ class DiscoverController extends ChangeNotifier {
   // Track in-flight requests to avoid rapid-fire processing
   final Set<String> _processingIds = {};
   bool _isDisposed = false;
+  double _radius = 10.0;
+  StreamSubscription? _settingsSubscription;
   
   List<NearbyMatchEntity> get matches => _matches;
   bool get isLoading => _isLoading;
@@ -50,10 +53,7 @@ class DiscoverController extends ChangeNotifier {
   bool get showMatchDialog => _showMatchDialog;
 
   /// Load users (one-time fetch)
-  /// This method is called whenever the AuthProvider emits a new user state
   Future<void> loadUsers(UserModel currentUser) async {
-    // If essential search parameters (user ID or geohash/location) haven't changed, 
-    // and we already have results, avoid re-fetching to prevent UI flicker.
     if (_lastUserId == currentUser.id && 
         _lastGeohash == currentUser.geohash && 
         _matches.isNotEmpty) {
@@ -63,14 +63,21 @@ class DiscoverController extends ChangeNotifier {
     _lastUserId = currentUser.id;
     _lastGeohash = currentUser.geohash;
 
-    // Only show loading indicator for the first load or major location shift
+    // Listen to radius changes dynamically
+    _settingsSubscription?.cancel();
+    _settingsSubscription = AdminService.instance.streamSettings().listen((settings) {
+      if (settings.nearbyRadiusInKm != _radius) {
+        _radius = settings.nearbyRadiusInKm;
+        loadUsers(currentUser);
+      }
+    });
+
     if (_matches.isEmpty) {
       _isLoading = true;
       notifyListeners();
     }
 
     try {
-      // 1. Get full profile with location from profileSetup (required for complex matching)
       final fullProfile = await _getCurrentUserProfileUseCase(currentUser);
 
       if (fullProfile.latitude == null || fullProfile.longitude == null) {
@@ -79,21 +86,20 @@ class DiscoverController extends ChangeNotifier {
         return;
       }
 
-      // 2. Fetch matches (Now Future-based)
-      final matches = await _getNearbyMatchesUseCase(
+      final adminSettings = await AdminService.instance.getSettings();
+      final radius = adminSettings.nearbyRadiusInKm;
+
+      final matches = await _getDiscoverMatchesUseCase(
         currentUser: fullProfile,
-        radiusInKm: 10.0,
+        radiusInKm: radius,
       );
 
-      // 3. Process and update state
-      // Sort matches by match percentage in descending order
-      _matches = List.from(matches)..sort((a, b) => b.matchPercentage.compareTo(a.matchPercentage));
+      _matches = matches;
       _isLoading = false;
       notifyListeners();
-      
-      // Pre-fetch locations for top matches to ensure text is ready when swiped
-      for (int i = 0; i < math.min(3, _matches.length); i++) {
-        fetchLocationForMatch(_matches[i]);
+
+      for (int i = 0; i < math.min(3, matches.length); i++) {
+        fetchLocationForMatch(matches[i]);
       }
     } catch (e) {
       _isLoading = false;
@@ -210,6 +216,7 @@ class DiscoverController extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    _settingsSubscription?.cancel();
     super.dispose();
   }
 

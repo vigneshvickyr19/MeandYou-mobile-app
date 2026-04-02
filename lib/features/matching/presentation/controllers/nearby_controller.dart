@@ -12,6 +12,7 @@ import '../../../../core/services/location_service.dart';
 import '../../../../core/utils/location_formatter.dart';
 import '../../data/repositories/matching_repository_impl.dart';
 import '../../../../features/home/data/services/home_service.dart';
+import '../../../../core/services/admin_service.dart';
 
 class NearbyController extends ChangeNotifier {
   final GetNearbyMatchesUseCase _getNearbyMatchesUseCase;
@@ -43,6 +44,10 @@ class NearbyController extends ChangeNotifier {
   NearbyMatchEntity? _selectedMatch;
   NearbyMatchEntity? get selectedMatch => _selectedMatch;
 
+  double _radius = 10.0;
+  double get radius => _radius;
+  StreamSubscription? _settingsSubscription;
+
   StreamSubscription? _locationSubscription;
 
   UserModel? _currentUser;
@@ -62,6 +67,15 @@ class NearbyController extends ChangeNotifier {
     _currentUser = currentUser;
     _lastGeohash = currentUser.geohash;
     
+    // Listen to radius changes dynamically
+    _settingsSubscription?.cancel();
+    _settingsSubscription = AdminService.instance.streamSettings().listen((settings) {
+      if (settings.nearbyRadiusInKm != _radius) {
+        _radius = settings.nearbyRadiusInKm;
+        _fetchMatches(); // Instant refresh when radius changes
+      }
+    });
+
     // Optimization: If we already have the essential data, start matching immediately
     if (_currentUser?.latitude != null && _currentUser?.geohash != null) {
       _fetchMatches();
@@ -83,9 +97,13 @@ class NearbyController extends ChangeNotifier {
     if (_currentUser == null) return;
 
     try {
+      // Fetch dynamic radius from Admin Panel Settings
+      final adminSettings = await AdminService.instance.getSettings();
+      _radius = adminSettings.nearbyRadiusInKm;
+
       final matches = await _getNearbyMatchesUseCase(
         currentUser: _currentUser!,
-        radiusInKm: 10.0,
+        radiusInKm: _radius,
       );
       
       // Sort by distance (closest first)
@@ -276,6 +294,7 @@ class NearbyController extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _locationSubscription?.cancel();
+    _settingsSubscription?.cancel();
     super.dispose();
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../data/services/home_service.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/services/database_service.dart';
+import '../../../../core/services/admin_service.dart';
+import 'dart:async';
 
 class NearbyController extends ChangeNotifier {
   final HomeService _homeService = HomeService();
@@ -16,11 +18,30 @@ class NearbyController extends ChangeNotifier {
 
   final DatabaseService _databaseService = DatabaseService();
 
-  void loadUsers(String currentUserId) {
+  StreamSubscription? _usersSubscription;
+
+  void loadUsers(String currentUserId) async {
     _isLoading = true;
     notifyListeners();
 
-    _homeService.getUsersNearby(currentUserId).listen((users) {
+    // 1. Get Admin Settings for Radius
+    final settings = await AdminService.instance.getSettings();
+    final radius = settings.nearbyRadiusInKm;
+
+    // 2. Get Current User Location
+    final currentUser = await _databaseService.getUserById(currentUserId);
+    final userLat = currentUser?.latitude;
+    final userLng = currentUser?.longitude;
+
+    _usersSubscription?.cancel();
+    _usersSubscription = _homeService
+        .getUsersNearby(
+          currentUserId,
+          maxDistance: radius,
+          userLat: userLat,
+          userLng: userLng,
+        )
+        .listen((users) {
       _users = users;
       _isLoading = false;
 
@@ -35,15 +56,29 @@ class NearbyController extends ChangeNotifier {
     });
   }
 
+  @override
+  void dispose() {
+    _usersSubscription?.cancel();
+    super.dispose();
+  }
+
   void selectUser(UserModel? user) {
     _selectedUser = user;
     notifyListeners();
   }
 
-  double getDistance(UserModel user) {
-    // TODO: Calculate real distance based on user location
-    // For now, return random distance for UI
-    return (5 + (user.id.hashCode % 50)).toDouble();
+  Future<double> getDistance(String currentUserId, UserModel otherUser) async {
+    if (otherUser.latitude == null || otherUser.longitude == null) return 0.0;
+    
+    final currentUser = await _databaseService.getUserById(currentUserId);
+    if (currentUser?.latitude == null || currentUser?.longitude == null) return 0.0;
+
+    return _homeService.calculateDistance(
+      currentUser!.latitude!,
+      currentUser.longitude!,
+      otherUser.latitude!,
+      otherUser.longitude!,
+    );
   }
 
   // Get position for user avatar on map (UI only for now)

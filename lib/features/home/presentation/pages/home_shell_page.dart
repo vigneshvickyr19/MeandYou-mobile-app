@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/services/notification_service.dart';
-import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/widgets/custom_bottom_nav/custom_bottom_nav.dart';
 import '../../../chat/presentation/pages/chat_page.dart';
 import '../../../linkes/presentation/pages/like_page.dart';

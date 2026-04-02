@@ -52,33 +52,38 @@ class AdminController extends ChangeNotifier {
       final updated = AdminSettings(
         maleFreeLikes: male,
         femaleFreeLikes: female,
-        userOverrides: _settings!.userOverrides,
+        nearbyRadiusInKm: _settings?.nearbyRadiusInKm ?? 10.0,
         updatedAt: DateTime.now(),
       );
       await _adminService.updateSettings(updated);
+    } catch (e) {
+      debugPrint('AdminController: Error updating limits: $e');
+      rethrow;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<void> updateUserOverride(String userId, int limit) async {
+  Future<void> updateNearbyRadius(double radius) async {
     if (_settings == null) return;
     _setLoading(true);
     try {
-      final overrides = Map<String, int>.from(_settings!.userOverrides);
-      overrides[userId] = limit;
-
       final updated = AdminSettings(
-        maleFreeLikes: _settings!.maleFreeLikes,
-        femaleFreeLikes: _settings!.femaleFreeLikes,
-        userOverrides: overrides,
+        maleFreeLikes: _settings?.maleFreeLikes ?? 5,
+        femaleFreeLikes: _settings?.femaleFreeLikes ?? 10,
+        nearbyRadiusInKm: radius,
         updatedAt: DateTime.now(),
       );
       await _adminService.updateSettings(updated);
+    } catch (e) {
+      debugPrint('AdminController: Error updating radius: $e');
+      rethrow;
     } finally {
       _setLoading(false);
     }
   }
+
+
 
   Future<void> createAnnouncement(
     String title,
@@ -109,6 +114,9 @@ class AdminController extends ChangeNotifier {
         targetAudience: audience,
         data: {'route': AppRoutes.home, 'type': 'BROADCAST'},
       );
+    } catch (e) {
+      debugPrint('AdminController: Error creating announcement: $e');
+      rethrow;
     } finally {
       _setLoading(false);
     }

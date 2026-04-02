@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../controllers/admin_controller.dart';
 import '../widgets/admin_card.dart';
 import '../../../subscription/presentation/admin/admin_subscription_management_page.dart';
+import '../../../../core/widgets/app_snackbar.dart';
 
 class AdminPanelPage extends StatefulWidget {
   const AdminPanelPage({super.key});
@@ -34,7 +35,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -66,30 +67,21 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             const SizedBox(height: 16),
 
             AdminCard(
+              title: 'Nearby Settings',
+              subtitle: 'Configure search radius in KM',
+              icon: Icons.location_on_outlined,
+              onTap: () => _manageNearbyRadius(context),
+            ),
+            const SizedBox(height: 16),
+
+            AdminCard(
               title: 'Announcements',
               subtitle: 'Send global offers & updates',
               icon: Icons.campaign_outlined,
               onTap: () => _manageAnnouncements(context),
             ),
 
-            const SizedBox(height: 32),
-            const Text(
-              'User Management',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 16),
 
-            AdminCard(
-              title: 'User Overrides',
-              subtitle: 'Custom limits for specific IDs',
-              icon: Icons.person_search_rounded,
-              onTap: () => _manageOverrides(context),
-            ),
 
             const SizedBox(height: 32),
             const Text(
@@ -128,6 +120,111 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final femaleController = TextEditingController(
       text: controller.settings?.femaleFreeLikes.toString() ?? '10',
     );
+    bool maleUnlimited = controller.settings?.maleFreeLikes == -1;
+    bool femaleUnlimited = controller.settings?.femaleFreeLikes == -1;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF141414),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 24,
+            right: 24,
+            top: 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Update Free Like Limits',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(child: _buildTextField('Male Limit', maleController, enabled: !maleUnlimited)),
+                  const SizedBox(width: 16),
+                  _buildUnlimitedToggle('Unlimited', maleUnlimited, (val) => setSheetState(() => maleUnlimited = val)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildTextField('Female Limit', femaleController, enabled: !femaleUnlimited)),
+                  const SizedBox(width: 16),
+                  _buildUnlimitedToggle('Unlimited', femaleUnlimited, (val) => setSheetState(() => femaleUnlimited = val)),
+                ],
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: Consumer<AdminController>(
+                  builder: (context, controller, _) => ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: controller.isLoading ? null : () async {
+                      try {
+                        await controller.updateLikeLimits(
+                          maleUnlimited ? -1 : int.parse(maleController.text),
+                          femaleUnlimited ? -1 : int.parse(femaleController.text),
+                        );
+                        if (!context.mounted) return;
+                        AppSnackbar.show(
+                          context,
+                          message: 'Free Like Limits updated successfully!',
+                          type: SnackbarType.success,
+                        );
+                        Navigator.pop(context);
+                      } catch (e) {
+                        AppSnackbar.show(
+                          context,
+                          message: 'Failed to update limits. Please try again.',
+                          type: SnackbarType.error,
+                        );
+                      }
+                    },
+                    child: controller.isLoading 
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text(
+                          'Save Changes',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _manageHelp(BuildContext context) {
+    // Basic implementation for now
+  }
+
+  void _manageNearbyRadius(BuildContext context) {
+    final controller = context.read<AdminController>();
+    final radiusController = TextEditingController(
+      text: controller.settings?.nearbyRadiusInKm.toString() ?? '10.0',
+    );
 
     showModalBottomSheet(
       context: context,
@@ -148,38 +245,59 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Update Free Like Limits',
+              'Update Nearby Radius',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
+            const Text(
+              'Sets the maximum distance (KM) for showing users in the Nearby tab. Use 0.5 for 500 meters.',
+              style: TextStyle(color: Colors.white38, fontSize: 13),
+            ),
             const SizedBox(height: 24),
-            _buildTextField('Male Limit', maleController),
-            const SizedBox(height: 16),
-            _buildTextField('Female Limit', femaleController),
+            _buildTextField('Search Radius (KM)', radiusController, isDecimal: true),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: Consumer<AdminController>(
+                builder: (context, controller, _) => ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  controller.updateLikeLimits(
-                    int.parse(maleController.text),
-                    int.parse(femaleController.text),
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  onPressed: controller.isLoading ? null : () async {
+                    final radius = double.tryParse(radiusController.text);
+                    if (radius != null) {
+                      try {
+                        await controller.updateNearbyRadius(radius);
+                        if (!context.mounted) return;
+                        AppSnackbar.show(
+                          context,
+                          message: 'Nearby Radius updated successfully!',
+                          type: SnackbarType.success,
+                        );
+                        Navigator.pop(context);
+                      } catch (e) {
+                        AppSnackbar.show(
+                          context,
+                          message: 'Failed to update radius. Please try again.',
+                          type: SnackbarType.error,
+                        );
+                      }
+                    }
+                  },
+                  child: controller.isLoading 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text(
+                        'Save Settings',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                 ),
               ),
             ),
@@ -190,12 +308,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     );
   }
 
-  void _manageHelp(BuildContext context) {
-    // Basic implementation for now
-  }
-
   void _manageAnnouncements(BuildContext context) {
-    final controller = context.read<AdminController>();
     final titleController = TextEditingController();
     final msgController = TextEditingController();
     String targetAudience = 'both';
@@ -265,28 +378,46 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: Consumer<AdminController>(
+                  builder: (context, controller, _) => ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    if (titleController.text.isNotEmpty &&
-                        msgController.text.isNotEmpty) {
-                      controller.createAnnouncement(
-                        titleController.text,
-                        msgController.text,
-                        'offer',
-                        targetAudience,
-                      );
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text(
-                    'Send Broadcast',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    onPressed: controller.isLoading ? null : () async {
+                      if (titleController.text.isNotEmpty &&
+                          msgController.text.isNotEmpty) {
+                        try {
+                          await controller.createAnnouncement(
+                            titleController.text,
+                            msgController.text,
+                            'offer',
+                            targetAudience,
+                          );
+                          if (!context.mounted) return;
+                          AppSnackbar.show(
+                            context,
+                            message: 'Announcement sent successfully!',
+                            type: SnackbarType.success,
+                          );
+                          Navigator.pop(context);
+                        } catch (e) {
+                          AppSnackbar.show(
+                            context,
+                            message: 'Failed to send announcement.',
+                            type: SnackbarType.error,
+                          );
+                        }
+                      }
+                    },
+                    child: controller.isLoading 
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text(
+                          'Send Broadcast',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                   ),
                 ),
               ),
@@ -334,69 +465,17 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     );
   }
 
-  void _manageOverrides(BuildContext context) {
-    final controller = context.read<AdminController>();
-    final idController = TextEditingController();
-    final limitController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF141414),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 24,
-          right: 24,
-          top: 24,
+  Widget _buildUnlimitedToggle(String label, bool value, Function(bool) onChanged) {
+    return Column(
+      children: [
+        const Text('Unlimited', style: TextStyle(color: Colors.white60, fontSize: 10)),
+        const SizedBox(height: 4),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: AppColors.primary,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'User Specific Override',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildTextField('User ID', idController),
-            const SizedBox(height: 16),
-            _buildTextField('New Limit', limitController),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  controller.updateUserOverride(
-                    idController.text.trim(),
-                    int.parse(limitController.text),
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  'Apply Override',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -404,6 +483,8 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     String label,
     TextEditingController ctrl, {
     int maxLines = 1,
+    bool enabled = true,
+    bool isDecimal = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,11 +496,13 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         const SizedBox(height: 8),
         TextField(
           controller: ctrl,
-          style: const TextStyle(color: Colors.white),
+          enabled: enabled,
+          style: TextStyle(color: enabled ? Colors.white : Colors.white24),
           maxLines: maxLines,
+          keyboardType: TextInputType.numberWithOptions(decimal: isDecimal),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
+            fillColor: enabled ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.01),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
