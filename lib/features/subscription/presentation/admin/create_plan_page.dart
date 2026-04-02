@@ -157,7 +157,7 @@ class _CreatePlanPageState extends State<CreatePlanPage> {
                     subtitle: Text('Inactive plans are hidden from store', style: TextStyle(color: AppColors.white.withValues(alpha: 0.38), fontSize: 12)),
                     value: _isActive,
                     onChanged: (val) => setState(() => _isActive = val),
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 48),

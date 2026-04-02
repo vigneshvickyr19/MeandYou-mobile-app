@@ -31,7 +31,7 @@ class ManagePlansPage extends StatelessWidget {
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: controller.allPlans.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final plan = controller.allPlans[index];
                     return AdminPlanListItem(plan: plan);

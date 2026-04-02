@@ -5,11 +5,13 @@ import '../models/profile_model.dart';
 import '../constants/firebase_constants.dart';
 
 class DatabaseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Use a lazy getter for Firestore instance
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
-  // Collection references
+  // Collection references using the lazy getter
   CollectionReference get _usersCollection => _db.collection(FirebaseConstants.users);
   CollectionReference get _profileSetupCollection => _db.collection(FirebaseConstants.profileSetup);
+
 
   // Create or Update User Account (Core only)
   Future<void> saveUserAccount(UserModel user) async {

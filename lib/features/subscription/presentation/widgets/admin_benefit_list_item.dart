@@ -49,7 +49,7 @@ class AdminBenefitListItem extends StatelessWidget {
                 scale: 0.8,
                 child: Switch(
                   value: benefit.isActive,
-                  activeColor: AppColors.primary,
+                  activeThumbColor: AppColors.primary,
                   onChanged: (val) async {
                     await context.read<SubscriptionController>().updateBenefit(BenefitEntity(
                       id: benefit.id,

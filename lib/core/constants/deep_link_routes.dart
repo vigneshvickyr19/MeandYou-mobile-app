@@ -38,7 +38,7 @@ class DeepLinkRoutes {
     final profileMatch = profileRegex.firstMatch(path);
     if (profileMatch != null) {
       params['userId'] = profileMatch.group(1)!;
-      params['route'] = '/profile';
+      params['route'] = '/other_profile'; // Maps to AppRoutes.otherProfile
       return params;
     }
 
@@ -47,7 +47,7 @@ class DeepLinkRoutes {
     final chatMatch = chatRegex.firstMatch(path);
     if (chatMatch != null) {
       params['chatId'] = chatMatch.group(1)!;
-      params['route'] = '/chat';
+      params['route'] = '/chat'; // Maps to AppRoutes.chat (NotificationPayloadModel will promote to chatDetail)
       return params;
     }
 

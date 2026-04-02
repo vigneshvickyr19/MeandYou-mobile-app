@@ -31,7 +31,7 @@ class ManageBenefitsPage extends StatelessWidget {
               : ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   itemCount: controller.benefits.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final benefit = controller.benefits[index];
                     return AdminBenefitListItem(benefit: benefit);

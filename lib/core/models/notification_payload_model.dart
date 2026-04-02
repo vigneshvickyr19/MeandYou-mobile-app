@@ -25,26 +25,26 @@ class NotificationPayloadModel {
 
   factory NotificationPayloadModel.fromMap(Map<String, dynamic> data) {
     // Normalize keys (handle standard and custom keys)
-    final type = data[NotificationConstants.keyType] as String?;
-    final route = data[NotificationConstants.keyRoute] as String?;
-    final link = data[NotificationConstants.keyLink] as String?;
+    final type = data[NotificationConstants.keyType]?.toString();
+    final route = data[NotificationConstants.keyRoute]?.toString();
+    final link = data[NotificationConstants.keyLink]?.toString();
     
-    // Normalize ID retrieval
-    String? chatId = data[NotificationConstants.keyChatId] as String?;
+    // Normalize ID retrieval with cast safety
+    String? chatId = data[NotificationConstants.keyChatId]?.toString();
     if (chatId == null && data[NotificationConstants.keyRoomId] != null) {
-      chatId = data[NotificationConstants.keyRoomId] as String?;
+      chatId = data[NotificationConstants.keyRoomId]?.toString();
     }
     
-    String? profileId = data[NotificationConstants.keyProfileId] as String?;
+    String? profileId = data[NotificationConstants.keyProfileId]?.toString();
     if (profileId == null && data[NotificationConstants.keyUserId] != null) {
-       profileId = data[NotificationConstants.keyUserId] as String?;
+       profileId = data[NotificationConstants.keyUserId]?.toString();
     }
     if (profileId == null && data[NotificationConstants.keySenderId] != null) {
-       profileId = data[NotificationConstants.keySenderId] as String?;
+       profileId = data[NotificationConstants.keySenderId]?.toString();
     }
 
-    final title = data[NotificationConstants.keyTitle] as String?;
-    final body = data[NotificationConstants.keyBody] as String?;
+    final title = data[NotificationConstants.keyTitle]?.toString();
+    final body = data[NotificationConstants.keyBody]?.toString();
 
     return NotificationPayloadModel(
       type: type,
@@ -60,51 +60,77 @@ class NotificationPayloadModel {
 
   /// Determines the app route based on payload data
   String get targetRoute {
-    // 1. Explicit route in payload
+    // 1. Infer from IDs first (highest confidence for specific screens)
+    if (chatId != null && chatId!.isNotEmpty) {
+      return AppRoutes.chatDetail;
+    }
+    
+    if (profileId != null && profileId!.isNotEmpty) {
+      return AppRoutes.otherProfile;
+    }
+
+    // 2. Explicit route in payload (standardized or raw)
     if (route != null && route!.isNotEmpty) {
+      // Map legacy/string identifiers to actual route constants
+      if (route == 'chat_screen' || route == '/chat-detail') return AppRoutes.chatDetail;
+      if (route == 'profile_screen' || route == '/other_profile') return AppRoutes.otherProfile;
+      if (route == 'home_screen') return AppRoutes.home;
+      
       return route!;
     }
     
-    // 2. Infer from type
-    if (type == NotificationConstants.typeChat) {
+    // 3. Infer from type
+    final normalizedType = type?.toUpperCase();
+    if (normalizedType == NotificationConstants.typeChat || normalizedType == 'MESSAGE') {
       if (chatId != null || link != null) return AppRoutes.chatDetail;
+      return AppRoutes.chat; // Fallback to chat tab
     }
     
-    if (type == NotificationConstants.typeProfile || 
-        type?.toUpperCase() == 'LIKE' || 
-        type?.toUpperCase() == 'INTEREST') {
+    if (normalizedType == NotificationConstants.typeProfile || 
+        normalizedType == 'LIKE' || 
+        normalizedType == 'INTEREST' ||
+        normalizedType == 'MATCH') {
        return AppRoutes.otherProfile;
     }
 
     // 3. Fallback to Home
+    if (normalizedType == 'SYSTEM' || normalizedType == 'NOTIFICATION') return AppRoutes.home;
+    
     return AppRoutes.home;
   }
   
   /// Determines arguments for the route
   Object? get targetArguments {
-     if (type == NotificationConstants.typeChat) {
-       if (chatId != null) {
-         return {
-           'chatRoomId': chatId,
-           'otherUser': UserModel(
-             id: originalData[NotificationConstants.keySenderId] ?? 
-                 originalData[NotificationConstants.keyUserId] ?? '',
-             email: '', // Not stored in notification payload
-             fullName: originalData[NotificationConstants.keyTitle] ?? 'User',
-             profileImageUrl: originalData[NotificationConstants.keySenderPhotoUrl],
-           ),
-         };
-       }
-     }
+    final route = targetRoute;
+
+    if (route == AppRoutes.chatDetail) {
+      return {
+        'chatRoomId': chatId ?? originalData[NotificationConstants.keyRoomId] ?? originalData['id'],
+        'otherUser': UserModel(
+          id: originalData[NotificationConstants.keySenderId] ?? 
+              originalData[NotificationConstants.keyUserId] ?? 
+              originalData['sender_id'] ?? '',
+          email: '', 
+          fullName: originalData[NotificationConstants.keyTitle] ?? 
+                    originalData['sender_name'] ?? 'User',
+          profileImageUrl: originalData[NotificationConstants.keySenderPhotoUrl] ?? 
+                           originalData['sender_image'],
+        ),
+      };
+    }
      
-      if (type == NotificationConstants.typeProfile || 
-          type?.toUpperCase() == 'LIKE' || 
-          type?.toUpperCase() == 'INTEREST') {
-        if (profileId != null) {
-          return {'userId': profileId};
-        }
-      }
+    if (route == AppRoutes.otherProfile) {
+      return {
+        'userId': profileId ?? originalData[NotificationConstants.keyUserId] ?? originalData['id']
+      };
+    }
+    
+    if (route == AppRoutes.home) {
+      final tabIndex = int.tryParse(originalData['tabIndex']?.toString() ?? 
+                                   originalData['tab_index']?.toString() ?? '0') ?? 0;
+      return {'tabIndex': tabIndex};
+    }
      
-     return originalData;
+    return originalData;
   }
 }

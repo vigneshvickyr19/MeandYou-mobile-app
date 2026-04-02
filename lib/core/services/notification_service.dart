@@ -57,35 +57,61 @@ class NotificationService {
 
   NotificationService._();
 
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  // Lazy getter for FirebaseMessaging
+  FirebaseMessaging get _firebaseMessaging => FirebaseMessaging.instance;
+
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   final DatabaseService _databaseService = DatabaseService();
 
   bool _initialized = false;
+  Future<void>? _initFuture;
   String? _fcmToken;
   RemoteMessage? _initialMessage;
   GlobalKey<NavigatorState>? _navigatorKey;
 
   String? get fcmToken => _fcmToken;
   RemoteMessage? get initialMessage => _initialMessage;
+  bool get isInitialized => _initialized;
 
   Future<void> initialize() async {
+    if (_initFuture != null) return _initFuture;
+    
+    _initFuture = _performInitialization();
+    return _initFuture;
+  }
+
+  Future<void> _performInitialization() async {
     if (_initialized) return;
 
     try {
+      debugPrint('NotificationService: Starting initialization');
+      
+      // 0. Ensure Firebase is ready
+      int attempts = 0;
+      while (Firebase.apps.isEmpty && attempts < 20) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+
+      if (Firebase.apps.isEmpty) {
+        debugPrint('NotificationService: Firebase not initialized after waiting');
+        return;
+      }
+
       // 1. Core setup - these are fast and required for system registration
       await Future.wait([
         _requestPermissions(),
         _initializeLocalNotifications(),
       ]);
 
-      // 2. Configure listeners ONLY - do NOT fetch tokens or save to DB here
+      // 2. Configure listeners and FETCH initial message
       await _configureFCM();
       
       if (!kIsWeb) _listenToCallEvents();
 
       _initialized = true;
+      debugPrint('NotificationService: Initialization complete');
     } catch (e) {
       debugPrint('Error initializing notification service: $e');
     }
@@ -99,11 +125,7 @@ class NotificationService {
 
     // Check if we have an initial message to process
     if (_initialMessage != null) {
-      if (kDebugMode) {
-        print(
-          'NotificationService: Processing initial message after navigator set',
-        );
-      }
+      debugPrint('NotificationService: Processing initial message after navigator set');
       _handleNotificationOpenedApp(_initialMessage!);
       _initialMessage = null;
     }
@@ -207,13 +229,10 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationOpenedApp);
 
     // Handle notification that opened app from terminated state
-    _firebaseMessaging.getInitialMessage().then((message) {
+    try {
+      final message = await _firebaseMessaging.getInitialMessage();
       if (message != null) {
-        if (kDebugMode) {
-          print(
-            'NotificationService: Found initial message from terminated state',
-          );
-        }
+        debugPrint('NotificationService: Found initial message from terminated state');
         // If navigator is already set, handle it now, otherwise store for later
         if (_navigatorKey?.currentState != null) {
           _handleNotificationOpenedApp(message);
@@ -221,7 +240,9 @@ class NotificationService {
           _initialMessage = message;
         }
       }
-    });
+    } catch (e) {
+      debugPrint('NotificationService: Error getting initial message: $e');
+    }
 
     // Listen to token refresh
     _firebaseMessaging.onTokenRefresh.listen((newToken) {

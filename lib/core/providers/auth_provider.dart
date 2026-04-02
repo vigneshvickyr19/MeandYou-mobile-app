@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../../data/repositories/user_repository.dart';
@@ -21,21 +22,19 @@ class AuthProvider extends ChangeNotifier {
   bool get isInitializing => _isInitializing;
   bool get isAuthenticated => _currentUser != null;
 
-  AuthProvider({User? initialUser}) {
-    if (initialUser != null) {
-      _currentUser = UserModel(
-        id: initialUser.uid,
-        email: initialUser.email ?? '',
-        phoneNumber: initialUser.phoneNumber,
-        isProfileComplete: false,
-        isVerified:
-            initialUser.emailVerified || (initialUser.phoneNumber != null),
-        createdAt: DateTime.now(),
-        role: 'user', // Basic user by default
-      );
+  AuthProvider() {
+    // Standard non-throwing check for Firebase initialization
+    if (Firebase.apps.isNotEmpty) {
+      initialize();
     }
+  }
+
+
+  void initialize() {
+    if (!_isInitializing && _currentUser != null) return;
     _init();
   }
+
 
   void _init() {
     // 1. Listen for auth changes

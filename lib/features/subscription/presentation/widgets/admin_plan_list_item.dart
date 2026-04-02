@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/subscription_plan_entity.dart';
-import '../controllers/subscription_controller.dart';
 import '../admin/create_plan_page.dart';
 
 class AdminPlanListItem extends StatelessWidget {
@@ -33,12 +32,12 @@ class AdminPlanListItem extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.white.withOpacity(0.05),
+                          color: AppColors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           plan.productId.toUpperCase(),
-                          style: TextStyle(color: AppColors.white.withOpacity(0.4), fontSize: 9, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: AppColors.white.withValues(alpha: 0.4), fontSize: 9, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],

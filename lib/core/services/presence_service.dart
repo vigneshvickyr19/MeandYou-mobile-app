@@ -11,7 +11,9 @@ class PresenceService {
 
   PresenceService._();
 
-  final FirebaseDatabase _db = FirebaseDatabase.instance;
+  // Lazy getter for RTDB instance
+  FirebaseDatabase get _db => FirebaseDatabase.instance;
+
   StreamSubscription? _connectedSubscription;
   String? _currentUserId;
 

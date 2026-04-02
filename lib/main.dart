@@ -1,56 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:provider/provider.dart';
-
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'app.dart';
 import 'firebase_options.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/startup_service.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/profile_setup_provider.dart';
+import 'core/providers/location_provider.dart';
+import 'core/providers/app_state_provider.dart';
 import 'features/notifications/presentation/controllers/notification_controller.dart';
 import 'features/linkes/presentation/controllers/like_controller.dart';
 import 'features/admin/presentation/controllers/admin_controller.dart';
-import 'core/providers/startup_provider.dart';
-import 'core/providers/location_provider.dart';
 import 'features/subscription/presentation/controllers/subscription_controller.dart';
 
-void main() async {
+void main() {
+  // 1. Minimum sync setup
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Firebase MUST be initialized with options for multiple platforms
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Create AuthProvider early to pass into the hierarchy
+  final authProvider = AuthProvider();
 
-  // 2. Pre-warmed state check for "Zero-Gap" startup
-  // We check the cache immediately to avoid even a single frame of Splash if possible
-  // await FirebaseAuth.instance.setSettings(
-  //   forceRecaptchaFlow: true,
-  // );
-  final initialUser = FirebaseAuth.instance.currentUser;
-
-  // 3. Ensure NotificationService is initialized BEFORE runApp
-  // This is crucial to know if we launched from a notification
-  await NotificationService.instance.initialize();
-
+  // 2. Start the app IMMEDIATELY
   runApp(
     MultiProvider(
       providers: [
-        // lazy: false + initialUser makes the first build of AuthWrapper nearly instant
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(initialUser: initialUser), 
+        ChangeNotifierProvider.value(value: authProvider),
+        ChangeNotifierProvider(create: (_) => LocationProvider(), lazy: false),
+
+        ChangeNotifierProxyProvider2<
+          AuthProvider,
+          LocationProvider,
+          AppStateProvider
+        >(
+          create: (context) => AppStateProvider(
+            authProvider: authProvider,
+            locationProvider: context.read<LocationProvider>(),
+          ),
+          update: (context, auth, location, previous) =>
+              previous ??
+              AppStateProvider(authProvider: auth, locationProvider: location),
           lazy: false,
         ),
-        ChangeNotifierProvider(create: (_) => StartupProvider()),
+
         ChangeNotifierProvider(create: (_) => ProfileSetupProvider()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
         ChangeNotifierProvider(create: (_) => LikeController()),
         ChangeNotifierProvider(create: (_) => AdminController()),
-        ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => SubscriptionController()),
       ],
       child: const MyApp(),
     ),
   );
+
+  // 3. Heavy initialization happens COMPLETELY in background
+  _initializeServicesInBackground(authProvider);
+}
+
+/// Initialize all services in the background
+Future<void> _initializeServicesInBackground(AuthProvider authProvider) async {
+  try {
+    debugPrint('Starting background initialization...');
+
+    // 1. Initialize Firebase first
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('Firebase initialized');
+
+    // 2. Now that Firebase is ready, initialize Auth logic
+    authProvider.initialize();
+    debugPrint('AuthProvider initialized');
+
+    // 3. Initialize other services
+    await NotificationService.instance.initialize();
+    debugPrint('NotificationService initialized');
+
+    await StartupService.instance.initialize();
+    debugPrint('StartupService initialized');
+  } catch (e) {
+    debugPrint('Error during background initialization: $e');
+  }
 }

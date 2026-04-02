@@ -35,10 +35,10 @@ class PricingCard extends StatelessWidget {
         color: isMostPopular ? null : AppColors.card,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: isMostPopular ? AppColors.primary : AppColors.white.withOpacity(0.08),
+          color: isMostPopular ? AppColors.primary : AppColors.white.withValues(alpha: 0.08),
           width: 2,
         ),
-        boxShadow: isMostPopular ? [BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 24, spreadRadius: 0)] : null,
+        boxShadow: isMostPopular ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.15), blurRadius: 24, spreadRadius: 0)] : null,
       ),
       child: Column(
         children: [
@@ -66,7 +66,7 @@ class PricingCard extends StatelessWidget {
               Text(plan.price % 1 == 0 ? plan.price.toStringAsFixed(0) : plan.price.toStringAsFixed(2), style: const TextStyle(color: AppColors.white, fontSize: 48, fontWeight: FontWeight.bold)),
               Padding(
                 padding: const EdgeInsets.only(top: 24),
-                child: Text('/$durationLabel', style: TextStyle(color: AppColors.white.withOpacity(0.38), fontSize: 16)),
+                child: Text('/$durationLabel', style: TextStyle(color: AppColors.white.withValues(alpha: 0.38), fontSize: 16)),
               ),
             ],
           ),
@@ -86,7 +86,7 @@ class PricingCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           benefits[index],
-                          style: TextStyle(color: AppColors.white.withOpacity(0.7), fontSize: 14),
+                          style: TextStyle(color: AppColors.white.withValues(alpha: 0.7), fontSize: 14),
                         ),
                       ),
                     ],
@@ -127,8 +127,6 @@ class PricingCard extends StatelessWidget {
         return 'mo';
       case DurationType.quarterly:
         return 'qr';
-      default:
-        return 'mo';
     }
   }
 

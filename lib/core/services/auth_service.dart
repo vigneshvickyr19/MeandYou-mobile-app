@@ -3,14 +3,30 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Use lazy initialization for Firebase services
+  // This allows the class to be instantiated before Firebase.initializeApp()
+  FirebaseAuth get _auth => FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Stream of auth changes
-  Stream<User?> get user => _auth.authStateChanges();
+  // Stream of auth changes - handles the case where it's accessed early
+  Stream<User?> get user {
+    try {
+      return _auth.authStateChanges();
+    } catch (e) {
+      debugPrint('AuthService: Firebase not ready yet, returning empty stream');
+      return const Stream.empty();
+    }
+  }
 
-  // Get current user
-  User? get currentUser => _auth.currentUser;
+  // Get current user - safe to call early (returns null if Firebase not ready)
+  User? get currentUser {
+    try {
+      return _auth.currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
+
 
   // --- Email/Password Authentication ---
 
