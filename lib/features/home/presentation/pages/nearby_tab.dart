@@ -302,18 +302,6 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildPlaceholderImage() {
-    return Container(
-      color: const Color(0xFF2A2A2A),
-      child: Center(
-        child: Icon(
-          Icons.person,
-          size: 120,
-          color: Colors.white.withValues(alpha: 0.3),
-        ),
-      ),
-    );
-  }
 
   Widget _buildGradientOverlay() {
     return Positioned(

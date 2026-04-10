@@ -1,9 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/user_model.dart';
-import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/premium_gated_image.dart';
 
 class ReceivedLikeCard extends StatelessWidget {
@@ -172,16 +170,4 @@ class ReceivedLikeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholder() {
-    return Container(
-      color: const Color(0xFF1E1E1E),
-      child: const Center(
-        child: Icon(
-          Icons.person_rounded,
-          color: Colors.white10,
-          size: 32,
-        ),
-      ),
-    );
-  }
 }

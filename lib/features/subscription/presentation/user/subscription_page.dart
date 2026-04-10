@@ -106,8 +106,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   void _handleSubscribe(String planId) async {
+    final authProvider = context.read<AuthProvider>();
     final controller = context.read<SubscriptionController>();
-    final success = await controller.processPurchase(planId);
+    
+    final userId = authProvider.currentUser?.id;
+    final plan = controller.activePlans.firstWhere((p) => p.id == planId);
+
+    if (userId == null) {
+      AppSnackbar.show(context, message: 'Please log in to continue.', type: SnackbarType.error);
+      return;
+    }
+
+    final success = await controller.processPurchase(userId, plan);
 
     if (mounted) {
       AppSnackbar.show(

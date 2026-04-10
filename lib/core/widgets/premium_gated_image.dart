@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 /// A high-performance, reusable widget that handles premium gated content visualization.
 /// Features: Custom Shimmer Loading, Error Handling, and Backdrop Blurring.
@@ -30,6 +29,8 @@ class PremiumGatedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final overlayWidget = overlay;
+    
     return Container(
       width: width,
       height: height,
@@ -50,7 +51,7 @@ class PremiumGatedImage extends StatelessWidget {
               _buildBlurLayer(),
 
             // 3. Optional Overlay
-            if (overlay != null) overlay!,
+            ... (overlayWidget != null ? [overlayWidget] : []),
 
             // 4. Lock Indicator Layer
             if (isGated && showLockIcon) _buildLockIndicator(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../domain/entities/subscription_plan_entity.dart';
 import '../controllers/subscription_controller.dart';
@@ -131,8 +132,16 @@ class PricingCard extends StatelessWidget {
   }
 
   void _handleSubscribe(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
     final controller = context.read<SubscriptionController>();
-    final success = await controller.processPurchase(plan.id);
+    
+    final userId = authProvider.currentUser?.id;
+    if (userId == null) {
+      AppSnackbar.show(context, message: 'Please log in to continue.', type: SnackbarType.error);
+      return;
+    }
+
+    final success = await controller.processPurchase(userId, plan);
 
     if (context.mounted) {
       if (success) {
