@@ -17,9 +17,19 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+    final isWideScreen = size.width > 600;
+
+    // Responsive dimensions
+    final double navHeight = isSmallScreen ? 64 : 76;
+    final double horizontalMargin = isWideScreen ? size.width * 0.2 : 16;
+    final double bottomMargin = isSmallScreen ? 16 : 28;
+    final bool hideLabels = isSmallScreen;
+
     return Container(
-      height: 76,
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+      height: navHeight,
+      margin: EdgeInsets.fromLTRB(horizontalMargin, 0, horizontalMargin, bottomMargin),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: AppColors.navBg,
@@ -56,6 +66,7 @@ class CustomBottomNav extends StatelessWidget {
             iconPath: AppImages.homeIcon,
             isActive: currentIndex == 0,
             onTap: onChanged,
+            showLabel: !hideLabels,
           ),
           NavItem(
             index: 1,
@@ -63,6 +74,7 @@ class CustomBottomNav extends StatelessWidget {
             iconPath: AppImages.lovelyIcon,
             isActive: currentIndex == 1,
             onTap: onChanged,
+            showLabel: !hideLabels,
           ),
           if (showAdmin)
             NavItem(
@@ -72,6 +84,7 @@ class CustomBottomNav extends StatelessWidget {
               icon: Icons.admin_panel_settings_rounded,
               isActive: currentIndex == 4,
               onTap: onChanged,
+              showLabel: !hideLabels,
             ),
           NavItem(
             index: 2,
@@ -79,6 +92,7 @@ class CustomBottomNav extends StatelessWidget {
             iconPath: AppImages.messageIcon,
             isActive: currentIndex == 2,
             onTap: onChanged,
+            showLabel: !hideLabels,
           ),
           NavItem(
             index: 3,
@@ -86,6 +100,7 @@ class CustomBottomNav extends StatelessWidget {
             iconPath: AppImages.profileIcon,
             isActive: currentIndex == 3,
             onTap: onChanged,
+            showLabel: !hideLabels,
           ),
         ],
       ),

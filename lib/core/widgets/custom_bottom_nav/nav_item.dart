@@ -8,6 +8,7 @@ class NavItem extends StatelessWidget {
   final String iconPath;
   final IconData? icon;
   final bool isActive;
+  final bool showLabel;
   final ValueChanged<int> onTap;
 
   const NavItem({
@@ -17,6 +18,7 @@ class NavItem extends StatelessWidget {
     required this.iconPath,
     this.icon,
     required this.isActive,
+    this.showLabel = true,
     required this.onTap,
   });
 
@@ -92,7 +94,7 @@ class NavItem extends StatelessWidget {
                   ),
                 ),
               ),
-              crossFadeState: isActive 
+              crossFadeState: (isActive && showLabel)
                   ? CrossFadeState.showSecond 
                   : CrossFadeState.showFirst,
             ),

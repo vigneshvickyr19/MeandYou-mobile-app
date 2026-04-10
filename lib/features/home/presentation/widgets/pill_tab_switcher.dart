@@ -13,10 +13,13 @@ class PillTabSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 380;
+
     return Center(
       child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: isSmallScreen ? 44 : 50,
+        padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 12),
         child: AnimatedBuilder(
           animation: controller,
           builder: (context, child) {
@@ -31,6 +34,7 @@ class PillTabSwitcher extends StatelessWidget {
                     // Fast switch without slide animation
                     controller.index = index;
                   },
+                  isSmallScreen: isSmallScreen,
                 );
               }),
             );
@@ -44,12 +48,16 @@ class PillTabSwitcher extends StatelessWidget {
     required String label,
     required bool isActive,
     required VoidCallback onTap,
+    required bool isSmallScreen,
   }) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 16 : 24, 
+          vertical: 8
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -57,7 +65,7 @@ class PillTabSwitcher extends StatelessWidget {
               label,
               style: TextStyle(
                 color: isActive ? AppColors.white : AppColors.white.withValues(alpha: 0.5),
-                fontSize: 16,
+                fontSize: isSmallScreen ? 14 : 16,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                 letterSpacing: 0.2,
               ),
