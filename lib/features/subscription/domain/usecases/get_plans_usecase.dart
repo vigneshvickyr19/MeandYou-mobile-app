@@ -1,5 +1,5 @@
-import '../entities/subscription_plan_entity.dart';
-import '../repositories/subscription_repository.dart';
+import 'package:me_and_you/features/subscription/domain/entities/subscription_plan_entity.dart';
+import 'package:me_and_you/features/subscription/domain/repositories/subscription_repository.dart';
 
 class GetPlansUseCase {
   final SubscriptionRepository _repository;

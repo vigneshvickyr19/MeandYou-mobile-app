@@ -5,7 +5,7 @@ import '../models/subscription_plan_model.dart';
 import '../models/user_subscription_model.dart';
 
 class SubscriptionRemoteDataSource {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   // Benefits
   Future<void> createBenefit(BenefitModel benefit) async {
@@ -62,6 +62,40 @@ class SubscriptionRemoteDataSource {
         .map((doc) {
       if (!doc.exists) return null;
       return UserSubscriptionModel.fromMap(doc.data()!, doc.id);
+    });
+  }
+
+  Future<void> purchaseSubscription(UserSubscriptionModel subscription) async {
+    final batch = _firestore.batch();
+
+    // 1. Update current subscription
+    final subRef = _firestore.collection(FirebaseConstants.userSubscriptions).doc(subscription.userId);
+    batch.set(subRef, subscription.toMap());
+
+    // 2. Add to history
+    final historyRef = _firestore.collection(FirebaseConstants.subscriptionHistory).doc();
+    batch.set(historyRef, {
+      ...subscription.toMap(),
+      'purchaseDate': FieldValue.serverTimestamp(),
+      'id': historyRef.id,
+    });
+
+    await batch.commit();
+  }
+
+  Stream<List<UserSubscriptionModel>> getSubscriptionHistory(String userId) {
+    return _firestore
+        .collection(FirebaseConstants.subscriptionHistory)
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      final history = snapshot.docs
+          .map((doc) => UserSubscriptionModel.fromMap(doc.data(), doc.id))
+          .toList();
+      
+      // Sort in-memory to avoid mandatory composite index requirement
+      history.sort((a, b) => b.startDate.compareTo(a.startDate));
+      return history;
     });
   }
 }

@@ -7,21 +7,46 @@ import '../../../../core/models/user_model.dart';
 import '../../../../core/constants/firebase_constants.dart';
 
 class MatchingRepositoryImpl implements MatchingRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   @override
-  Future<List<NearbyMatchEntity>> getNearbyMatches({
+  Future<NearbyResult> getNearbyMatches({
     required UserModel currentUser,
     double radiusInKm = 5.0,
+    int limit = 20,
+    DocumentSnapshot? lastDoc,
+    bool activeOnly = true,
   }) async {
-    final List<Map<String, dynamic>> profiles = await _fetchProfilesByLocation(
+    final List<NearbyMatchEntity> allMatches = [];
+    DocumentSnapshot? newLastDoc;
+
+    // 1. Fetch matching profiles based on geohash
+    // Note: For true scalability with startAfter in Firestore across multiple geohashes, 
+    // we query a slightly larger batch and filter.
+    final List<Map<String, dynamic>> rawProfiles = await _fetchProfilesByLocationPaginated(
       currentUser: currentUser,
       radiusInKm: radiusInKm,
+      limit: limit,
+      lastDoc: lastDoc,
     );
 
-    final List<NearbyMatchEntity> matches = [];
+    // 2. Filter and Map
+    final DateTime activeThreshold = DateTime.now().subtract(const Duration(hours: 24));
 
-    for (var data in profiles) {
+    for (var data in rawProfiles) {
+      final String id = data['id'];
+      
+      // Filter: Current User
+      if (id == currentUser.id) continue;
+
+      // Filter: Activity (24h)
+      if (activeOnly) {
+        final lastUpdate = (data[FirebaseConstants.lastLocationUpdate] as Timestamp?)?.toDate();
+        if (lastUpdate == null || lastUpdate.isBefore(activeThreshold)) {
+          continue;
+        }
+      }
+
       final double lat = (data[FirebaseConstants.latitude] as num?)?.toDouble() ?? 0;
       final double lng = (data[FirebaseConstants.longitude] as num?)?.toDouble() ?? 0;
       
@@ -32,15 +57,21 @@ class MatchingRepositoryImpl implements MatchingRepository {
         lng,
       );
 
-      // Final strict filter by radius
+      // Filter: Exact Radius (Haversine)
       if (distance > radiusInKm) continue;
 
-      matches.add(_mapToEntity(data, distance, 0)); // 0 match percentage for Nearby
+      allMatches.add(_mapToEntity(data, distance, 0));
     }
 
-    // Sort: Distance (closest first)
-    matches.sort((a, b) => a.distance.compareTo(b.distance));
-    return matches;
+    // 3. Handle last document for next page
+    // We capture the original snapshot from the data source if possible
+    newLastDoc = rawProfiles.isNotEmpty ? rawProfiles.last['_snapshot'] as DocumentSnapshot? : null;
+
+    return NearbyResult(
+      matches: allMatches,
+      lastDoc: newLastDoc,
+      hasMore: rawProfiles.length >= limit,
+    );
   }
 
   @override
@@ -59,9 +90,10 @@ class MatchingRepositoryImpl implements MatchingRepository {
     final int myMinAge = myProfileData['minAge'] ?? 18;
     final int myMaxAge = myProfileData['maxAge'] ?? 99;
 
-    final List<Map<String, dynamic>> rawProfiles = await _fetchProfilesByLocation(
+    final List<Map<String, dynamic>> rawProfiles = await _fetchProfilesByLocationPaginated(
       currentUser: currentUser,
       radiusInKm: radiusInKm,
+      limit: 50,
     );
 
     final List<NearbyMatchEntity> matches = [];
@@ -111,17 +143,21 @@ class MatchingRepositoryImpl implements MatchingRepository {
     return matches;
   }
 
-  /// Private helper to fetch profiles using geohash range queries
-  Future<List<Map<String, dynamic>>> _fetchProfilesByLocation({
+  /// Paginated helper to fetch profiles using geohash range queries
+  Future<List<Map<String, dynamic>>> _fetchProfilesByLocationPaginated({
     required UserModel currentUser,
     required double radiusInKm,
+    required int limit,
+    DocumentSnapshot? lastDoc,
   }) async {
     final String userGeohash = currentUser.geohash ?? '';
     if (userGeohash.isEmpty) return [];
 
-    // Calculate geohash precision
-    final String centerHash = userGeohash.length >= 4 
-        ? userGeohash.substring(0, 4) 
+    // 1. Calculate geohash precision based on radius
+    // 4 chars is roughly 20km x 20km, 5 chars is ~5km x 5km
+    int precision = radiusInKm <= 5 ? 5 : 4;
+    final String centerHash = userGeohash.length >= precision 
+        ? userGeohash.substring(0, precision) 
         : userGeohash;
 
     final GeoHasher hasher = GeoHasher();
@@ -129,22 +165,33 @@ class MatchingRepositoryImpl implements MatchingRepository {
     final List<String> allCells = [centerHash, ...neighbors.values];
 
     final List<Future<QuerySnapshot<Map<String, dynamic>>>> queryFutures = [];
+    
     for (final cell in allCells) {
-      queryFutures.add(
-        _firestore
-            .collection(FirebaseConstants.profileSetup)
-            .orderBy(FirebaseConstants.geohash)
-            .startAt([cell])
-            .endAt(['$cell\uf8ff'])
-            .limit(50)
-            .get(),
-      );
+      Query<Map<String, dynamic>> query = _firestore
+          .collection(FirebaseConstants.profileSetup)
+          .orderBy(FirebaseConstants.geohash)
+          .startAt([cell])
+          .endAt(['$cell\uf8ff']);
+      
+      // If we have a cursor, we skip cells that are "before" the cursor geohash 
+      // or start after it in the current cell.
+      if (lastDoc != null) {
+        final lastGeohash = lastDoc.get(FirebaseConstants.geohash) as String;
+        // Optimization: Only query cells that could contain geohashes >= lastGeohash
+        if (cell.compareTo(lastGeohash.substring(0, cell.length)) >= 0) {
+           query = query.startAfterDocument(lastDoc);
+        } else {
+           continue; // Skip this cell entirely as it's lexically before our cursor's cell
+        }
+      }
+
+      queryFutures.add(query.limit(limit).get());
     }
 
     final List<QuerySnapshot<Map<String, dynamic>>> snapshots =
         await Future.wait(queryFutures);
 
-    final List<Map<String, dynamic>> profiles = [];
+    final List<Map<String, dynamic>> rawResults = [];
     final Set<String> seenIds = {};
 
     for (var snapshot in snapshots) {
@@ -152,11 +199,25 @@ class MatchingRepositoryImpl implements MatchingRepository {
         if (doc.id == currentUser.id) continue;
         if (seenIds.contains(doc.id)) continue;
         
-        profiles.add({...doc.data(), 'id': doc.id});
+        rawResults.add({
+          ...doc.data(), 
+          'id': doc.id,
+          '_snapshot': doc // Attach snapshot for cursor tracking
+        });
         seenIds.add(doc.id);
       }
     }
-    return profiles;
+
+    // Sort by geohash to ensure consistent pagination across all merged results
+    rawResults.sort((a, b) => (a[FirebaseConstants.geohash] as String)
+        .compareTo(b[FirebaseConstants.geohash] as String));
+
+    // Trim to limit
+    if (rawResults.length > limit) {
+      return rawResults.sublist(0, limit);
+    }
+
+    return rawResults;
   }
 
   int _calculateAge(dynamic dobData) {

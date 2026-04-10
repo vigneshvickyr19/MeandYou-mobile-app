@@ -52,7 +52,9 @@ class AdminController extends ChangeNotifier {
       final updated = AdminSettings(
         maleFreeLikes: male,
         femaleFreeLikes: female,
-        nearbyRadiusInKm: _settings?.nearbyRadiusInKm ?? 10.0,
+        nearbyRadiusInKm: _settings!.nearbyRadiusInKm,
+        maxRadiusKm: _settings!.maxRadiusKm,
+        maxUsersPerFetch: _settings!.maxUsersPerFetch,
         updatedAt: DateTime.now(),
       );
       await _adminService.updateSettings(updated);
@@ -69,9 +71,11 @@ class AdminController extends ChangeNotifier {
     _setLoading(true);
     try {
       final updated = AdminSettings(
-        maleFreeLikes: _settings?.maleFreeLikes ?? 5,
-        femaleFreeLikes: _settings?.femaleFreeLikes ?? 10,
+        maleFreeLikes: _settings!.maleFreeLikes,
+        femaleFreeLikes: _settings!.femaleFreeLikes,
         nearbyRadiusInKm: radius,
+        maxRadiusKm: _settings!.maxRadiusKm,
+        maxUsersPerFetch: _settings!.maxUsersPerFetch,
         updatedAt: DateTime.now(),
       );
       await _adminService.updateSettings(updated);

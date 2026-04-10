@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/services/notification_service.dart';
@@ -44,6 +45,12 @@ class _HomeShellPageState extends State<HomeShellPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Heavy work: Sync FCM token (Only after UI is rendered)
       NotificationService.instance.syncTokenNow();
+
+      // Initialize Subscription logic
+      final authProvider = context.read<AuthProvider>();
+      if (authProvider.currentUser != null) {
+        context.read<SubscriptionController>().initUser(authProvider.currentUser!.id);
+      }
     });
   }
 

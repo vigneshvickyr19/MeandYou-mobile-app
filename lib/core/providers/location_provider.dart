@@ -5,9 +5,11 @@ import 'package:geolocator/geolocator.dart';
 class LocationProvider extends ChangeNotifier {
   bool _isPermissionGranted = false;
   bool _isServiceEnabled = false;
+  bool _isBackgroundEnabled = false;
   bool _isChecking = true;
 
   bool get isPermissionGranted => _isPermissionGranted;
+  bool get isBackgroundEnabled => _isBackgroundEnabled;
   bool get isServiceEnabled => _isServiceEnabled;
   bool get isChecking => _isChecking;
   bool get hasEffectiveLocation => _isPermissionGranted && _isServiceEnabled;
@@ -26,6 +28,9 @@ class LocationProvider extends ChangeNotifier {
       
       _isPermissionGranted = (permission == LocationPermission.always || 
                              permission == LocationPermission.whileInUse);
+      
+      // Also track if background specifically is enabled
+      _isBackgroundEnabled = (permission == LocationPermission.always);
     } catch (e) {
       debugPrint('Error checking location status: $e');
       _isPermissionGranted = false;

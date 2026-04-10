@@ -15,6 +15,10 @@ import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
+import '../../../../core/widgets/premium_gated_image.dart';
+
 class NearbyTab extends StatefulWidget {
   const NearbyTab({super.key});
 
@@ -46,6 +50,8 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
+      
+      // Load users for everyone, premium status will handle blurring/liking inside
       if (authProvider.currentUser != null) {
         _controller.loadUsers(authProvider.currentUser!);
       }
@@ -61,6 +67,18 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
   }
 
   void _handleLike(NearbyMatchEntity match) async {
+    final subController = context.read<SubscriptionController>();
+    
+    // --- Premium Check for Liking ---
+    if (!subController.isPremium) {
+      SubscriptionUpsellSheet.show(
+        context,
+        title: 'Unlock Liking',
+        subtitle: 'Upgrade to Premium to connect with people nearby.',
+      );
+      return;
+    }
+
     try {
       _heartTriggerController.add(null);
       HapticFeedback.mediumImpact();
@@ -92,32 +110,36 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _controller,
-      child: Consumer<NearbyController>(
-        builder: (context, controller, _) {
-          if (controller.isLoading) {
-            return _buildLoadingState();
-          }
+    return Consumer<SubscriptionController>(
+      builder: (context, subController, _) {
+        return ChangeNotifierProvider.value(
+          value: _controller,
+          child: Consumer<NearbyController>(
+            builder: (context, controller, _) {
+              if (controller.isLoading) {
+                return _buildLoadingState();
+              }
 
-          final users = controller.users;
+              final users = controller.users;
 
-          if (users.isEmpty) {
-            return _buildEmptyState(controller.radius);
-          }
+              if (users.isEmpty) {
+                return _buildEmptyState(controller.radius);
+              }
 
-          return Stack(
-            children: [
-              _buildCarousel(users),
-              HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
-            ],
-          );
-        },
-      ),
+              return Stack(
+                children: [
+                  _buildCarousel(users, subController.isPremium),
+                  HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildCarousel(List<NearbyMatchEntity> users) {
+  Widget _buildCarousel(List<NearbyMatchEntity> users, bool isPremium) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -131,25 +153,65 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
         bottom: false,
         child: PageView.builder(
           controller: _pageController,
-          itemCount: users.length,
+          itemCount: users.length + (_controller.isLoadMore ? 1 : 0),
           onPageChanged: (index) {
             setState(() {
               _currentPage = index;
             });
-            _controller.fetchLocationForMatch(users[index]);
-            if (index + 1 < users.length) {
-              _controller.fetchLocationForMatch(users[index + 1]);
+            if (index < users.length) {
+              _controller.fetchLocationForMatch(users[index]);
+              if (index + 1 < users.length) {
+                _controller.fetchLocationForMatch(users[index + 1]);
+              }
+            }
+
+            // --- Pagination: Load more when reaching near the end ---
+            if (index >= users.length - 3) {
+              _controller.loadMore();
             }
           },
           itemBuilder: (context, index) {
-            return _buildCarouselCard(users[index], index);
+            // Check if we show a "Loading More" card at the very end
+            if (index == users.length && _controller.isLoadMore) {
+              return _buildLoadMoreCard();
+            }
+            return _buildCarouselCard(users[index], index, isPremium);
           },
         ),
       ),
     );
   }
 
-  Widget _buildCarouselCard(NearbyMatchEntity match, int index) {
+  Widget _buildLoadMoreCard() {
+    return Center(
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.68,
+        width: MediaQuery.of(context).size.width * 0.88,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+            const SizedBox(height: 20),
+            Text(
+              'Finding more people...',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 14,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCarouselCard(NearbyMatchEntity match, int index, bool isPremium) {
     final difference = (index - _currentPageValue).abs();
     final scale = 1.0 - (difference * 0.15).clamp(0.0, 0.15);
     final opacity = 1.0 - (difference * 0.5).clamp(0.0, 0.5);
@@ -174,11 +236,11 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
           ),
         );
       },
-      child: _buildProfileCard(match, index == _currentPage, index),
+      child: _buildProfileCard(match, index == _currentPage, index, isPremium),
     );
   }
 
-  Widget _buildProfileCard(NearbyMatchEntity match, bool isActive, int index) {
+  Widget _buildProfileCard(NearbyMatchEntity match, bool isActive, int index, bool isPremium) {
     final screenHeight = MediaQuery.of(context).size.height;
     final cardHeight = screenHeight * 0.68;
 
@@ -207,7 +269,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildParallaxImage(match, index),
+                  _buildParallaxImage(match, index, isPremium),
                   _buildGradientOverlay(),
                   _buildProfileInfo(match),
                 ],
@@ -221,23 +283,20 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildParallaxImage(NearbyMatchEntity match, int index) {
+  Widget _buildParallaxImage(NearbyMatchEntity match, int index, bool isPremium) {
     return AnimatedBuilder(
       animation: _pageController,
       builder: (context, child) {
         final double delta = index - _currentPageValue;
         return Container(
           transform: Matrix4.identity()..translateByVector3(vm.Vector3(delta * 40, 0.0, 0.0)),
-          child: match.profileImageUrl != null && match.profileImageUrl!.isNotEmpty
-              ? Image.network(
-                  match.profileImageUrl!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  scale: 1.1,
-                  errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
-                )
-              : _buildPlaceholderImage(),
+          child: PremiumGatedImage(
+            imageUrl: match.profileImageUrl,
+            isGated: !isPremium,
+            blurSigma: 25.0, // Extra heavy for premium feel
+            borderRadius: 32.0,
+            showLockIcon: false, // Cleaner UX for nearby cards
+          ),
         );
       },
     );

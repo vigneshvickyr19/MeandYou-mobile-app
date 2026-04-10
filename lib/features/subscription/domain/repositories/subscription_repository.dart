@@ -16,4 +16,6 @@ abstract class SubscriptionRepository {
 
   // User Subscriptions
   Stream<UserSubscriptionEntity?> getUserSubscription(String userId);
+  Future<void> purchaseSubscription(UserSubscriptionEntity subscription);
+  Stream<List<UserSubscriptionEntity>> getSubscriptionHistory(String userId);
 }

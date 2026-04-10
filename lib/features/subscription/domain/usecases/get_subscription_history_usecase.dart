@@ -1,12 +1,12 @@
 import 'package:me_and_you/features/subscription/domain/entities/user_subscription_entity.dart';
 import 'package:me_and_you/features/subscription/domain/repositories/subscription_repository.dart';
 
-class GetUserSubscriptionUseCase {
+class GetSubscriptionHistoryUseCase {
   final SubscriptionRepository _repository;
 
-  GetUserSubscriptionUseCase(this._repository);
+  GetSubscriptionHistoryUseCase(this._repository);
 
-  Stream<UserSubscriptionEntity?> execute(String userId) {
-    return _repository.getUserSubscription(userId);
+  Stream<List<UserSubscriptionEntity>> execute(String userId) {
+    return _repository.getSubscriptionHistory(userId);
   }
 }

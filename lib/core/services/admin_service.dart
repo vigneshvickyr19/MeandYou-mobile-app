@@ -10,7 +10,7 @@ class AdminService {
 
   AdminService._();
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   // Collection reference
   DocumentReference get _adminSettingsDoc =>

@@ -14,6 +14,7 @@ class FirebaseConstants {
   static const String benefits = 'benefits';
   static const String subscriptionPlans = 'subscription_plans';
   static const String userSubscriptions = 'user_subscriptions';
+  static const String subscriptionHistory = 'subscription_history';
 
   // Field Names
   static const String lastMessageAt = 'lastMessageAt';

@@ -5,7 +5,7 @@ import '../../../home/data/models/like_model.dart';
 import '../../../../core/models/user_model.dart';
 
 class LinksService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   static const String _matchesCollection = FirebaseConstants.matches;
   static const String _likesCollection = FirebaseConstants.likes;

@@ -4,12 +4,16 @@ class AdminSettings {
   final int maleFreeLikes;
   final int femaleFreeLikes;
   final double nearbyRadiusInKm;
+  final double maxRadiusKm;
+  final int maxUsersPerFetch;
   final DateTime updatedAt;
 
   AdminSettings({
     this.maleFreeLikes = 5,
     this.femaleFreeLikes = 10,
     this.nearbyRadiusInKm = 10.0,
+    this.maxRadiusKm = 50.0,
+    this.maxUsersPerFetch = 20,
     required this.updatedAt,
   });
 
@@ -18,6 +22,8 @@ class AdminSettings {
       maleFreeLikes: data['maleFreeLikes'] ?? 5,
       femaleFreeLikes: data['femaleFreeLikes'] ?? 10,
       nearbyRadiusInKm: (data['nearbyRadiusInKm'] as num?)?.toDouble() ?? 10.0,
+      maxRadiusKm: (data['maxRadiusKm'] as num?)?.toDouble() ?? 50.0,
+      maxUsersPerFetch: data['maxUsersPerFetch'] ?? 20,
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -27,6 +33,8 @@ class AdminSettings {
       'maleFreeLikes': maleFreeLikes,
       'femaleFreeLikes': femaleFreeLikes,
       'nearbyRadiusInKm': nearbyRadiusInKm,
+      'maxRadiusKm': maxRadiusKm,
+      'maxUsersPerFetch': maxUsersPerFetch,
       'updatedAt': updatedAt,
     };
   }

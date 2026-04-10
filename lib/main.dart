@@ -12,7 +12,8 @@ import 'core/providers/app_state_provider.dart';
 import 'features/notifications/presentation/controllers/notification_controller.dart';
 import 'features/linkes/presentation/controllers/like_controller.dart';
 import 'features/admin/presentation/controllers/admin_controller.dart';
-import 'features/subscription/presentation/controllers/subscription_controller.dart';
+import 'package:me_and_you/features/subscription/presentation/controllers/subscription_controller.dart';
+import 'core/services/background_location_service.dart';
 
 void main() {
   // 1. Minimum sync setup
@@ -78,6 +79,10 @@ Future<void> _initializeServicesInBackground(AuthProvider authProvider) async {
 
     await StartupService.instance.initialize();
     debugPrint('StartupService initialized');
+
+    // 4. Initialize Background Location
+    await BackgroundLocationService.instance.initialize();
+    debugPrint('BackgroundLocationService initialized');
   } catch (e) {
     debugPrint('Error during background initialization: $e');
   }

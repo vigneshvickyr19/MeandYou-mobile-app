@@ -156,7 +156,13 @@ class _SubscriptionUpsellSheetState extends State<SubscriptionUpsellSheet> {
   void _handleSubscribe(BuildContext context, SubscriptionController controller) async {
     if (_selectedPlanId == null) return;
     
-    final success = await controller.processPurchase(_selectedPlanId!);
+    final authProvider = context.read<AuthProvider>();
+    final userId = authProvider.currentUser?.id;
+    if (userId == null) return;
+
+    final plan = controller.activePlans.firstWhere((p) => p.id == _selectedPlanId);
+    
+    final success = await controller.processPurchase(userId, plan);
     
     if (context.mounted) {
       if (success) {

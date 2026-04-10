@@ -101,7 +101,7 @@ class StartupService {
     required bool hasLocationAccess,
     required bool hasGeohash,
   }) {
-    debugPrint('StartupService: Determining route - Auth: $isAuthenticated, Profile: $isProfileComplete, Location: $hasLocationAccess, Geohash: $hasGeohash');
+    // debugPrint('StartupService: Determining route - Auth: $isAuthenticated, Profile: $isProfileComplete, Location: $hasLocationAccess, Geohash: $hasGeohash');
 
     // Not authenticated -> Get Started
     if (!isAuthenticated) {

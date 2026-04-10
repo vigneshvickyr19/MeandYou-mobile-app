@@ -1,13 +1,16 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/models/user_model.dart';
+import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import '../../../../core/widgets/premium_gated_image.dart';
 
 class ReceivedLikeCard extends StatelessWidget {
   final UserModel user;
   final String timeAgo;
   final VoidCallback onTap;
-  final VoidCallback onSayHelloTap;
+  final bool isBlurred;
   final int index;
 
   const ReceivedLikeCard({
@@ -15,7 +18,7 @@ class ReceivedLikeCard extends StatelessWidget {
     required this.user,
     required this.timeAgo,
     required this.onTap,
-    required this.onSayHelloTap,
+    required this.isBlurred,
     required this.index,
   });
 
@@ -60,7 +63,7 @@ class ReceivedLikeCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              '${user.fullName}${user.age != null ? ', ${user.age}' : ''}',
+                              isBlurred ? 'Someone' : '${user.fullName}${user.age != null ? ', ${user.age}' : ''}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -83,34 +86,20 @@ class ReceivedLikeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Interpreted your profile',
+                        isBlurred ? 'Unlock to see who liked you' : 'Liked your profile',
                         style: TextStyle(
-                          color: AppColors.primary.withValues(alpha: 0.7),
+                          color: isBlurred ? AppColors.secondary : AppColors.primary.withValues(alpha: 0.7),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 16),
                       
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildActionButton(
-                              onTap: onSayHelloTap,
-                              label: 'Say Hello',
-                              isPrimary: true,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _buildActionButton(
-                              onTap: onTap, // onTap navigates to profile
-                              label: 'View Profile',
-                              isPrimary: false,
-                            ),
-                          ),
-                        ],
+                      // Action Buttons - Only View Profile now
+                      _buildActionButton(
+                        onTap: onTap,
+                        label: isBlurred ? 'Upgrade to View' : 'View Profile',
+                        isPrimary: isBlurred,
                       ),
                     ],
                   ),
@@ -137,15 +126,11 @@ class ReceivedLikeCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty
-            ? Image.network(
-                user.profileImageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, _, _) => _buildPlaceholder(),
-              )
-            : _buildPlaceholder(),
+      child: PremiumGatedImage(
+        imageUrl: user.profileImageUrl,
+        isGated: isBlurred,
+        blurSigma: 18.0, // Optimized for smaller card size
+        borderRadius: 18.0,
       ),
     );
   }

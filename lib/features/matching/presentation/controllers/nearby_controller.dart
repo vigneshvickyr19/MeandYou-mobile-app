@@ -14,6 +14,8 @@ import '../../data/repositories/matching_repository_impl.dart';
 import '../../../../features/home/data/services/home_service.dart';
 import '../../../../core/services/admin_service.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class NearbyController extends ChangeNotifier {
   final GetNearbyMatchesUseCase _getNearbyMatchesUseCase;
   final UpdateLocationUseCase _updateLocationUseCase;
@@ -38,6 +40,14 @@ class NearbyController extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _isLoadMore = false;
+  bool get isLoadMore => _isLoadMore;
+
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+
+  DocumentSnapshot? _lastDoc;
+
   bool _isLocationLoading = false;
   bool get isLocationLoading => _isLocationLoading;
 
@@ -45,9 +55,10 @@ class NearbyController extends ChangeNotifier {
   NearbyMatchEntity? get selectedMatch => _selectedMatch;
 
   double _radius = 10.0;
+  int _fetchLimit = 20;
   double get radius => _radius;
-  StreamSubscription? _settingsSubscription;
 
+  StreamSubscription? _settingsSubscription;
   StreamSubscription? _locationSubscription;
 
   UserModel? _currentUser;
@@ -55,10 +66,11 @@ class NearbyController extends ChangeNotifier {
   String? _lastGeohash;
   bool _isDisposed = false;
 
-  /// Load users (one-time fetch)
-  Future<void> loadUsers(UserModel currentUser) async {
-    // If geohash hasn't changed and we already have users, avoid re-fetching
-    if (_currentUser?.id == currentUser.id && 
+  /// Load users (Initial fetch)
+  Future<void> loadUsers(UserModel currentUser, {bool isRefresh = false}) async {
+    // Prevent unneeded re-fetches if nothing changed
+    if (!isRefresh && 
+        _currentUser?.id == currentUser.id && 
         _lastGeohash == currentUser.geohash && 
         _users.isNotEmpty) {
       return;
@@ -66,19 +78,25 @@ class NearbyController extends ChangeNotifier {
 
     _currentUser = currentUser;
     _lastGeohash = currentUser.geohash;
+    _resetPagination();
     
-    // Listen to radius changes dynamically
+    // Listen to admin settings dynamically
     _settingsSubscription?.cancel();
     _settingsSubscription = AdminService.instance.streamSettings().listen((settings) {
+      bool changed = false;
       if (settings.nearbyRadiusInKm != _radius) {
         _radius = settings.nearbyRadiusInKm;
-        _fetchMatches(); // Instant refresh when radius changes
+        changed = true;
       }
+      if (settings.maxUsersPerFetch != _fetchLimit) {
+        _fetchLimit = settings.maxUsersPerFetch;
+        changed = true;
+      }
+      if (changed) _fetchMatches(isInitial: true);
     });
 
-    // Optimization: If we already have the essential data, start matching immediately
     if (_currentUser?.latitude != null && _currentUser?.geohash != null) {
-      _fetchMatches();
+      await _fetchMatches(isInitial: true);
       _startLocationUpdates(_currentUser!.id);
       return;
     }
@@ -86,34 +104,66 @@ class NearbyController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // 1. Get full profile only if essential data is missing
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
-
-    await _fetchMatches();
+    await _fetchMatches(isInitial: true);
     _startLocationUpdates(_currentUser!.id);
   }
 
-  Future<void> _fetchMatches() async {
+  /// Load more users for infinite scroll
+  Future<void> loadMore() async {
+    if (_isLoadMore || !_hasMore || _currentUser == null) return;
+
+    _isLoadMore = true;
+    notifyListeners();
+
+    await _fetchMatches(isInitial: false);
+
+    _isLoadMore = false;
+    notifyListeners();
+  }
+
+  void _resetPagination() {
+    _users = [];
+    _lastDoc = null;
+    _hasMore = true;
+    _isLoading = false;
+    _isLoadMore = false;
+  }
+
+  Future<void> _fetchMatches({required bool isInitial}) async {
     if (_currentUser == null) return;
 
-    try {
-      // Fetch dynamic radius from Admin Panel Settings
-      final adminSettings = await AdminService.instance.getSettings();
-      _radius = adminSettings.nearbyRadiusInKm;
+    if (isInitial) {
+      _isLoading = true;
+      _lastDoc = null;
+      _hasMore = true;
+      notifyListeners();
+    }
 
-      final matches = await _getNearbyMatchesUseCase(
+    try {
+      final result = await _getNearbyMatchesUseCase.executeWithPagination(
         currentUser: _currentUser!,
         radiusInKm: _radius,
+        limit: _fetchLimit,
+        lastDoc: _lastDoc,
       );
+
+      if (isInitial) {
+        _users = result.matches;
+      } else {
+        // Prevent duplicates
+        final newMatches = result.matches.where((m) => !_users.any((u) => u.id == m.id)).toList();
+        _users.addAll(newMatches);
+      }
+
+      _lastDoc = result.lastDoc;
+      _hasMore = result.hasMore;
       
-      // Sort by distance (closest first)
-      _users = List.from(matches)..sort((a, b) => a.distance.compareTo(b.distance));
-      _isLoading = false;
-      notifyListeners();
     } catch (error) {
-      _isLoading = false;
-      notifyListeners();
       debugPrint('Error loading nearby matches: $error');
+    } finally {
+      if (isInitial) _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -169,7 +219,7 @@ class NearbyController extends ChangeNotifier {
         geohash: geohash,
       );
       _lastGeohash = geohash;
-      _fetchMatches();
+      _fetchMatches(isInitial: true);
     }
 
   // Sync to cloud

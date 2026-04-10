@@ -8,6 +8,7 @@ import '../services/notification_service.dart';
 import '../services/deep_link_service.dart';
 import '../services/storage_service.dart';
 import '../services/presence_service.dart';
+import '../services/background_location_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -54,6 +55,8 @@ class AuthProvider extends ChangeNotifier {
         return;
       }
 
+      final isFirstInit = _isInitializing;
+      
       // Create a minimal user model from Firebase Auth data
       // This allows immediate navigation to Home without waiting for Firestore
       _currentUser = UserModel(
@@ -66,8 +69,11 @@ class AuthProvider extends ChangeNotifier {
         role: 'user',
       );
 
-      _isInitializing = true;
-      notifyListeners();
+      // Only show full-screen initialization on first app boot
+      if (isFirstInit) {
+        _isInitializing = true;
+        notifyListeners();
+      }
 
       // Start real-time streaming of user document
       _startUserStreaming(user.uid);
@@ -95,6 +101,9 @@ class AuthProvider extends ChangeNotifier {
         _currentUser = _currentUser?.copyWith(isProfileComplete: false);
         _setInitialized();
       }
+    }, onError: (e) {
+      debugPrint("AuthProvider: User stream error: $e");
+      _setInitialized();
     });
   }
 
@@ -113,13 +122,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _setInitialized() {
-    // Always signal that state is stable
     DeepLinkService().setAuthResolved(true);
-
+    
     if (_isInitializing) {
       _isInitializing = false;
+      
+      // Start background location tracking once user is initialized
+      if (_currentUser != null) {
+        BackgroundLocationService.instance.startTracking(_currentUser!.id);
+      }
+      
+      notifyListeners();
+    } else {
+      // Standard data update, not a routing gate event
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   // --- Login with Phone (Request OTP) ---
@@ -235,6 +252,10 @@ class AuthProvider extends ChangeNotifier {
 
       await _userRepository.signOut();
       _currentUser = null;
+
+      // Stop background location tracking on logout
+      BackgroundLocationService.instance.stopTracking();
+
       // Reset auth resolution for next login/session
       DeepLinkService().setAuthResolved(false);
     } finally {
@@ -276,6 +297,10 @@ class AuthProvider extends ChangeNotifier {
 
       _currentUser = null;
       _userDocumentSubscription?.cancel();
+
+      // Stop background location tracking on account deletion
+      BackgroundLocationService.instance.stopTracking();
+
       DeepLinkService().setAuthResolved(false);
       
       debugPrint('Account deleted successfully for user: $userId');

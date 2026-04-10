@@ -10,6 +10,8 @@ import '../widgets/received_like_card.dart';
 import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import '../../../../core/constants/subscription_constants.dart';
 import 'package:flutter/services.dart';
 
 class LikePage extends StatefulWidget {
@@ -274,6 +276,9 @@ class _LikePageState extends State<LikePage>
           );
         }
 
+        final subController = context.watch<SubscriptionController>();
+        final bool canSeeLikes = subController.hasBenefit(SubscriptionBenefits.seeWhoLikedYou);
+
         return RefreshIndicator(
           onRefresh: () async => _loadData(force: true),
           backgroundColor: const Color(0xFF1E1E1E),
@@ -290,14 +295,18 @@ class _LikePageState extends State<LikePage>
                 index: index,
                 user: item.fromUser,
                 timeAgo: controller.formatTimeAgo(item.like.createdAt),
+                isBlurred: !canSeeLikes,
                 onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.otherProfile,
-                    arguments: {'userId': item.fromUser.id},
-                  );
+                  if (canSeeLikes) {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.otherProfile,
+                      arguments: {'userId': item.fromUser.id},
+                    );
+                  } else {
+                    SubscriptionBottomSheet.show(context);
+                  }
                 },
-                onSayHelloTap: () => _handleLikeBack(item),
               );
             },
           ),

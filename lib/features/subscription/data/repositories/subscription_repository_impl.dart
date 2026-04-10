@@ -1,10 +1,11 @@
-import '../../domain/entities/benefit_entity.dart';
-import '../../domain/entities/subscription_plan_entity.dart';
-import '../../domain/entities/user_subscription_entity.dart';
-import '../../domain/repositories/subscription_repository.dart';
-import '../datasources/subscription_remote_datasource.dart';
-import '../models/benefit_model.dart';
-import '../models/subscription_plan_model.dart';
+import 'package:me_and_you/features/subscription/domain/entities/benefit_entity.dart';
+import 'package:me_and_you/features/subscription/domain/entities/subscription_plan_entity.dart';
+import 'package:me_and_you/features/subscription/domain/entities/user_subscription_entity.dart';
+import 'package:me_and_you/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:me_and_you/features/subscription/data/datasources/subscription_remote_datasource.dart';
+import 'package:me_and_you/features/subscription/data/models/benefit_model.dart';
+import 'package:me_and_you/features/subscription/data/models/subscription_plan_model.dart';
+import 'package:me_and_you/features/subscription/data/models/user_subscription_model.dart';
 
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
   final SubscriptionRemoteDataSource _remoteDataSource;
@@ -49,5 +50,15 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Stream<UserSubscriptionEntity?> getUserSubscription(String userId) {
     return _remoteDataSource.getUserSubscription(userId);
+  }
+
+  @override
+  Future<void> purchaseSubscription(UserSubscriptionEntity subscription) async {
+    await _remoteDataSource.purchaseSubscription(UserSubscriptionModel.fromEntity(subscription));
+  }
+
+  @override
+  Stream<List<UserSubscriptionEntity>> getSubscriptionHistory(String userId) {
+    return _remoteDataSource.getSubscriptionHistory(userId);
   }
 }

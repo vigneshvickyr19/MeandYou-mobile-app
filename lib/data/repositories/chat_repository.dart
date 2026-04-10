@@ -5,7 +5,7 @@ import '../../features/chat/data/models/chat_room_model.dart';
 import '../../features/chat/data/models/message_model.dart';
 
 class ChatRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   CollectionReference get _chatsCollection =>
       _firestore.collection(FirebaseConstants.chats);

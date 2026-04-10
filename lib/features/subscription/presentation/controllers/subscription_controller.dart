@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../domain/entities/benefit_entity.dart';
-import '../../domain/entities/subscription_plan_entity.dart';
-import '../../domain/entities/user_subscription_entity.dart';
-import '../../domain/usecases/get_benefits_usecase.dart';
-import '../../domain/usecases/get_plans_usecase.dart';
-import '../../domain/usecases/get_user_subscription_usecase.dart';
-import '../../domain/usecases/manage_benefit_usecase.dart';
-import '../../domain/usecases/manage_plan_usecase.dart';
-import '../../data/datasources/subscription_remote_datasource.dart';
-import '../../data/repositories/subscription_repository_impl.dart';
+import 'package:me_and_you/features/subscription/domain/entities/benefit_entity.dart';
+import 'package:me_and_you/features/subscription/domain/entities/subscription_plan_entity.dart';
+import 'package:me_and_you/features/subscription/domain/entities/user_subscription_entity.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/get_benefits_usecase.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/get_plans_usecase.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/get_user_subscription_usecase.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/manage_benefit_usecase.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/manage_plan_usecase.dart';
+import 'package:me_and_you/features/subscription/data/datasources/subscription_remote_datasource.dart';
+import 'package:me_and_you/features/subscription/data/repositories/subscription_repository_impl.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/purchase_subscription_usecase.dart';
+import 'package:me_and_you/features/subscription/domain/usecases/get_subscription_history_usecase.dart';
+import 'package:uuid/uuid.dart';
 
 class SubscriptionController extends ChangeNotifier {
   final GetBenefitsUseCase _getBenefitsUseCase;
@@ -17,24 +20,30 @@ class SubscriptionController extends ChangeNotifier {
   final GetPlansUseCase _getPlansUseCase;
   final ManagePlanUseCase _managePlanUseCase;
   final GetUserSubscriptionUseCase _getUserSubscriptionUseCase;
+  final PurchaseSubscriptionUseCase _purchaseSubscriptionUseCase;
+  final GetSubscriptionHistoryUseCase _getSubscriptionHistoryUseCase;
 
   SubscriptionController() : 
     _getBenefitsUseCase = GetBenefitsUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
     _manageBenefitUseCase = ManageBenefitUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
     _getPlansUseCase = GetPlansUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
     _managePlanUseCase = ManagePlanUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
-    _getUserSubscriptionUseCase = GetUserSubscriptionUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource()));
+    _getUserSubscriptionUseCase = GetUserSubscriptionUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
+    _purchaseSubscriptionUseCase = PurchaseSubscriptionUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
+    _getSubscriptionHistoryUseCase = GetSubscriptionHistoryUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource()));
 
   List<BenefitEntity> _benefits = [];
   List<SubscriptionPlanEntity> _activePlans = [];
   List<SubscriptionPlanEntity> _allPlans = [];
   UserSubscriptionEntity? _userSubscription;
+  List<UserSubscriptionEntity> _subscriptionHistory = [];
   bool _isLoading = false;
 
   List<BenefitEntity> get benefits => _benefits;
   List<SubscriptionPlanEntity> get activePlans => _activePlans;
   List<SubscriptionPlanEntity> get allPlans => _allPlans;
   UserSubscriptionEntity? get userSubscription => _userSubscription;
+  List<UserSubscriptionEntity> get subscriptionHistory => _subscriptionHistory;
   bool get isLoading => _isLoading;
   bool get isPremium => _userSubscription?.isPremium ?? false;
 
@@ -42,6 +51,7 @@ class SubscriptionController extends ChangeNotifier {
   StreamSubscription? _activePlansSub;
   StreamSubscription? _allPlansSub;
   StreamSubscription? _userSub;
+  StreamSubscription? _historySub;
 
   void initAdmin() {
     _listenToBenefits();
@@ -52,6 +62,7 @@ class SubscriptionController extends ChangeNotifier {
     _listenToBenefits();
     _listenToActivePlans();
     _listenToUserSubscription(userId);
+    _listenToSubscriptionHistory(userId);
   }
 
   @override
@@ -60,6 +71,7 @@ class SubscriptionController extends ChangeNotifier {
     _activePlansSub?.cancel();
     _allPlansSub?.cancel();
     _userSub?.cancel();
+    _historySub?.cancel();
     super.dispose();
   }
 
@@ -93,6 +105,42 @@ class SubscriptionController extends ChangeNotifier {
       _userSubscription = data;
       notifyListeners();
     });
+  }
+
+  void _listenToSubscriptionHistory(String userId) {
+    _historySub?.cancel();
+    _historySub = _getSubscriptionHistoryUseCase.execute(userId).listen((data) {
+      _subscriptionHistory = data;
+      notifyListeners();
+    });
+  }
+
+  /// Logical check if the user has a specific benefit
+  bool hasBenefit(String benefitCode) {
+    if (!isPremium || _userSubscription == null) return false;
+
+    // 1. Find the current plan details
+    final currentPlan = _activePlans.firstWhere(
+      (p) => p.id == _userSubscription!.planId,
+      orElse: () => _allPlans.firstWhere(
+        (p) => p.id == _userSubscription!.planId,
+        orElse: () => SubscriptionPlanEntity(
+          id: '', name: '', productId: '', 
+          durationType: DurationType.monthly, durationInDays: 0, 
+          price: 0, currency: '', benefitIds: []
+        ),
+      ),
+    );
+
+    if (currentPlan.id.isEmpty) return false;
+
+    // 2. Map benefit IDs to their codes and check for a match
+    final userBenefitCodes = _benefits
+        .where((b) => currentPlan.benefitIds.contains(b.id))
+        .map((b) => b.code)
+        .toList();
+
+    return userBenefitCodes.contains(benefitCode);
   }
 
   // Admin Actions
@@ -140,13 +188,25 @@ class SubscriptionController extends ChangeNotifier {
     }
   }
 
-  Future<bool> processPurchase(String planId) async {
+  Future<bool> processPurchase(String userId, SubscriptionPlanEntity plan) async {
     _setLoading(true);
     try {
-      // Simulate backend API call
+      // Simulate backend payment verification
       await Future.delayed(const Duration(seconds: 2));
-      // In a real app, the backend would update Firestore.
-      // Our stream listener in initUser will automatically pick it up.
+
+      final now = DateTime.now();
+      final expiry = now.add(Duration(days: plan.durationInDays));
+
+      final subscription = UserSubscriptionEntity(
+        userId: userId,
+        planId: plan.id,
+        startDate: now,
+        expiryDate: expiry,
+        paymentId: 'SIMULATED_${const Uuid().v4()}',
+        status: SubscriptionStatus.active,
+      );
+
+      await _purchaseSubscriptionUseCase.execute(subscription);
       return true;
     } catch (e) {
       debugPrint("Purchase error: $e");

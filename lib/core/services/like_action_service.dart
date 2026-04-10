@@ -52,7 +52,45 @@ class LikeActionService {
       
       // Determine max likes (Gender default)
       int maxLikes = (gender == 'female' ? adminSettings.femaleFreeLikes : adminSettings.maleFreeLikes);
-      
+
+      // --- Subscription Check ---
+      final subDoc = await FirebaseFirestore.instance
+          .collection(FirebaseConstants.userSubscriptions)
+          .doc(currentUserId)
+          .get();
+
+      bool hasUnlimitedLikes = false;
+      if (subDoc.exists) {
+        final data = subDoc.data()!;
+        final expiry = (data['expiryDate'] as Timestamp).toDate();
+        final status = data['status'];
+        
+        if (status == 'active' && expiry.isAfter(DateTime.now())) {
+          // If active, check if the assigned plan has the UNLIMITED_LIKES benefit
+          final planId = data['planId'];
+          final planDoc = await FirebaseFirestore.instance
+              .collection(FirebaseConstants.subscriptionPlans)
+              .doc(planId)
+              .get();
+          
+          if (planDoc.exists) {
+            final benefitIds = List<String>.from(planDoc.data()?['benefitIds'] ?? []);
+            
+            // Fetch benefit codes for these IDs
+            for (String bid in benefitIds) {
+              final benefitDoc = await FirebaseFirestore.instance
+                  .collection(FirebaseConstants.benefits)
+                  .doc(bid)
+                  .get();
+              if (benefitDoc.exists && benefitDoc.data()?['code'] == 'UNLIMITED_LIKES') {
+                hasUnlimitedLikes = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       final dailyLikesRef = FirebaseFirestore.instance
           .collection(FirebaseConstants.users)
@@ -70,8 +108,8 @@ class LikeActionService {
         }
       }
 
-      // Check Daily Limit (skip if -1)
-      if (maxLikes != -1 && currentCount >= maxLikes) {
+      // Check Daily Limit (skip if -1 or has UNLIMITED_LIKES)
+      if (!hasUnlimitedLikes && maxLikes != -1 && currentCount >= maxLikes) {
         throw LikeLimitReachedException("You've reached your daily free like limit.");
       }
 
