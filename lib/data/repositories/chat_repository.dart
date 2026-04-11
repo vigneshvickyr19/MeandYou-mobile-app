@@ -115,6 +115,46 @@ class ChatRepository {
     await batch.commit();
   }
 
+  /// Fetches a batch of messages for a chat room using cursor-based pagination.
+  /// 
+  /// Results are ordered by timestamp descending (newest first).
+  Future<QuerySnapshot> getMessagesBatch(
+    String chatRoomId, {
+    DocumentSnapshot? lastDocument,
+    int limit = 20,
+  }) async {
+    Query query = _messagesCollection
+        .where(FirebaseConstants.chatRoomId, isEqualTo: chatRoomId)
+        .orderBy(FirebaseConstants.timestamp, descending: true)
+        .limit(limit);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    return query.get();
+  }
+
+  /// Streams latest messages after a specific timestamp.
+  /// Used for real-time updates without re-fetching the entire history.
+  Stream<List<MessageModel>> streamLatestMessages(String chatRoomId, DateTime since) {
+    return _messagesCollection
+        .where(FirebaseConstants.chatRoomId, isEqualTo: chatRoomId)
+        .where(FirebaseConstants.timestamp, isGreaterThan: Timestamp.fromDate(since))
+        .orderBy(FirebaseConstants.timestamp, descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map(
+            (doc) => MessageModel.fromMap(
+              doc.data() as Map<String, dynamic>,
+              doc.id,
+            ),
+          )
+          .toList();
+    });
+  }
+
   Stream<List<MessageModel>> getMessages(String chatRoomId) {
     return _messagesCollection
         .where(FirebaseConstants.chatRoomId, isEqualTo: chatRoomId)

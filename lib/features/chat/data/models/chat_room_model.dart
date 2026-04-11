@@ -48,7 +48,7 @@ class ChatRoomModel {
       lastMessageTime: timestamp,
       lastMessageSenderId: map[FirebaseConstants.lastMessageSenderId] ?? '',
       unreadCount: (map[FirebaseConstants.unreadCount] as Map?)?.map(
-            (key, value) => MapEntry(key as String, (value as num).toInt()),
+            (key, value) => MapEntry(key as String, (value as num?)?.toInt() ?? 0),
           ) ??
           <String, int>{},
       typing: Map<String, bool>.from(map[FirebaseConstants.typing] ?? {}),
@@ -58,7 +58,10 @@ class ChatRoomModel {
       groupName: map[FirebaseConstants.groupName],
       groupImage: map[FirebaseConstants.groupImage],
       lastReadAt: (map['lastReadAt'] as Map?)?.map(
-            (key, value) => MapEntry(key as String, (value as Timestamp).toDate()),
+            (key, value) => MapEntry(
+              key as String,
+              (value as Timestamp?)?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0),
+            ),
           ) ??
           <String, DateTime>{},
       pinnedMessageId: map[FirebaseConstants.pinnedMessageId],

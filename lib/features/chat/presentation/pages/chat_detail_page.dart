@@ -39,6 +39,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void initState() {
     super.initState();
     _controller = ChatDetailController();
+    _scrollController.addListener(_onScroll);
+
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentUser != null) {
       _controller.initialize(
@@ -46,6 +48,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         authProvider.currentUser!.id,
         widget.otherUser.id,
       );
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _controller.loadMoreMessages();
     }
   }
 
@@ -180,28 +189,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         ],
                       ),
                     ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.videocam_rounded,
-                          color: AppColors.white,
-                          size: 22,
-                        ),
-                        onPressed: () {
-                          _controller.initiateCall('VIDEO');
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.call_rounded,
-                          color: AppColors.white,
-                          size: 22,
-                        ),
-                        onPressed: () {
-                          _controller.initiateCall('AUDIO');
-                        },
-                      ),
-                      const SizedBox(width: 8),
+                    actions: const [
+                      SizedBox(width: 8),
                     ],
                   ),
                 ),
@@ -273,8 +262,24 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             left: 12,
                             right: 12,
                           ),
-                          itemCount: controller.messages.length,
+                          itemCount: controller.messages.length + (controller.hasMore ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (index == controller.messages.length) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary.withValues(alpha: 0.5),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
                             final message = controller.messages[index];
                             final isCurrentUser =
                                 message.senderId == currentUserId;

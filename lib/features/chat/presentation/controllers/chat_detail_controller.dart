@@ -15,6 +15,7 @@ import '../../../notifications/data/models/notification_model.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/presence_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatDetailController extends ChangeNotifier {
   final ChatRepository _chatRepository = ChatRepository();
@@ -45,6 +46,14 @@ class ChatDetailController extends ChangeNotifier {
   Map<String, dynamic>? _otherUserStatus;
   MessageModel? _replyingTo;
   MessageModel? _editingMessage;
+  
+  // Pagination State
+  bool _hasMore = true;
+  bool _isFetchingMore = false;
+  DocumentSnapshot? _lastSnapshot;
+  final int _pageSize = 20;
+  StreamSubscription? _messagesSubscription;
+  DateTime? _lastMessageTime;
 
   List<MessageModel> get messages {
     if (_needsRebuildCache) {
@@ -73,6 +82,8 @@ class ChatDetailController extends ChangeNotifier {
   MessageModel? get replyingTo => _replyingTo;
   MessageModel? get editingMessage => _editingMessage;
   String get currentUserId => _currentUserId;
+  bool get hasMore => _hasMore;
+  bool get isFetchingMore => _isFetchingMore;
 
   void initialize(String chatRoomId, String currentUserId, String otherUserId) {
     _chatRoomId = chatRoomId;
@@ -136,45 +147,137 @@ class ChatDetailController extends ChangeNotifier {
     });
   }
 
-  void loadMessages() {
-    _chatRepository
-        .getMessages(_chatRoomId)
-        .listen(
-          (messages) {
-            // Filter out messages that the current user deleted for themselves
-            _messages = messages.where((m) => !m.deletedFor.contains(_currentUserId)).toList();
-            _isLoading = false;
-            _messagesLoaded = true;
-            _needsRebuildCache = true;
+  Future<void> loadMessages() async {
+    if (_isLoading && _messagesLoaded) return;
 
-            // Clean up optimistic messages that are now confirmed
-            _optimisticMessages.removeWhere(
-              (opt) => messages.any(
-                (MessageModel msg) =>
-                    (msg.id == opt.id) ||
-                    (msg.content == opt.content &&
-                     msg.senderId == opt.senderId &&
-                     msg.type == opt.type &&
-                     (msg.timestamp.difference(opt.timestamp).inSeconds.abs() < 10)),
-              ),
-            );
+    try {
+      _isLoading = true;
+      notifyListeners();
 
-            if (hasListeners) {
-              notifyListeners();
-            }
+      final snapshot = await _chatRepository.getMessagesBatch(
+        _chatRoomId,
+        limit: _pageSize,
+      );
 
-            // Mark any new messages as seen
-            markMessagesAsSeen();
-          },
-          onError: (error) {
-            debugPrint('Error loading messages: $error');
-            _isLoading = false;
-            _messagesLoaded = true; // Mark as loaded to stop showing spinner
-            if (hasListeners) {
-              notifyListeners();
-            }
-          },
-        );
+      _processMessagesBatch(snapshot, isInitial: true);
+      
+      // Start listening for new messages coming in after our latest message
+      _subscribeToNewMessages();
+      
+    } catch (e) {
+      debugPrint('Error loading initial messages: $e');
+    } finally {
+      _isLoading = false;
+      _messagesLoaded = true;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMoreMessages() async {
+    if (!_hasMore || _isFetchingMore || _isLoading) return;
+
+    try {
+      _isFetchingMore = true;
+      notifyListeners();
+
+      final snapshot = await _chatRepository.getMessagesBatch(
+        _chatRoomId,
+        lastDocument: _lastSnapshot,
+        limit: _pageSize,
+      );
+
+      _processMessagesBatch(snapshot, isInitial: false);
+    } catch (e) {
+      debugPrint('Error loading more messages: $e');
+    } finally {
+      _isFetchingMore = false;
+      notifyListeners();
+    }
+  }
+
+  void _processMessagesBatch(QuerySnapshot snapshot, {required bool isInitial}) {
+    if (snapshot.docs.isEmpty) {
+      if (isInitial) {
+        _hasMore = false;
+      } else {
+        _hasMore = false;
+      }
+      return;
+    }
+
+    final newMessages = snapshot.docs
+        .map((doc) => MessageModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+        .where((m) => !m.deletedFor.contains(_currentUserId))
+        .toList();
+
+    if (isInitial) {
+      _messages = newMessages;
+      if (newMessages.isNotEmpty) {
+        _lastMessageTime = newMessages.first.timestamp;
+      }
+    } else {
+      // Append older messages to the end (since _messages is newest first)
+      for (var msg in newMessages) {
+        if (!_messages.any((m) => m.id == msg.id)) {
+          _messages.add(msg);
+        }
+      }
+    }
+
+    _lastSnapshot = snapshot.docs.last;
+    _hasMore = snapshot.docs.length == _pageSize;
+    _needsRebuildCache = true;
+    
+    // Clean up optimistic messages
+    _cleanupOptimisticMessages(newMessages);
+
+    notifyListeners();
+    markMessagesAsSeen();
+  }
+
+  void _subscribeToNewMessages() {
+    _messagesSubscription?.cancel();
+    
+    // We only want messages newer than our last message time
+    final queryDate = _lastMessageTime ?? DateTime.now().subtract(const Duration(seconds: 1));
+
+    _messagesSubscription = _chatRepository
+        .streamLatestMessages(_chatRoomId, queryDate)
+        .listen((newMessages) {
+      if (newMessages.isEmpty) return;
+
+      bool addedAny = false;
+      for (var msg in newMessages) {
+        if (!_messages.any((m) => m.id == msg.id) && !msg.deletedFor.contains(_currentUserId)) {
+          _messages.insert(0, msg);
+          addedAny = true;
+          // Update last message time so next notification knows where we are
+          if (_lastMessageTime == null || msg.timestamp.isAfter(_lastMessageTime!)) {
+            _lastMessageTime = msg.timestamp;
+          }
+        }
+      }
+
+      if (addedAny) {
+        _needsRebuildCache = true;
+        _cleanupOptimisticMessages(newMessages);
+        notifyListeners();
+        markMessagesAsSeen();
+      }
+    });
+  }
+
+  void _cleanupOptimisticMessages(List<MessageModel> confirmedMessages) {
+    _optimisticMessages.removeWhere(
+      (opt) => confirmedMessages.any(
+        (msg) => (msg.id == opt.id) ||
+                (msg.content == opt.content &&
+                 msg.senderId == opt.senderId &&
+                 msg.type == opt.type &&
+                 (msg.timestamp.difference(opt.timestamp).inSeconds.abs() < 10)),
+      ),
+    );
+    _needsRebuildCache = true;
   }
 
   Future<void> startRecording() async {
@@ -648,6 +751,7 @@ class ChatDetailController extends ChangeNotifier {
     _typingSubscription?.cancel();
     _statusSubscription?.cancel();
     _otherUserTypingSubscription?.cancel();
+    _messagesSubscription?.cancel();
 
     if (_chatRoomId.isNotEmpty && _currentUserId.isNotEmpty) {
       // 1. Clear active chat (stops push suppression)
