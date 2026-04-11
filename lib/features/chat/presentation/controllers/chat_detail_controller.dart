@@ -375,6 +375,13 @@ class ChatDetailController extends ChangeNotifier {
         debugPrint('Cannot send notification: User offline or no token');
         return;
       }
+      
+      // CRITICAL: Check if recipient is already in this chat room
+      final bool isRecipientInChat = await PresenceService.instance.isUserInChat(_otherUserId, _chatRoomId);
+      if (isRecipientInChat) {
+        debugPrint('Suppressing push notification: Recipient is actively viewing this chat');
+        return;
+      }
 
       // Fetch current user to get their name
       final currentUser = await _databaseService.getUserById(_currentUserId);

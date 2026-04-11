@@ -60,10 +60,30 @@ class PresenceService {
       'state': isOnline ? 'online' : 'offline',
       'lastChanged': ServerValue.timestamp,
     });
+
+    // Handle active chat visibility during backgrounding
+    // If going offline (background), clear active chat so notifications are sent
+    // If going online (foreground), restore active chat if the user was on the chat page
+    if (isOnline) {
+      if (_lastChatRoomId != null) {
+        await _updateActiveChatInDb(_lastChatRoomId);
+      }
+    } else {
+      await _updateActiveChatInDb(null);
+    }
   }
 
+  String? _lastChatRoomId;
+
   /// Track which chat the user is currently viewing to suppress push notifications.
+  /// Also stores the ID locally to restore after app backgrounding.
   Future<void> setActiveChat(String? chatId) async {
+    _lastChatRoomId = chatId;
+    await _updateActiveChatInDb(chatId);
+  }
+
+  /// Internal helper to update RTDB state
+  Future<void> _updateActiveChatInDb(String? chatId) async {
     if (_currentUserId == null) return;
     
     final activeChatRef = _db.ref().child(FirebaseConstants.activeChatsPath).child(_currentUserId!);
@@ -78,6 +98,25 @@ class PresenceService {
       
       // Ensure it clears on disconnect
       activeChatRef.onDisconnect().remove();
+    }
+  }
+
+  /// Check if a specific user is currently viewing a specific chat.
+  /// Useful for suppressing notifications when the recipient is already looking at the conversation.
+  Future<bool> isUserInChat(String userId, String chatId) async {
+    try {
+      final snapshot = await _db.ref()
+          .child(FirebaseConstants.activeChatsPath)
+          .child(userId)
+          .get();
+          
+      if (!snapshot.exists) return false;
+      
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      return data['chatId'] == chatId;
+    } catch (e) {
+      debugPrint('Error checking active chat: $e');
+      return false;
     }
   }
 
