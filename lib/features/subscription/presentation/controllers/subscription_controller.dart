@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:me_and_you/features/subscription/domain/entities/benefit_entity.dart';
 import 'package:me_and_you/features/subscription/domain/entities/subscription_plan_entity.dart';
@@ -30,7 +31,12 @@ class SubscriptionController extends ChangeNotifier {
     _managePlanUseCase = ManagePlanUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
     _getUserSubscriptionUseCase = GetUserSubscriptionUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
     _purchaseSubscriptionUseCase = PurchaseSubscriptionUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())),
-    _getSubscriptionHistoryUseCase = GetSubscriptionHistoryUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource()));
+    _getSubscriptionHistoryUseCase = GetSubscriptionHistoryUseCase(SubscriptionRepositoryImpl(SubscriptionRemoteDataSource())) {
+    // Auto-reset when the user signs out so the next user gets clean streams
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user == null) reset();
+    });
+  }
 
   List<BenefitEntity> _benefits = [];
   List<SubscriptionPlanEntity> _activePlans = [];
@@ -38,6 +44,10 @@ class SubscriptionController extends ChangeNotifier {
   UserSubscriptionEntity? _userSubscription;
   List<UserSubscriptionEntity> _subscriptionHistory = [];
   bool _isLoading = false;
+
+  // Guards to prevent re-attaching streams on every rebuild
+  bool _isAdminInitialized = false;
+  String? _activeUserId;
 
   List<BenefitEntity> get benefits => _benefits;
   List<SubscriptionPlanEntity> get activePlans => _activePlans;
@@ -52,17 +62,44 @@ class SubscriptionController extends ChangeNotifier {
   StreamSubscription? _allPlansSub;
   StreamSubscription? _userSub;
   StreamSubscription? _historySub;
+  StreamSubscription<User?>? _authSubscription;
 
   void initAdmin() {
+    if (_isAdminInitialized) return;
+    _isAdminInitialized = true;
     _listenToBenefits();
     _listenToAllPlans();
   }
 
   void initUser(String userId) {
+    // If already listening for this exact user, don't re-attach
+    if (_activeUserId == userId) return;
+    _activeUserId = userId;
     _listenToBenefits();
     _listenToActivePlans();
     _listenToUserSubscription(userId);
     _listenToSubscriptionHistory(userId);
+  }
+
+  /// Call on logout so the next user gets a fresh initialization
+  void reset() {
+    _benefitsSub?.cancel();
+    _activePlansSub?.cancel();
+    _allPlansSub?.cancel();
+    _userSub?.cancel();
+    _historySub?.cancel();
+    _benefitsSub = null;
+    _activePlansSub = null;
+    _allPlansSub = null;
+    _userSub = null;
+    _historySub = null;
+    _isAdminInitialized = false;
+    _activeUserId = null;
+    _benefits = [];
+    _activePlans = [];
+    _allPlans = [];
+    _userSubscription = null;
+    _subscriptionHistory = [];
   }
 
   @override
@@ -72,6 +109,7 @@ class SubscriptionController extends ChangeNotifier {
     _allPlansSub?.cancel();
     _userSub?.cancel();
     _historySub?.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 

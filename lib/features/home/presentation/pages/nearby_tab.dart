@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -427,62 +426,6 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMatchPercentageBadge(NearbyMatchEntity match) {
-    final double pct = match.matchPercentage;
-    final bool isHighMatch = pct >= 80;
-    final bool isMediumMatch = pct >= 50;
-
-    final Color mainColor = isHighMatch 
-        ? const Color(0xFFE85D04) 
-        : isMediumMatch 
-            ? const Color(0xFFFF8C42) 
-            : Colors.white60;
-
-    return Positioned(
-      top: 24,
-      left: 24,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: mainColor.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: mainColor.withValues(alpha: 0.25),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ShaderMask(
-              shaderCallback: (bounds) => LinearGradient(
-                colors: [
-                  mainColor,
-                  mainColor.withValues(alpha: 0.7),
-                ],
-              ).createShader(bounds),
-              child: Icon(
-                isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              "${pct.toInt()}% Match",
-              style: TextStyle(
-                color: mainColor,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
               ),
             ),
           ],

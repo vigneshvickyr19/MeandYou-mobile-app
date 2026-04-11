@@ -41,8 +41,31 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  /// Call this when app resumes to re-check if user fixed settings
+  /// Silent background refresh called on app resume / window focus change.
+  ///
+  /// Deliberately does NOT set [_isChecking] = true so [AppStateProvider.shouldShowSplash]
+  /// never flips back to true mid-session, which would cause the visible blink/flash.
+  /// Listeners are only notified when the permission state actually changes.
   Future<void> refreshStatus() async {
-    await checkPermissionStatus();
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final permission = await Geolocator.checkPermission();
+
+      final granted = permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+      final backgroundEnabled = permission == LocationPermission.always;
+
+      // Only rebuild the widget tree if something actually changed
+      if (_isServiceEnabled != serviceEnabled ||
+          _isPermissionGranted != granted ||
+          _isBackgroundEnabled != backgroundEnabled) {
+        _isServiceEnabled = serviceEnabled;
+        _isPermissionGranted = granted;
+        _isBackgroundEnabled = backgroundEnabled;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error refreshing location status: $e');
+    }
   }
 }

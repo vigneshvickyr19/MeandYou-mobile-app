@@ -47,26 +47,6 @@ class UserRepository {
     return await _dbService.getUserAccount(credential.user!.uid);
   }
 
-  // Sign in with Google
-  Future<UserModel> signInWithGoogle() async {
-    UserCredential credential = await _authService.signInWithGoogle();
-    String uid = credential.user!.uid;
-
-    UserModel? existing = await _dbService.getUserAccount(uid);
-    if (existing == null) {
-      existing = UserModel(
-        id: uid,
-        email: credential.user?.email ?? '',
-        phoneNumber: credential.user?.phoneNumber,
-        isProfileComplete: false,
-        isVerified: false,
-        createdAt: DateTime.now(),
-      );
-      await _dbService.saveUserAccount(existing);
-    }
-    return existing;
-  }
-
   // OTP Verification flows
   Future<void> requestOtp({
     required String phoneNumber,

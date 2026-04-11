@@ -191,7 +191,7 @@ class MatchCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 14),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   'Message',
                   style: TextStyle(

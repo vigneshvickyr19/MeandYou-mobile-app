@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,26 +27,32 @@ class BackgroundLocationService {
 
   BackgroundLocationService._();
 
+  // Guards duplicate starts and holds the iOS stream subscription for cleanup
+  bool _isTracking = false;
+  StreamSubscription<Position>? _iosLocationSubscription;
+
   /// Initialize background capabilities.
   /// Should be called in main.dart after Firebase initialization.
   Future<void> initialize() async {
     if (Platform.isAndroid) {
-      await Workmanager().initialize(
-        callbackDispatcher,
-        isInDebugMode: kDebugMode,
-      );
+      await Workmanager().initialize(callbackDispatcher);
     }
   }
 
   /// Start background monitoring.
   /// Typically called after user login and successful permission grants.
   Future<void> startTracking(String userId) async {
+    // Prevent starting a second tracking session without stopping the first
+    if (_isTracking) return;
+
     final permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       debugPrint("BackgroundLocationService: Permissions not granted.");
       return;
     }
+
+    _isTracking = true;
 
     // Android: Register periodic task
     if (Platform.isAndroid) {
@@ -64,10 +69,9 @@ class BackgroundLocationService {
       );
     }
 
-    // iOS: Significant location change listener
-    // Note: On iOS, this happens automatically when app is suspended if configured.
+    // iOS: Store the subscription so we can cancel it on stopTracking()
     if (Platform.isIOS) {
-      Geolocator.getPositionStream(
+      _iosLocationSubscription = Geolocator.getPositionStream(
         locationSettings: AppleSettings(
           accuracy: LocationAccuracy.medium,
           distanceFilter: 500,
@@ -83,10 +87,13 @@ class BackgroundLocationService {
 
   /// Stop all background tracking (e.g., on logout).
   Future<void> stopTracking() async {
+    _isTracking = false;
     if (Platform.isAndroid) {
       await Workmanager().cancelAll();
     }
-    // iOS listeners are cleared when the process dies or subscription is cancelled.
+    // Cancel the stored iOS subscription
+    await _iosLocationSubscription?.cancel();
+    _iosLocationSubscription = null;
   }
 
   /// Core logic to determine if Firestore needs a write.

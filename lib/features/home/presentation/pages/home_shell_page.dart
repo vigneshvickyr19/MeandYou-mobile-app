@@ -41,12 +41,14 @@ class _HomeShellPageState extends State<HomeShellPage>
       });
     }
 
-    // --- Post-Startup Optimization Logic ---
+    // Run once after the first frame — guards in each service prevent re-runs on rebuild
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Heavy work: Sync FCM token (Only after UI is rendered)
+      if (!mounted) return;
+
+      // Sync FCM token (only writes if changed)
       NotificationService.instance.syncTokenNow();
 
-      // Initialize Subscription logic
+      // Initialize subscription streams — guarded inside initUser() by _activeUserId
       final authProvider = context.read<AuthProvider>();
       if (authProvider.currentUser != null) {
         context.read<SubscriptionController>().initUser(authProvider.currentUser!.id);
@@ -56,8 +58,10 @@ class _HomeShellPageState extends State<HomeShellPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Re-check location permission if user returns from the Settings app.
+    // We deliberately do NOT re-initialize services or re-fetch data here
+    // to avoid redundant API calls on every focus change.
     if (state == AppLifecycleState.resumed) {
-      // Re-check when user returns from settings
       context.read<LocationProvider>().refreshStatus();
     }
   }

@@ -65,6 +65,8 @@ class NearbyController extends ChangeNotifier {
   Position? _lastPosition;
   String? _lastGeohash;
   bool _isDisposed = false;
+  // Ensures we only start the Geolocator stream once per loadUsers() call
+  bool _locationStarted = false;
 
   /// Load users (Initial fetch)
   Future<void> loadUsers(UserModel currentUser, {bool isRefresh = false}) async {
@@ -79,6 +81,9 @@ class NearbyController extends ChangeNotifier {
     _currentUser = currentUser;
     _lastGeohash = currentUser.geohash;
     _resetPagination();
+
+    // Reset location started flag when a new load is explicitly requested
+    if (isRefresh) _locationStarted = false;
     
     // Listen to admin settings dynamically
     _settingsSubscription?.cancel();
@@ -92,6 +97,7 @@ class NearbyController extends ChangeNotifier {
         _fetchLimit = settings.maxUsersPerFetch;
         changed = true;
       }
+      // Settings changed: only re-fetch data, not the location stream
       if (changed) _fetchMatches(isInitial: true);
     });
 
@@ -173,6 +179,10 @@ class NearbyController extends ChangeNotifier {
   }
 
   void _startLocationUpdates(String userId) async {
+    // Only start once per session — avoid duplicate streams if called again
+    if (_locationStarted) return;
+    _locationStarted = true;
+
     bool serviceEnabled;
     LocationPermission permission;
 

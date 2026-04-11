@@ -11,6 +11,7 @@ import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'deep_link_service.dart';
 import '../constants/call_constants.dart';
 import '../constants/notification_constants.dart';
@@ -57,6 +58,8 @@ class NotificationService {
 
   NotificationService._();
 
+  static const String _fcmTokenKey = 'last_fcm_token';
+
   // Lazy getter for FirebaseMessaging
   FirebaseMessaging get _firebaseMessaging => FirebaseMessaging.instance;
 
@@ -69,6 +72,9 @@ class NotificationService {
   String? _fcmToken;
   RemoteMessage? _initialMessage;
   GlobalKey<NavigatorState>? _navigatorKey;
+
+  // Tracks which FCM topics are actively subscribed to avoid redundant calls
+  final Set<String> _subscribedTopics = {};
 
   String? get fcmToken => _fcmToken;
   RemoteMessage? get initialMessage => _initialMessage;
@@ -189,7 +195,7 @@ class NotificationService {
     );
 
     await _localNotifications.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
@@ -265,8 +271,20 @@ class NotificationService {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
+        // Optimization: Only update if the token has changed since last save
+        final prefs = await SharedPreferences.getInstance();
+        final lastToken = prefs.getString(_fcmTokenKey);
+        
+        if (lastToken == token) {
+          debugPrint("NotificationService: Token is unchanged, skipping Firestore update.");
+          return;
+        }
+
         await _databaseService.updateUserField(user.uid, {'fcmToken': token});
-        debugPrint("NotificationService: FCM Token saved for user: ${user.uid}");
+        
+        // Cache the token locally after successful update
+        await prefs.setString(_fcmTokenKey, token);
+        debugPrint("NotificationService: FCM Token saved and cached for user: ${user.uid}");
       } catch (e) {
         debugPrint("NotificationService: Error saving FCM token: $e");
       }
@@ -383,10 +401,10 @@ class NotificationService {
     );
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      details,
+      id: notification.hashCode,
+      title: notification.title,
+      body: notification.body,
+      notificationDetails: details,
       payload: jsonEncode(message.data),
     );
   }
@@ -430,10 +448,10 @@ class NotificationService {
     );
 
     await _localNotifications.show(
-      0,
-      'Test Notification',
-      'This is a local test notification to verify it works!',
-      details,
+      id: 0,
+      title: 'Test Notification',
+      body: 'This is a local test notification to verify it works!',
+      notificationDetails: details,
     );
   }
 
@@ -607,10 +625,13 @@ class NotificationService {
   // TOPIC SUBSCRIPTION MANAGEMENT
   // -----------------------------------------------------------------------------
 
-  /// Subscribe to a specific topic
+  /// Subscribe to a specific topic — no-op if already subscribed this session
   Future<void> subscribeToTopic(String topic) async {
+    if (_subscribedTopics.contains(topic)) return;
+
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
+      _subscribedTopics.add(topic);
       if (kDebugMode) {
         print('NotificationService: Subscribed to topic: $topic');
       }
@@ -623,6 +644,7 @@ class NotificationService {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
+      _subscribedTopics.remove(topic);
       if (kDebugMode) {
         print('NotificationService: Unsubscribed from topic: $topic');
       }
@@ -659,5 +681,15 @@ class NotificationService {
     } else if (normalizedGender == 'female') {
       await unsubscribeFromTopic(NotificationConstants.topicFemale);
     }
+  }
+
+  /// Clears the local subscription state cache — call on logout so the
+  /// next user session re-subscribes correctly.
+  void clearSubscriptionState() async {
+    _subscribedTopics.clear();
+    
+    // Also clear the cached token so the next user session performs a fresh sync
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_fcmTokenKey);
   }
 }

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
@@ -13,9 +12,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/app_snackbar.dart';
-import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
-import '../../../../core/widgets/premium_gated_image.dart';
 import '../../../../core/widgets/app_cached_image.dart';
 import '../widgets/match_compatibility_sheet.dart';
 

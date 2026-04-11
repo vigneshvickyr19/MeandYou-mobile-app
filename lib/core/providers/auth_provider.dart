@@ -18,6 +18,11 @@ class AuthProvider extends ChangeNotifier {
   bool _isInitializing = true;
   StreamSubscription<UserModel?>? _userDocumentSubscription;
 
+  // Guards to prevent duplicate side-effects on repeated stream emissions
+  bool _subscriptionsSynced = false;
+  bool _trackingStarted = false;
+  bool _authResolved = false; // ensures DeepLinkService is only notified once
+
   UserModel? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isInitializing => _isInitializing;
@@ -86,13 +91,18 @@ class AuthProvider extends ChangeNotifier {
     // Initialize Presence (RTDB) when user document starts streaming
     PresenceService.instance.initialize(uid);
 
+    // Reset per-session guards when starting a new user stream
+    _subscriptionsSynced = false;
+    _trackingStarted = false;
+    _authResolved = false;
+
     _userDocumentSubscription = _userRepository.streamUserAccount(uid).listen((
       userData,
     ) {
       if (userData != null) {
         _currentUser = userData;
 
-        // Ensure subscriptions are synced
+        // Ensure subscriptions are synced — only once per login session
         _syncSubscriptions();
 
         _setInitialized();
@@ -107,14 +117,18 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  /// Syncs FCM topic subscriptions based on current user profile
+  /// Syncs FCM topic subscriptions based on current user profile.
+  /// Runs only once per login session — subsequent Firestore updates are ignored.
   Future<void> _syncSubscriptions() async {
-    if (_currentUser == null) return;
-    
-    // Always subscribe to global topic for authenticated users
+    if (_currentUser == null || _subscriptionsSynced) return;
+    _subscriptionsSynced = true;
+
+    // 1. Update FCM Token to Firestore
+    await _updateFcmToken();
+
+    // 2. Subscribe to topics
     await NotificationService.instance.subscribeToGlobalTopic();
 
-    // Subscribe to gender topic if available
     if (_currentUser?.gender != null) {
       await NotificationService.instance.subscribeToGenderTopic(_currentUser!.gender!);
       debugPrint("AuthProvider: Synced gender subscription for ${_currentUser!.gender}");
@@ -122,16 +136,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _setInitialized() {
-    DeepLinkService().setAuthResolved(true);
-    
+    // Only signal auth resolution once — every Firestore stream emit re-calls this
+    if (!_authResolved) {
+      _authResolved = true;
+      DeepLinkService().setAuthResolved(_currentUser != null);
+    }
+
     if (_isInitializing) {
       _isInitializing = false;
-      
-      // Start background location tracking once user is initialized
-      if (_currentUser != null) {
+
+      // Start background location tracking once per login session
+      if (_currentUser != null && !_trackingStarted) {
+        _trackingStarted = true;
         BackgroundLocationService.instance.startTracking(_currentUser!.id);
       }
-      
+
       notifyListeners();
     } else {
       // Standard data update, not a routing gate event
@@ -199,19 +218,6 @@ class AuthProvider extends ChangeNotifier {
     return completer.future;
   }
 
-  // --- Login with Google ---
-  Future<void> loginWithGoogle() async {
-    _setLoading(true);
-    try {
-      _currentUser = await _userRepository.signInWithGoogle();
-      await _updateFcmToken();
-      // Sync all subscriptions
-      await _syncSubscriptions();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
   // --- Verify Phone OTP ---
   Future<void> verifyOtp(
     String verificationId,
@@ -225,7 +231,9 @@ class AuthProvider extends ChangeNotifier {
         smsCode,
         displayName: displayName,
       );
-      await _updateFcmToken();
+      // Removed manual _updateFcmToken() call as it's now handled in the unified _syncSubscriptions()
+      // triggered when the user document starts streaming.
+      
       // Sync all subscriptions
       await _syncSubscriptions();
     } finally {
@@ -250,8 +258,15 @@ class AuthProvider extends ChangeNotifier {
         await NotificationService.instance.unsubscribeFromGenderTopic(_currentUser!.gender!);
       }
 
+      // Clear topic subscription cache so next login re-subscribes correctly
+      NotificationService.instance.clearSubscriptionState();
+
       await _userRepository.signOut();
       _currentUser = null;
+
+      // Reset session guards
+      _subscriptionsSynced = false;
+      _trackingStarted = false;
 
       // Stop background location tracking on logout
       BackgroundLocationService.instance.stopTracking();
@@ -295,8 +310,15 @@ class AuthProvider extends ChangeNotifier {
         await NotificationService.instance.unsubscribeFromGenderTopic(_currentUser!.gender!);
       }
 
+      // Clear topic subscription cache so next session starts fresh
+      NotificationService.instance.clearSubscriptionState();
+
       _currentUser = null;
       _userDocumentSubscription?.cancel();
+
+      // Reset session guards
+      _subscriptionsSynced = false;
+      _trackingStarted = false;
 
       // Stop background location tracking on account deletion
       BackgroundLocationService.instance.stopTracking();
@@ -352,36 +374,28 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser == null) return;
     try {
       await PresenceService.instance.setStatus(isOnline);
-      // Online state is now in RTDB, Firestore document remains lean.
-      notifyListeners();
+      // Online state lives in RTDB only — no local state changes, no rebuild needed.
     } catch (e) {
       debugPrint("Error setting online status: $e");
     }
   }
 
+
   Future<void> _updateFcmToken() async {
     if (_currentUser == null) return;
 
-    // Update FCM Token
-    final token = NotificationService.instance.fcmToken;
-    if (token != null) {
-      try {
-        await _userRepository.updateFcmToken(_currentUser!.id, token);
-        debugPrint("FCM Token updated for user: ${_currentUser!.id}");
-      } catch (e) {
-        debugPrint("Error updating FCM token: $e");
-      }
-    }
-
-    // Update VoIP Token (iOS only)
-    final voipToken = await NotificationService.instance.getVoIPToken();
-    if (voipToken != null) {
-      try {
+    try {
+      // Use the more robust sync method from NotificationService which handles token fetching if null
+      await NotificationService.instance.syncTokenNow();
+      
+      // Also update VoIP Token (iOS only)
+      final voipToken = await NotificationService.instance.getVoIPToken();
+      if (voipToken != null) {
         await _userRepository.updateVoipToken(_currentUser!.id, voipToken);
-        debugPrint("VoIP Token updated for user: ${_currentUser!.id}");
-      } catch (e) {
-        debugPrint("Error updating VoIP token: $e");
+        debugPrint("AuthProvider: VoIP Token updated for user: ${_currentUser!.id}");
       }
+    } catch (e) {
+      debugPrint("AuthProvider: Error updating tokens: $e");
     }
   }
 }

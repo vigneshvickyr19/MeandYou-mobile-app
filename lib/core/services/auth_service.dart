@@ -1,12 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   // Use lazy initialization for Firebase services
   // This allows the class to be instantiated before Firebase.initializeApp()
   FirebaseAuth get _auth => FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // Stream of auth changes - handles the case where it's accessed early
   Stream<User?> get user {
@@ -50,26 +48,6 @@ class AuthService {
       );
     } catch (e) {
       debugPrint('Error signing up with email: $e');
-      rethrow;
-    }
-  }
-
-  // --- Google Authentication ---
-
-  Future<UserCredential> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) throw Exception('Google Sign-In cancelled');
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      return await _auth.signInWithCredential(credential);
-    } catch (e) {
-      debugPrint('Error signing in with Google: $e');
       rethrow;
     }
   }
@@ -122,6 +100,5 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
-    await _googleSignIn.signOut();
   }
 }

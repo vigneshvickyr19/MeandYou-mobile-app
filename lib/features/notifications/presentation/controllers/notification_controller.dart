@@ -10,13 +10,20 @@ class NotificationController extends ChangeNotifier {
   bool _isDisposed = false;
   StreamSubscription? _subscription;
 
+  // Tracks which user we're currently streaming for to prevent duplicate listeners
+  String? _activeUserId;
+
   List<AppNotification> get notifications => _notifications;
   bool get isLoading => _isLoading;
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   void listenToNotifications(String userId) {
     if (userId.isEmpty || _isDisposed) return;
-    
+
+    // Already streaming for this user — don't attach another listener
+    if (_activeUserId == userId && _subscription != null) return;
+
+    _activeUserId = userId;
     _isLoading = true;
     notifyListeners();
 
@@ -32,6 +39,15 @@ class NotificationController extends ChangeNotifier {
       debugPrint('Error listening to notifications: $error');
       notifyListeners();
     });
+  }
+
+  /// Call on logout to clear state and allow re-initialization for the next user
+  void reset() {
+    _subscription?.cancel();
+    _subscription = null;
+    _activeUserId = null;
+    _notifications = [];
+    _isLoading = false;
   }
 
   Future<void> markAsRead(String notificationId) async {

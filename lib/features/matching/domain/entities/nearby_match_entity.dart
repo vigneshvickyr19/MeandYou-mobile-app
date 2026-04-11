@@ -37,6 +37,8 @@ class NearbyMatchEntity {
     String? id,
     String? fullName,
     String? profileImageUrl,
+    String? thumbnailUrl,
+    int? imageVersion,
     double? distance,
     double? matchPercentage,
     String? address,
