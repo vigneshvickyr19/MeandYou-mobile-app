@@ -60,7 +60,7 @@ class BackgroundLocationService {
           requiresBatteryNotLow: true,
         ),
         inputData: {'userId': userId},
-        existingWorkPolicy: ExistingWorkPolicy.replace,
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
       );
     }
 
