@@ -13,7 +13,7 @@ import 'edit_profile_page.dart';
 import '../../../home/presentation/controllers/home_navigation_controller.dart';
 import '../../../../core/services/like_action_service.dart';
 import '../../../home/presentation/widgets/heart_flow_overlay.dart';
-import '../../../../core/widgets/subscription_bottom_sheet.dart';
+import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -292,7 +292,11 @@ class _ProfilePageState extends State<ProfilePage> {
     } on LikeLimitReachedException {
       if (!context.mounted) return;
       HapticFeedback.vibrate();
-      SubscriptionBottomSheet.show(context);
+      SubscriptionUpsellSheet.show(
+        context,
+        title: 'Out of likes?',
+        subtitle: 'Upgrade to Premium to continue liking more profiles and find your match.',
+      );
     } catch (e) {
       if (!context.mounted) return;
       AppSnackbar.show(

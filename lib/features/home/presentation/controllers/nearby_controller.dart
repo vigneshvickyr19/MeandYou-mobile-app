@@ -33,6 +33,9 @@ class NearbyController extends ChangeNotifier {
     final userLat = currentUser?.latitude;
     final userLng = currentUser?.longitude;
 
+    // 3. Get Matched IDs to exclude
+    final matchedIds = await _homeService.getMatchedUserIds(currentUserId);
+    
     _usersSubscription?.cancel();
     _usersSubscription = _homeService
         .getUsersNearby(
@@ -40,6 +43,7 @@ class NearbyController extends ChangeNotifier {
           maxDistance: radius,
           userLat: userLat,
           userLng: userLng,
+          excludedIds: matchedIds,
         )
         .listen((users) {
       _users = users;

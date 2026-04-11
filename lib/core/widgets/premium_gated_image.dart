@@ -91,7 +91,7 @@ class PremiumGatedImage extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
         child: Container(
-          color: Colors.black.withValues(alpha: 0.3),
+          color: Colors.black.withValues(alpha: 0.2),
         ),
       ),
     );

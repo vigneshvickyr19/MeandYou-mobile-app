@@ -12,9 +12,7 @@ import '../../../matching/domain/entities/nearby_match_entity.dart';
 import '../widgets/discover_action_button.dart';
 import '../widgets/heart_flow_overlay.dart';
 import '../../../../core/services/like_action_service.dart';
-import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
-
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/widgets/premium_gated_image.dart';
@@ -96,7 +94,11 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     } on LikeLimitReachedException catch (_) {
       if (!mounted) return;
       HapticFeedback.vibrate();
-      SubscriptionBottomSheet.show(context);
+      SubscriptionUpsellSheet.show(
+        context,
+        title: 'Out of likes?',
+        subtitle: 'Upgrade to Premium to continue liking more profiles nearby.',
+      );
     } catch (e) {
       debugPrint("Error liking user: $e");
       if (!mounted) return;
@@ -399,41 +401,91 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     return Positioned(
       top: 24,
       right: 24,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.near_me_rounded,
+              color: Colors.white.withValues(alpha: 0.7),
+              size: 14,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              LocationFormatter.getDistanceString(match.distance),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.near_me_rounded,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  size: 14,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  LocationFormatter.getDistanceString(match.distance),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMatchPercentageBadge(NearbyMatchEntity match) {
+    final double pct = match.matchPercentage;
+    final bool isHighMatch = pct >= 80;
+    final bool isMediumMatch = pct >= 50;
+
+    final Color mainColor = isHighMatch 
+        ? const Color(0xFFE85D04) 
+        : isMediumMatch 
+            ? const Color(0xFFFF8C42) 
+            : Colors.white60;
+
+    return Positioned(
+      top: 24,
+      left: 24,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: mainColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: mainColor.withValues(alpha: 0.25),
+            width: 1,
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [
+                  mainColor,
+                  mainColor.withValues(alpha: 0.7),
+                ],
+              ).createShader(bounds),
+              child: Icon(
+                isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              "${pct.toInt()}% Match",
+              style: TextStyle(
+                color: mainColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
         ),
       ),
     );

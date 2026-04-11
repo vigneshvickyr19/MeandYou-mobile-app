@@ -25,12 +25,14 @@ class GetNearbyMatchesUseCase {
     double radiusInKm = 5.0,
     int limit = 20,
     DocumentSnapshot? lastDoc,
+    List<String> excludedIds = const [],
   }) {
     return repository.getNearbyMatches(
       currentUser: currentUser,
       radiusInKm: radiusInKm,
       limit: limit,
       lastDoc: lastDoc,
+      excludedIds: excludedIds,
     );
   }
 }

@@ -21,13 +21,15 @@ abstract class MatchingRepository {
     double radiusInKm = 5.0,
     int limit = 20,
     DocumentSnapshot? lastDoc,
-    bool activeOnly = true, // To filter by last 24h activity if needed
+    bool activeOnly = true,
+    List<String> excludedIds = const [],
   });
 
   /// List of discover matches based on user preferences and distance
   Future<List<NearbyMatchEntity>> getDiscoverMatches({
     required UserModel currentUser,
     double radiusInKm = 10.0,
+    List<String> excludedIds = const [],
   });
 
   /// Updates the user's location in Firestore

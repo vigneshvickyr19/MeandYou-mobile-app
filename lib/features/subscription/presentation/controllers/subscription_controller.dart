@@ -78,7 +78,7 @@ class SubscriptionController extends ChangeNotifier {
   void _listenToBenefits() {
     _benefitsSub?.cancel();
     _benefitsSub = _getBenefitsUseCase.execute().listen((data) {
-      _benefits = data;
+      _benefits = List<BenefitEntity>.from(data);
       notifyListeners();
     });
   }
@@ -86,7 +86,7 @@ class SubscriptionController extends ChangeNotifier {
   void _listenToActivePlans() {
     _activePlansSub?.cancel();
     _activePlansSub = _getPlansUseCase.execute(activeOnly: true).listen((data) {
-      _activePlans = data;
+      _activePlans = List<SubscriptionPlanEntity>.from(data);
       notifyListeners();
     });
   }
@@ -94,7 +94,7 @@ class SubscriptionController extends ChangeNotifier {
   void _listenToAllPlans() {
     _allPlansSub?.cancel();
     _allPlansSub = _getPlansUseCase.execute(activeOnly: false).listen((data) {
-      _allPlans = data;
+      _allPlans = List<SubscriptionPlanEntity>.from(data);
       notifyListeners();
     });
   }
@@ -120,9 +120,9 @@ class SubscriptionController extends ChangeNotifier {
     if (!isPremium || _userSubscription == null) return false;
 
     // 1. Find the current plan details
-    final currentPlan = _activePlans.firstWhere(
+    final currentPlan = _activePlans.cast<SubscriptionPlanEntity>().firstWhere(
       (p) => p.id == _userSubscription!.planId,
-      orElse: () => _allPlans.firstWhere(
+      orElse: () => _allPlans.cast<SubscriptionPlanEntity>().firstWhere(
         (p) => p.id == _userSubscription!.planId,
         orElse: () => SubscriptionPlanEntity(
           id: '', name: '', productId: '', 

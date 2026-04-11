@@ -3,6 +3,7 @@ import '../../../../core/models/profile_model.dart';
 import '../../../../core/models/user_model.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../data/repositories/profile_repository.dart';
+import '../../../home/data/services/home_service.dart';
 
 class ProfileController extends ChangeNotifier {
   final AuthProvider _authProvider;
@@ -11,12 +12,14 @@ class ProfileController extends ChangeNotifier {
   ProfileModel? _profile;
   UserModel? _user;
   bool _isLoading = false;
+  bool _isMatched = false;
 
   ProfileController(this._authProvider);
 
   ProfileModel? get profile => _profile;
   UserModel? get user => _user;
   bool get isLoading => _isLoading;
+  bool get isMatched => _isMatched;
 
   Future<void> loadProfile(String? userId) async {
     final targetUserId = userId ?? _authProvider.currentUser?.id;
@@ -29,9 +32,11 @@ class ProfileController extends ChangeNotifier {
       final results = await Future.wait([
         _profileRepository.getProfile(targetUserId),
         _profileRepository.getUser(targetUserId),
+        HomeService().checkIfMatched(_authProvider.currentUser?.id ?? '', targetUserId),
       ]);
       _profile = results[0] as ProfileModel?;
       _user = results[1] as UserModel?;
+      _isMatched = results[2] as bool;
     } catch (e) {
       debugPrint("Error loading profile: $e");
     } finally {

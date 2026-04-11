@@ -74,18 +74,19 @@ class OtherProfileView extends StatelessWidget {
                     child: _buildInfoOverlay(),
                   ),
 
-                  Positioned(
-                    bottom: 24,
-                    left: 20,
-                    right: 20,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildCircleAction(Icons.close_rounded, Colors.white10, () => Navigator.pop(context)),
-                        _buildCircleAction(Icons.favorite_rounded, AppColors.primary, onLike),
-                      ],
+                  if (!controller.isMatched)
+                    Positioned(
+                      bottom: 24,
+                      left: 20,
+                      right: 20,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildCircleAction(Icons.close_rounded, Colors.white10, () => Navigator.pop(context)),
+                          _buildCircleAction(Icons.favorite_rounded, AppColors.primary, onLike),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

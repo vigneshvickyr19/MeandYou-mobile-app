@@ -12,8 +12,10 @@ import '../../../matching/domain/entities/nearby_match_entity.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../../../core/services/like_action_service.dart';
-import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
+import '../../../../core/widgets/premium_gated_image.dart';
 import '../../../../core/widgets/app_cached_image.dart';
 import '../widgets/match_compatibility_sheet.dart';
 
@@ -95,7 +97,11 @@ class _DiscoverTabState extends State<DiscoverTab>
     } on LikeLimitReachedException catch (_) {
       if (!mounted) return;
       HapticFeedback.vibrate();
-      SubscriptionBottomSheet.show(context);
+      SubscriptionUpsellSheet.show(
+        context,
+        title: 'Out of likes?',
+        subtitle: 'Upgrade to Premium to continue liking more profiles and find your match faster.',
+      );
     } catch (e) {
       debugPrint("Error liking user: $e");
       if (!mounted) return;
@@ -394,41 +400,35 @@ class _DiscoverTabState extends State<DiscoverTab>
     return Positioned(
       top: 24,
       right: 24,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.near_me_rounded,
+              color: Colors.white.withValues(alpha: 0.7),
+              size: 14,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              LocationFormatter.getDistanceString(match.distance),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.near_me_rounded,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  size: 14,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  LocationFormatter.getDistanceString(match.distance),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
@@ -451,55 +451,48 @@ class _DiscoverTabState extends State<DiscoverTab>
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
-          debugPrint('[DiscoverTab] Match chip tapped for: ${match.fullName}');
           final authProvider = context.read<AuthProvider>();
           if (authProvider.currentUser != null) {
             MatchCompatibilitySheet.show(context, match, authProvider.currentUser!);
           }
         },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: mainColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: mainColor.withValues(alpha: 0.25),
-                  width: 1,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: mainColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: mainColor.withValues(alpha: 0.25),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    mainColor,
+                    mainColor.withValues(alpha: 0.7),
+                  ],
+                ).createShader(bounds),
+                child: Icon(
+                  isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
+                  color: Colors.white,
+                  size: 16,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      colors: [
-                        mainColor,
-                        mainColor.withValues(alpha: 0.7),
-                      ],
-                    ).createShader(bounds),
-                    child: Icon(
-                      isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${pct.toInt()}% Match',
-                    style: TextStyle(
-                      color: isHighMatch ? Colors.white : Colors.white.withValues(alpha: 0.9),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 4),
+              Text(
+                "${pct.toInt()}% Match",
+                style: TextStyle(
+                  color: mainColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

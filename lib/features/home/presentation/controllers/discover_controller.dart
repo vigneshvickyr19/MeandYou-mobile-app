@@ -89,9 +89,13 @@ class DiscoverController extends ChangeNotifier {
       final adminSettings = await AdminService.instance.getSettings();
       final radius = adminSettings.nearbyRadiusInKm;
 
+      // Exclude already matched users
+      final matchedIds = await _homeService.getMatchedUserIds(currentUser.id);
+
       final matches = await _getDiscoverMatchesUseCase(
         currentUser: fullProfile,
         radiusInKm: radius,
+        excludedIds: matchedIds,
       );
 
       _matches = matches;

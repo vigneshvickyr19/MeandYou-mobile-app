@@ -10,10 +10,12 @@ class GetDiscoverMatchesUseCase {
   Future<List<NearbyMatchEntity>> call({
     required UserModel currentUser,
     double radiusInKm = 10.0,
+    List<String> excludedIds = const [],
   }) {
     return repository.getDiscoverMatches(
       currentUser: currentUser,
       radiusInKm: radiusInKm,
+      excludedIds: excludedIds,
     );
   }
 }

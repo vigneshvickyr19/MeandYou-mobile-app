@@ -7,9 +7,9 @@ import '../../../../core/providers/auth_provider.dart';
 import '../controllers/like_controller.dart';
 import '../widgets/match_card.dart';
 import '../widgets/received_like_card.dart';
-import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
+import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/constants/subscription_constants.dart';
 
 class LikePage extends StatefulWidget {
@@ -302,7 +302,11 @@ class _LikePageState extends State<LikePage>
                       arguments: {'userId': item.fromUser.id},
                     );
                   } else {
-                    SubscriptionBottomSheet.show(context);
+                    SubscriptionUpsellSheet.show(
+                      context,
+                      title: 'See Who Liked You',
+                      subtitle: 'Upgrade to see all the people who have already liked your profile.',
+                    );
                   }
                 },
               );

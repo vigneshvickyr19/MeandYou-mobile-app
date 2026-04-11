@@ -13,8 +13,8 @@ class HomeService {
   static const String _likesCollection = FirebaseConstants.likes;
   static const String _matchesCollection = FirebaseConstants.matches;
 
-  // Get all users except current user
-  Stream<List<UserModel>> getUsers(String currentUserId) {
+  // Get all users except current user and matched users
+  Stream<List<UserModel>> getUsers(String currentUserId, {List<String> excludedIds = const []}) {
     return _firestore
         .collection(_usersCollection)
         .where(FieldPath.documentId, isNotEqualTo: currentUserId)
@@ -22,8 +22,22 @@ class HomeService {
         .map((snapshot) {
       return snapshot.docs
           .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+          .where((user) => !excludedIds.contains(user.id))
           .toList();
     });
+  }
+
+  // Get matched user IDs for a specific user
+  Future<List<String>> getMatchedUserIds(String userId) async {
+    final snapshot = await _firestore
+        .collection(_matchesCollection)
+        .where('participants', arrayContains: userId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final participants = List<String>.from(doc.data()['participants'] ?? []);
+      return participants.firstWhere((p) => p != userId, orElse: () => '');
+    }).where((id) => id.isNotEmpty).toList();
   }
 
   // Get users from profileSetup collection
@@ -32,6 +46,7 @@ class HomeService {
     double? maxDistance, // in KM
     double? userLat,
     double? userLng,
+    List<String> excludedIds = const [],
   }) {
     return _firestore
         .collection(FirebaseConstants.users) // Use users collection for consistency
@@ -40,6 +55,7 @@ class HomeService {
         .map((snapshot) {
       final List<UserModel> allUsers = snapshot.docs
           .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+          .where((user) => !excludedIds.contains(user.id)) // Filter matched users
           .toList();
 
       if (maxDistance == null || userLat == null || userLng == null) {

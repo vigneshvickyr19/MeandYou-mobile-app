@@ -141,11 +141,16 @@ class NearbyController extends ChangeNotifier {
     }
 
     try {
+      // Get Matched IDs to exclude
+      final HomeService homeService = HomeService();
+      final matchedIds = await homeService.getMatchedUserIds(_currentUser!.id);
+
       final result = await _getNearbyMatchesUseCase.executeWithPagination(
         currentUser: _currentUser!,
         radiusInKm: _radius,
         limit: _fetchLimit,
         lastDoc: _lastDoc,
+        excludedIds: matchedIds,
       );
 
       if (isInitial) {

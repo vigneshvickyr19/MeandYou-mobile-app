@@ -16,6 +16,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
     int limit = 20,
     DocumentSnapshot? lastDoc,
     bool activeOnly = true,
+    List<String> excludedIds = const [],
   }) async {
     final List<NearbyMatchEntity> allMatches = [];
     DocumentSnapshot? newLastDoc;
@@ -36,8 +37,8 @@ class MatchingRepositoryImpl implements MatchingRepository {
     for (var data in rawProfiles) {
       final String id = data['id'];
       
-      // Filter: Current User
-      if (id == currentUser.id) continue;
+      // Filter: Current User & Matched Users
+      if (id == currentUser.id || excludedIds.contains(id)) continue;
 
       // Filter: Activity (24h)
       if (activeOnly) {
@@ -78,6 +79,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
   Future<List<NearbyMatchEntity>> getDiscoverMatches({
     required UserModel currentUser,
     double radiusInKm = 10.0,
+    List<String> excludedIds = const [],
   }) async {
     // 0. Fetch Current User Profile from profileSetup (Single source of truth)
     final profileSnapshot = await _firestore
@@ -109,7 +111,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
         lng,
       );
 
-      if (distance > radiusInKm) continue;
+      if (distance > radiusInKm || excludedIds.contains(data['id'])) continue;
 
       // DISCOVER CRITERIA: lookingFor, minAge, maxAge, distance
       
