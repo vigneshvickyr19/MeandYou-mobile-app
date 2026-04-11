@@ -158,7 +158,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         children: [
                           ChatAvatar(
                             userId: widget.otherUser.id,
-                            imageUrl: widget.otherUser.profileImageUrl,
+                            imageUrl: widget.otherUser.thumbnailUrl ?? widget.otherUser.profileImageUrl,
+                            imageVersion: widget.otherUser.imageVersion,
                             size: 36,
                           ),
                           const SizedBox(width: 12),

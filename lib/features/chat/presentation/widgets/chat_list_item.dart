@@ -90,7 +90,8 @@ class ChatListItem extends StatelessWidget {
             // Avatar
             ChatAvatar(
               userId: user?.id,
-              imageUrl: user?.profileImageUrl,
+              imageUrl: user?.thumbnailUrl ?? user?.profileImageUrl,
+              imageVersion: user?.imageVersion,
               size: 56,
             ),
             const SizedBox(width: 12),

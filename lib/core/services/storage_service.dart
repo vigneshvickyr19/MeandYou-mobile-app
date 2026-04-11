@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 import '../constants/firebase_constants.dart';
 
 /// Service to handle Firebase Storage operations with user-scoped isolation
@@ -16,6 +18,68 @@ class StorageService {
   static StorageService get instance => _instance ??= StorageService._();
   
   StorageService._();
+
+  /// Compresses an image and returns a temporary file.
+  Future<File?> _compressImage(File file, {int quality = 85, int minWidth = 1000}) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final targetPath = '${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.webp';
+      
+      return await FlutterImageCompress.compressAndGetFile(
+        file.absolute.path,
+        targetPath,
+        quality: quality,
+        minWidth: minWidth,
+        format: CompressFormat.webp,
+      ).then((xFile) => xFile != null ? File(xFile.path) : null);
+    } catch (e) {
+      debugPrint('Error compressing image: $e');
+      return null;
+    }
+  }
+
+  /// Generates a low-resolution thumbnail.
+  Future<File?> _generateThumbnail(File file) async {
+    return await _compressImage(file, quality: 50, minWidth: 200);
+  }
+
+  /// Uploads a profile photo (full + thumbnail) with automated versioning.
+  /// This implements Requirement #2 (Url Versioning), #4 (Upload Flow), and #6 (Thumbnail Optimization).
+  Future<Map<String, dynamic>> uploadUserAvatar({
+    required String userId,
+    required File originalFile,
+  }) async {
+    try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      
+      // 1. Compress Full Image
+      final compressedFull = await _compressImage(originalFile) ?? originalFile;
+      
+      // 2. Generate Thumbnail
+      final thumbnailFile = await _generateThumbnail(originalFile) ?? compressedFull;
+
+      // 3. Upload Full Image
+      final fullPath = '${FirebaseConstants.profileImagesPath}/$userId/profile_v$timestamp.webp';
+      final fullRef = _storage.ref().child(fullPath);
+      await fullRef.putFile(compressedFull, SettableMetadata(contentType: 'image/webp'));
+      final fullUrl = await fullRef.getDownloadURL();
+
+      // 4. Upload Thumbnail
+      final thumbPath = '${FirebaseConstants.profileImagesPath}/$userId/thumb_v$timestamp.webp';
+      final thumbRef = _storage.ref().child(thumbPath);
+      await thumbRef.putFile(thumbnailFile, SettableMetadata(contentType: 'image/webp'));
+      final thumbUrl = await thumbRef.getDownloadURL();
+
+      return {
+        FirebaseConstants.profileImageUrl: fullUrl,
+        FirebaseConstants.thumbnailUrl: thumbUrl,
+        FirebaseConstants.imageVersion: timestamp,
+      };
+    } catch (e) {
+      debugPrint('Error in uploadUserAvatar: $e');
+      rethrow;
+    }
+  }
 
   /// Uploads a profile image for a specific user.
   /// Uses a timestamp-based versioning to avoid cache issues and provide historical clarity.

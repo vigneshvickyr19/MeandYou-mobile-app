@@ -2,6 +2,8 @@ class NearbyMatchEntity {
   final String id;
   final String fullName;
   final String? profileImageUrl;
+  final String? thumbnailUrl;
+  final int? imageVersion;
   final double distance;
   final double matchPercentage;
   final String? address;
@@ -17,6 +19,8 @@ class NearbyMatchEntity {
     required this.id,
     required this.fullName,
     this.profileImageUrl,
+    this.thumbnailUrl,
+    this.imageVersion,
     required this.distance,
     required this.matchPercentage,
     this.address,
@@ -48,6 +52,8 @@ class NearbyMatchEntity {
       id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      imageVersion: imageVersion ?? this.imageVersion,
       distance: distance ?? this.distance,
       matchPercentage: matchPercentage ?? this.matchPercentage,
       address: address ?? this.address,

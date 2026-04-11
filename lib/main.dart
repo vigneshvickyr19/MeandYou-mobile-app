@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:provider/provider.dart';
 import 'app.dart';
 import 'firebase_options.dart';
@@ -18,6 +21,12 @@ import 'core/services/background_location_service.dart';
 void main() {
   // 1. Minimum sync setup
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // 1.1 Support for Desktop (sqflite for cached_network_image)
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   // Create AuthProvider early to pass into the hierarchy
   final authProvider = AuthProvider();

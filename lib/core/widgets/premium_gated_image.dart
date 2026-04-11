@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'app_cached_image.dart';
 
 /// A high-performance, reusable widget that handles premium gated content visualization.
 /// Features: Custom Shimmer Loading, Error Handling, and Backdrop Blurring.
 class PremiumGatedImage extends StatelessWidget {
   final String? imageUrl;
+  final int? imageVersion;
   final bool isGated;
   final double blurSigma;
   final double borderRadius;
@@ -17,6 +19,7 @@ class PremiumGatedImage extends StatelessWidget {
   const PremiumGatedImage({
     super.key,
     required this.imageUrl,
+    this.imageVersion,
     required this.isGated,
     this.blurSigma = 20.0,
     this.borderRadius = 24.0,
@@ -62,50 +65,17 @@ class PremiumGatedImage extends StatelessWidget {
   }
 
   Widget _buildImageWithStates() {
-    if (imageUrl == null || imageUrl!.isEmpty) {
-      return _buildPlaceholder(Icons.person_off_rounded);
-    }
-
-    return Image.network(
-      imageUrl!,
+    return AppCachedImage(
+      imageUrl: imageUrl,
+      imageVersion: imageVersion,
       fit: fit,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded || frame != null) {
-          return AnimatedOpacity(
-            opacity: 1.0,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeIn,
-            child: child,
-          );
-        }
-        return _buildSkeleton();
-      },
-      errorBuilder: (context, error, stackTrace) => _buildPlaceholder(Icons.error_outline_rounded),
+      width: width,
+      height: height,
+      borderRadius: borderRadius,
+      errorWidget: _buildPlaceholder(Icons.error_outline_rounded),
     );
   }
 
-  Widget _buildSkeleton() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.3, end: 0.6),
-      duration: const Duration(milliseconds: 1500),
-      builder: (context, opacity, child) {
-        return Opacity(
-          opacity: opacity,
-          child: Container(
-            color: Colors.white.withValues(alpha: 0.1),
-            child: Center(
-              child: Icon(
-                Icons.image_outlined,
-                color: Colors.white.withValues(alpha: 0.1),
-                size: 40,
-              ),
-            ),
-          ),
-        );
-      },
-      onEnd: () {},
-    );
-  }
 
   Widget _buildPlaceholder(IconData icon) {
     return Container(

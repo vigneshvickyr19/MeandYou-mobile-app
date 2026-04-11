@@ -291,7 +291,8 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
         return Container(
           transform: Matrix4.identity()..translateByVector3(vm.Vector3(delta * 40, 0.0, 0.0)),
           child: PremiumGatedImage(
-            imageUrl: match.profileImageUrl,
+            imageUrl: match.thumbnailUrl ?? match.profileImageUrl,
+            imageVersion: match.imageVersion,
             isGated: !isPremium,
             blurSigma: 25.0, // Extra heavy for premium feel
             borderRadius: 32.0,

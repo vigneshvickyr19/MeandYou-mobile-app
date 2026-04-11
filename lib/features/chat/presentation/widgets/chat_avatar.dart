@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/presence_service.dart';
+import '../../../../core/widgets/app_cached_image.dart';
 
 class ChatAvatar extends StatelessWidget {
   final String? imageUrl;
+  final int? imageVersion;
   final bool isOnline; // Static fallback
   final double size;
   final bool showOnlineIndicator;
@@ -12,6 +14,7 @@ class ChatAvatar extends StatelessWidget {
   const ChatAvatar({
     super.key,
     this.imageUrl,
+    this.imageVersion,
     this.isOnline = false,
     this.size = 50,
     this.showOnlineIndicator = true,
@@ -28,20 +31,14 @@ class ChatAvatar extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.grey[800],
-            image: imageUrl != null && imageUrl!.isNotEmpty
-                ? DecorationImage(
-                    image: NetworkImage(imageUrl!),
-                    fit: BoxFit.cover,
-                  )
-                : null,
           ),
-          child: imageUrl == null || imageUrl!.isEmpty
-              ? Icon(
-                  Icons.person,
-                  color: Colors.white24,
-                  size: size * 0.6,
-                )
-              : null,
+          child: AppCachedImage(
+            imageUrl: imageUrl,
+            imageVersion: imageVersion,
+            width: size,
+            height: size,
+            isRound: true,
+          ),
         ),
         if (showOnlineIndicator)
           Positioned(

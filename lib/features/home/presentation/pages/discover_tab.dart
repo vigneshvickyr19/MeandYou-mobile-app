@@ -14,6 +14,7 @@ import 'dart:async';
 import '../../../../core/services/like_action_service.dart';
 import '../../../../core/widgets/subscription_bottom_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/app_cached_image.dart';
 import '../widgets/match_compatibility_sheet.dart';
 
 /// Discover Tab - iOS-style carousel with smooth animations
@@ -265,16 +266,15 @@ class _DiscoverTabState extends State<DiscoverTab>
         final double delta = index - _currentPageValue;
         return Container(
           transform: Matrix4.identity()..translateByVector3(vm.Vector3(delta * 40, 0.0, 0.0)), // Parallax shift
-          child: match.profileImageUrl != null && match.profileImageUrl!.isNotEmpty
-              ? Image.network(
-                  match.profileImageUrl!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  scale: 1.1, // Slightly larger to allow shifting without gaps
-                  errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
-                )
-              : _buildPlaceholderImage(),
+          child: AppCachedImage(
+            imageUrl: match.thumbnailUrl ?? match.profileImageUrl,
+            imageVersion: match.imageVersion,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            placeholder: _buildPlaceholderImage(),
+            errorWidget: _buildPlaceholderImage(),
+          ),
         );
       },
     );

@@ -13,6 +13,8 @@ class UserModel {
   final String? voipToken;
   final String? fullName;
   final String? profileImageUrl;
+  final String? thumbnailUrl;
+  final int? imageVersion;
   final int? age;
   final double? latitude;
   final double? longitude;
@@ -37,6 +39,8 @@ class UserModel {
     this.voipToken,
     this.fullName,
     this.profileImageUrl,
+    this.thumbnailUrl,
+    this.imageVersion,
     this.age,
     this.latitude,
     this.longitude,
@@ -63,6 +67,8 @@ class UserModel {
       voipToken: data[FirebaseConstants.voipToken],
       fullName: data[FirebaseConstants.fullName],
       profileImageUrl: data[FirebaseConstants.profileImageUrl],
+      thumbnailUrl: data[FirebaseConstants.thumbnailUrl],
+      imageVersion: data[FirebaseConstants.imageVersion],
       age: data[FirebaseConstants.age] is int
           ? data[FirebaseConstants.age]
           : int.tryParse(data[FirebaseConstants.age]?.toString() ?? ''),
@@ -98,6 +104,8 @@ class UserModel {
       FirebaseConstants.voipToken: voipToken,
       FirebaseConstants.fullName: fullName,
       FirebaseConstants.profileImageUrl: profileImageUrl,
+      FirebaseConstants.thumbnailUrl: thumbnailUrl,
+      FirebaseConstants.imageVersion: imageVersion,
       FirebaseConstants.age: age,
       FirebaseConstants.latitude: latitude,
       FirebaseConstants.longitude: longitude,
@@ -123,6 +131,8 @@ class UserModel {
     String? voipToken,
     String? fullName,
     String? profileImageUrl,
+    String? thumbnailUrl,
+    int? imageVersion,
     bool? isOnline,
     int? age,
     double? latitude,
@@ -152,6 +162,8 @@ class UserModel {
       voipToken: voipToken ?? this.voipToken,
       fullName: fullName ?? this.fullName,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      imageVersion: imageVersion ?? this.imageVersion,
       age: age ?? this.age,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,

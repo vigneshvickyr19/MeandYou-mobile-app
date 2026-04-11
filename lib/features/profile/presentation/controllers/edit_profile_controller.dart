@@ -110,23 +110,26 @@ class EditProfileController extends ChangeNotifier {
       await _profileRepository.updateProfile(userId, changes);
       
       // 3. Sync core fields to 'users' collection to ensure UI refreshes everywhere
-      if (changes.containsKey('fullName') || changes.containsKey('photos')) {
+      // 3. Sync core fields to 'users' collection to ensure UI refreshes everywhere
+      if (changes.containsKey('photos')) {
         final Map<String, dynamic> userSync = {};
-        if (changes.containsKey('fullName')) {
-          userSync['fullName'] = changes['fullName'];
-        }
-        if (changes.containsKey('photos')) {
-          final List<dynamic> photos = changes['photos'] as List;
-          if (photos.isNotEmpty) {
-            userSync['profileImageUrl'] = photos.first;
-          }
+        final List<dynamic> photos = changes['photos'] as List;
+        if (photos.isNotEmpty) {
+           final firstPhotoMeta = _lastUploadedAvatarMeta;
+           if (firstPhotoMeta != null) {
+              userSync[FirebaseConstants.profileImageUrl] = firstPhotoMeta[FirebaseConstants.profileImageUrl];
+              userSync[FirebaseConstants.thumbnailUrl] = firstPhotoMeta[FirebaseConstants.thumbnailUrl];
+              userSync[FirebaseConstants.imageVersion] = firstPhotoMeta[FirebaseConstants.imageVersion];
+           } else {
+              userSync[FirebaseConstants.profileImageUrl] = photos.first;
+           }
         }
         
         if (userSync.isNotEmpty) {
           await _db
               .collection(FirebaseConstants.users)
               .doc(userId)
-              .set(userSync, SetOptions(merge: true));
+              .update(userSync);
         }
       }
 
@@ -142,9 +145,12 @@ class EditProfileController extends ChangeNotifier {
     }
   }
 
+  Map<String, dynamic>? _lastUploadedAvatarMeta;
+
   Future<List<String>> _handlePhotoUploads(String userId) async {
     final List<String> currentPhotos = _draftProfile?.photos ?? [];
     final List<String> finalPhotos = List.from(currentPhotos);
+    _lastUploadedAvatarMeta = null;
 
     for (int i = 0; i < currentPhotos.length; i++) {
         final path = currentPhotos[i];
@@ -154,17 +160,28 @@ class EditProfileController extends ChangeNotifier {
         if (!path.startsWith('http')) {
           final file = File(path);
           if (await file.exists()) {
-            final downloadUrl = await _storageService.uploadProfileImage(
-              userId: userId,
-              file: file,
-              index: i,
-            );
-            finalPhotos[i] = downloadUrl;
+            if (i == 0) {
+              // Primary Profile Image (Full + Thumbnail + Versioning)
+              final meta = await _storageService.uploadUserAvatar(
+                userId: userId,
+                originalFile: file,
+              );
+              _lastUploadedAvatarMeta = meta;
+              finalPhotos[i] = meta[FirebaseConstants.profileImageUrl];
+            } else {
+              // Secondary Photos
+              final downloadUrl = await _storageService.uploadProfileImage(
+                userId: userId,
+                file: file,
+                index: i,
+              );
+              finalPhotos[i] = downloadUrl;
+            }
 
-            // Store metadata in profile_images collection as requested
+            // Optional: Backup URL in separate collection
             await _db.collection(FirebaseConstants.profileImages).add({
               'userId': userId,
-              'url': downloadUrl,
+              'url': finalPhotos[i],
               'index': i,
               'uploadedAt': FieldValue.serverTimestamp(),
             });

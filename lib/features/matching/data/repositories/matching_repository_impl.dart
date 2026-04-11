@@ -243,6 +243,8 @@ class MatchingRepositoryImpl implements MatchingRepository {
       id: data['id'],
       fullName: data[FirebaseConstants.fullName] ?? 'Unknown',
       profileImageUrl: profilePic,
+      thumbnailUrl: data[FirebaseConstants.thumbnailUrl],
+      imageVersion: (data[FirebaseConstants.imageVersion] as num?)?.toInt(),
       distance: distance,
       matchPercentage: matchPercentage,
       address: data[FirebaseConstants.address],

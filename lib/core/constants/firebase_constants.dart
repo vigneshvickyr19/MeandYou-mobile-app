@@ -79,6 +79,8 @@ class FirebaseConstants {
   static const String maxAge = 'maxAge';
   static const String role = 'role';
   static const String settings = 'settings';
+  static const String imageVersion = 'imageVersion';
+  static const String thumbnailUrl = 'thumbnailUrl';
 
   // Storage Paths
   static const String profileImagesPath = 'profile_images';
