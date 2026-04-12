@@ -14,6 +14,8 @@ import '../widgets/message_input.dart';
 import '../widgets/chat_reply_preview.dart';
 import '../widgets/chat_edit_preview.dart';
 import '../widgets/chat_pinned_bar.dart';
+import '../widgets/chat_suggestions.dart';
+import '../widgets/chat_starter_suggestions.dart';
 import '../../../../core/widgets/app_image_preview_modal.dart';
 import '../../../../core/widgets/app_back_button.dart';
 
@@ -213,43 +215,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           ),
                         )
                       else if (controller.messages.isEmpty)
-                        FadeIn(
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white.withValues(alpha: 0.05),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.chat_bubble_outline_rounded,
-                                    size: 48,
-                                    color: AppColors.white.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                Text(
-                                  'No messages yet',
-                                  style: TextStyle(
-                                    color: AppColors.white.withValues(alpha: 0.8),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Start the conversation with ${widget.otherUser.fullName}',
-                                  style: TextStyle(
-                                    color: AppColors.white.withValues(alpha: 0.4),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        ChatStarterSuggestions(
+                          otherUser: widget.otherUser,
+                          suggestions: controller.aiSuggestions,
+                          isLoading: controller.isAiLoading,
+                          onSuggestionTap: (suggestion) {
+                            controller.useAiSuggestion(suggestion);
+                            _scrollToBottom();
+                          },
                         )
                       else
                         ListView.builder(
@@ -383,6 +356,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                             ],
                           ),
                         ),
+                      ),
+
+                    if (controller.messages.isNotEmpty && 
+                       (controller.aiSuggestions.isNotEmpty || controller.isAiLoading))
+                      ChatSuggestions(
+                        suggestions: controller.aiSuggestions,
+                        isLoading: controller.isAiLoading,
+                        onSuggestionTap: (suggestion) {
+                          controller.useAiSuggestion(suggestion);
+                          _scrollToBottom();
+                        },
                       ),
 
                     MessageInput(

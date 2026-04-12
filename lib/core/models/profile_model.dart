@@ -19,8 +19,9 @@ class ProfileModel {
   final String? country;
   final String? pinCode;
 
-  // Step 4: Bio
+  // Step 4: Bio & Personality
   final String? bio;
+  final String? personality;
 
   // Step 5: Quick Stats
   final int? height;
@@ -64,6 +65,7 @@ class ProfileModel {
     this.country,
     this.pinCode,
     this.bio,
+    this.personality,
     this.height,
     this.jobTitle,
     this.education,
@@ -101,6 +103,7 @@ class ProfileModel {
       country: data['country'],
       pinCode: data['pinCode'],
       bio: data['bio'],
+      personality: data['personality'],
       height: data['height'],
       jobTitle: data['jobTitle'],
       education: data['education'],
@@ -138,6 +141,7 @@ class ProfileModel {
       'country': country,
       'pinCode': pinCode,
       'bio': bio,
+      'personality': personality,
       'height': height,
       'jobTitle': jobTitle,
       'education': education,
@@ -174,6 +178,7 @@ class ProfileModel {
     String? country,
     String? pinCode,
     String? bio,
+    String? personality,
     int? height,
     String? jobTitle,
     String? education,
@@ -209,6 +214,7 @@ class ProfileModel {
       country: country ?? this.country,
       pinCode: pinCode ?? this.pinCode,
       bio: bio ?? this.bio,
+      personality: personality ?? this.personality,
       height: height ?? this.height,
       jobTitle: jobTitle ?? this.jobTitle,
       education: education ?? this.education,

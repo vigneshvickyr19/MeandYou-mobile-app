@@ -15,6 +15,7 @@ import '../widgets/step_5_lifestyle.dart';
 import '../widgets/step_6_dating_preferences.dart';
 import '../widgets/step_7_about_me.dart';
 import '../widgets/step_8_verification.dart';
+import '../widgets/profile_setup_loading.dart';
 
 import '../controllers/profile_setup_controller.dart';
 
@@ -58,13 +59,11 @@ class ProfileSetupPage extends StatelessWidget {
         if (didPop) return;
         controller.handleBack(context);
       },
-      child: Scaffold(
-        backgroundColor: AppColors.black,
-        body: isAppLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              )
-            : Stack(
+      child: isAppLoading
+          ? const ProfileSetupLoading()
+          : Scaffold(
+              backgroundColor: AppColors.black,
+              body: Stack(
                 children: [
                   // Background Glow
                   Positioned(

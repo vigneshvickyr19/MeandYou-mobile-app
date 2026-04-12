@@ -16,6 +16,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/presence_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/ai_chat_api_service.dart';
+import '../../../../core/services/ai_suggestion_cache_service.dart';
 
 class ChatDetailController extends ChangeNotifier {
   final ChatRepository _chatRepository = ChatRepository();
@@ -24,6 +26,7 @@ class ChatDetailController extends ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
   final NotificationApiService _notificationApiService = NotificationApiService.instance;
   final NotificationStorageService _notificationStorageService = NotificationStorageService();
+  final AiChatApiService _aiApiService = AiChatApiService.instance;
 
   bool _isRecording = false;
 
@@ -55,6 +58,13 @@ class ChatDetailController extends ChangeNotifier {
   StreamSubscription? _messagesSubscription;
   DateTime? _lastMessageTime;
 
+  // AI Chat Suggestion State
+  List<String> _aiSuggestions = [];
+  bool _isAiLoading = false;
+  Timer? _aiSuggestionTimer;
+  String? _lastTriggeredMsgId;
+  final AiSuggestionCacheService _aiCache = AiSuggestionCacheService.instance;
+
   List<MessageModel> get messages {
     if (_needsRebuildCache) {
       // Combine regular messages with optimistic ones, avoiding duplicates by ID
@@ -84,6 +94,8 @@ class ChatDetailController extends ChangeNotifier {
   String get currentUserId => _currentUserId;
   bool get hasMore => _hasMore;
   bool get isFetchingMore => _isFetchingMore;
+  List<String> get aiSuggestions => _aiSuggestions;
+  bool get isAiLoading => _isAiLoading;
 
   void initialize(String chatRoomId, String currentUserId, String otherUserId) {
     _chatRoomId = chatRoomId;
@@ -169,6 +181,14 @@ class ChatDetailController extends ChangeNotifier {
     } finally {
       _isLoading = false;
       _messagesLoaded = true;
+      
+      // Handle AI Suggestions Restore/Refresh
+      if (_messages.isEmpty) {
+        _fetchFirstMessageSuggestions();
+      } else {
+        _restoreSuggestedRepliesFromCache();
+      }
+      
       notifyListeners();
     }
   }
@@ -261,6 +281,15 @@ class ChatDetailController extends ChangeNotifier {
       if (addedAny) {
         _needsRebuildCache = true;
         _cleanupOptimisticMessages(newMessages);
+
+        // Manage AI Suggested Replies
+        final newest = newMessages.first;
+        if (newest.senderId != _currentUserId) {
+          _startAiSuggestionTimer(newest);
+        } else {
+          _clearAiSuggestions();
+        }
+
         notifyListeners();
         markMessagesAsSeen();
       }
@@ -420,6 +449,7 @@ class ChatDetailController extends ChangeNotifier {
     _optimisticMessages.insert(0, message);
     _needsRebuildCache = true;
     _selectedImages = [];
+    _clearAiSuggestions();
     notifyListeners();
 
     try {
@@ -745,6 +775,105 @@ class ChatDetailController extends ChangeNotifier {
     return Duration.zero;
   }
 
+  // --- AI Suggestion Logic ---
+
+  Future<void> _restoreSuggestedRepliesFromCache() async {
+    if (_messages.isEmpty) return;
+    
+    final lastMsg = _messages.first;
+    // Only restore if it was from the other user (we don't suggest replies to our own messages)
+    if (lastMsg.senderId != _currentUserId) {
+      final cached = _aiCache.getSuggestedReplies(_chatRoomId, lastMsg.id);
+      if (cached != null && cached.isNotEmpty) {
+        _aiSuggestions = cached;
+        _lastTriggeredMsgId = lastMsg.id;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> _fetchFirstMessageSuggestions() async {
+    final cached = _aiCache.getFirstMessages(_chatRoomId);
+    if (cached != null && cached.isNotEmpty) {
+      _aiSuggestions = cached;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _isAiLoading = true;
+      _aiSuggestions = [];
+      notifyListeners();
+
+      final profile = await _databaseService.getProfileSetup(_otherUserId);
+      final profileInfo = profile?.bio ?? 'Passionate about life and meeting new people';
+      
+      final suggestions = await _aiApiService.getFirstMessageSuggestions(profileInfo);
+      _aiSuggestions = suggestions;
+      await _aiCache.saveFirstMessages(_chatRoomId, suggestions);
+    } catch (e) {
+      debugPrint('Error fetching AI first message: $e');
+    } finally {
+      _isAiLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void _startAiSuggestionTimer(MessageModel lastMessage) {
+    _aiSuggestionTimer?.cancel();
+    _clearAiSuggestions();
+
+    // 1. Check if we already have it in cache for this message
+    final cached = _aiCache.getSuggestedReplies(_chatRoomId, lastMessage.id);
+    if (cached != null && cached.isNotEmpty) {
+       _aiSuggestions = cached;
+       _lastTriggeredMsgId = lastMessage.id;
+       notifyListeners();
+       return;
+    }
+
+    // 2. Trigger after 1 minute of inactivity
+    _aiSuggestionTimer = Timer(const Duration(minutes: 1), () {
+      if (_lastTriggeredMsgId != lastMessage.id) {
+        _fetchReplySuggestions(lastMessage);
+      }
+    });
+  }
+
+  Future<void> _fetchReplySuggestions(MessageModel lastMessage) async {
+    if (_isAiLoading || lastMessage.type != MessageType.text) return;
+
+    try {
+      _isAiLoading = true;
+      notifyListeners();
+
+      final suggestions = await _aiApiService.getSuggestedReplies(lastMessage.content);
+      _aiSuggestions = suggestions;
+      _lastTriggeredMsgId = lastMessage.id;
+      
+      // Save to persistent cache
+      await _aiCache.saveSuggestedReplies(_chatRoomId, lastMessage.id, suggestions);
+    } catch (e) {
+      debugPrint('Error fetching AI replies: $e');
+    } finally {
+      _isAiLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void _clearAiSuggestions() {
+    _aiSuggestionTimer?.cancel();
+    if (_aiSuggestions.isNotEmpty) {
+      _aiSuggestions = [];
+      notifyListeners();
+    }
+  }
+
+  void useAiSuggestion(String suggestion) {
+    sendMessage(suggestion);
+    _clearAiSuggestions();
+  }
+
   @override
   void dispose() {
     _chatRoomSubscription?.cancel();
@@ -752,6 +881,7 @@ class ChatDetailController extends ChangeNotifier {
     _statusSubscription?.cancel();
     _otherUserTypingSubscription?.cancel();
     _messagesSubscription?.cancel();
+    _aiSuggestionTimer?.cancel();
 
     if (_chatRoomId.isNotEmpty && _currentUserId.isNotEmpty) {
       // 1. Clear active chat (stops push suppression)
