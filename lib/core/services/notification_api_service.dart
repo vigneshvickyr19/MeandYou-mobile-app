@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../constants/api_constants.dart';
 
 class NotificationApiService {
   static final NotificationApiService _instance = NotificationApiService._();
   static NotificationApiService get instance => _instance;
 
   final Dio _dio = Dio();
-  final String _baseUrl = 'https://push-notification-ve9s.onrender.com';
+  final String _baseUrl = ApiConstants.notificationBaseUrl;
 
   NotificationApiService._() {
     _dio.options.baseUrl = _baseUrl;
