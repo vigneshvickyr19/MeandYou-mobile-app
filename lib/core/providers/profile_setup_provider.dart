@@ -109,13 +109,7 @@ class ProfileSetupProvider extends ChangeNotifier {
           isValid = false;
         }
         break;
-      case 3: // Step 4: Bio
-        if (p.bio == null || p.bio!.isEmpty) {
-          _errors['bio'] = "Please enter your Bio.";
-          isValid = false;
-        }
-        break;
-      case 4: // Step 5: Quick Stats
+      case 3: // Step 4: Quick Stats
         if (p.height == null) {
           _errors['height'] = "Please select Height.";
           isValid = false;
@@ -133,7 +127,7 @@ class ProfileSetupProvider extends ChangeNotifier {
           isValid = false;
         }
         break;
-      case 5: // Step 6: Lifestyle
+      case 4: // Step 5: Lifestyle
         if (p.smoking == null) {
           _errors['smoking'] = "Please select smoking habit.";
           isValid = false;
@@ -159,13 +153,19 @@ class ProfileSetupProvider extends ChangeNotifier {
           isValid = false;
         }
         break;
-      case 6: // Step 7: Preferences & Interests
+      case 5: // Step 6: Preferences & Interests
         if (p.lookingFor == null) {
           _errors['lookingFor'] = "Please select what you are looking for.";
           isValid = false;
         }
         if (p.interests == null || p.interests!.isEmpty) {
           _errors['interests'] = "Please select at least one Interest.";
+          isValid = false;
+        }
+        break;
+      case 6: // Step 7: About Me (Bio)
+        if (p.bio == null || p.bio!.isEmpty) {
+          _errors['bio'] = "Please enter your Bio.";
           isValid = false;
         }
         break;
@@ -201,14 +201,12 @@ class ProfileSetupProvider extends ChangeNotifier {
             p.country!.isNotEmpty &&
             p.pinCode != null &&
             p.pinCode!.isNotEmpty;
-      case 3: // Step 4: Bio
-        return p.bio != null && p.bio!.isNotEmpty;
-      case 4: // Step 5: Quick Stats
+      case 3: // Step 4: Quick Stats
         return p.height != null &&
             p.jobTitle != null &&
             p.education != null &&
             p.hometown != null;
-      case 5: // Step 6: Lifestyle
+      case 4: // Step 5: Lifestyle
         return p.drinking != null &&
             p.smoking != null &&
             p.exercise != null &&
@@ -216,13 +214,15 @@ class ProfileSetupProvider extends ChangeNotifier {
             p.pets != null &&
             p.religion != null &&
             p.language != null;
-      case 6: // Step 7: Preferences & Interests
+      case 5: // Step 6: Preferences & Interests
         return p.lookingFor != null &&
             p.minAge != null &&
             p.maxAge != null &&
             p.distance != null &&
             p.interests != null &&
             p.interests!.isNotEmpty;
+      case 6: // Step 7: About Me (Bio)
+        return p.bio != null && p.bio!.isNotEmpty;
       case 7: // Step 8: Verification & Socials
         // Basic check for socials if needed, but the user said "only if click step 8 finally save"
         return true;

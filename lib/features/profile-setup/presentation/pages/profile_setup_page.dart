@@ -10,10 +10,10 @@ import '../../../../core/widgets/app_back_button.dart';
 import '../widgets/step_1_basic_identity.dart';
 import '../widgets/step_2_photos.dart';
 import '../widgets/step_3_location.dart';
-import '../widgets/step_4_about_me.dart';
-import '../widgets/step_5_quick_stats.dart';
-import '../widgets/step_6_lifestyle.dart';
-import '../widgets/step_7_dating_preferences.dart';
+import '../widgets/step_4_quick_stats.dart';
+import '../widgets/step_5_lifestyle.dart';
+import '../widgets/step_6_dating_preferences.dart';
+import '../widgets/step_7_about_me.dart';
 import '../widgets/step_8_verification.dart';
 
 import '../controllers/profile_setup_controller.dart';
@@ -25,10 +25,10 @@ class ProfileSetupPage extends StatelessWidget {
     const StepBasicIdentity(),
     const StepPhotos(),
     const StepLocation(),
-    const StepAboutMe(),
     const StepQuickStats(),
     const StepLifestyle(),
     const StepDatingPreferences(),
+    const StepAboutMe(),
     const StepVerification(),
   ];
 
