@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/widgets/app_cached_image.dart';
 import '../widgets/match_compatibility_sheet.dart';
+import '../widgets/matching_skeleton.dart';
 
 /// Discover Tab - iOS-style carousel with smooth animations
 ///
@@ -34,12 +35,15 @@ class DiscoverTab extends StatefulWidget {
 }
 
 class _DiscoverTabState extends State<DiscoverTab>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late DiscoverController _controller;
   late PageController _pageController;
   int _currentPage = 0;
   double _currentPageValue = 0.0;
   final StreamController<void> _heartTriggerController = StreamController<void>.broadcast();
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -52,9 +56,11 @@ class _DiscoverTabState extends State<DiscoverTab>
 
     // Listen to page changes for smooth animations
     _pageController.addListener(() {
-      setState(() {
-        _currentPageValue = _pageController.page ?? 0.0;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPageValue = _pageController.page ?? 0.0;
+        });
+      }
     });
 
     // Load users after frame is built
@@ -112,6 +118,7 @@ class _DiscoverTabState extends State<DiscoverTab>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return ChangeNotifierProvider.value(
       value: _controller,
       child: Consumer<DiscoverController>(
@@ -126,11 +133,29 @@ class _DiscoverTabState extends State<DiscoverTab>
             return _buildEmptyState();
           }
 
-          return Stack(
-            children: [
-              _buildCarousel(matches),
-              HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
-            ],
+          return RefreshIndicator(
+            onRefresh: () => controller.loadUsers(
+              context.read<AuthProvider>().currentUser!,
+              isRefresh: true,
+            ),
+            color: AppColors.primary,
+            backgroundColor: const Color(0xFF151515),
+            edgeOffset: MediaQuery.of(context).padding.top + 80,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height,
+                  child: Stack(
+                    children: [
+                      _buildCarousel(matches),
+                      HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -534,35 +559,7 @@ class _DiscoverTabState extends State<DiscoverTab>
 
   /// Build loading state
   Widget _buildLoadingState() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 3,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Finding people nearby...',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const MatchingSkeleton();
   }
 
   /// Build empty state

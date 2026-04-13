@@ -5,7 +5,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import '../../domain/entities/nearby_match_entity.dart';
 import '../../domain/usecases/get_nearby_matches_usecase.dart';
-import '../../domain/usecases/update_location_usecase.dart';
 import '../../../../core/models/user_model.dart';
 import '../../domain/usecases/get_current_user_profile_usecase.dart';
 import '../../../../core/services/location_service.dart';
@@ -13,24 +12,21 @@ import '../../../../core/utils/location_formatter.dart';
 import '../../data/repositories/matching_repository_impl.dart';
 import '../../../../features/home/data/services/home_service.dart';
 import '../../../../core/services/admin_service.dart';
+import '../../../../core/services/background_location_service.dart';
+import '../../../../core/constants/location_constants.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NearbyController extends ChangeNotifier {
   final GetNearbyMatchesUseCase _getNearbyMatchesUseCase;
-  final UpdateLocationUseCase _updateLocationUseCase;
   final GetCurrentUserProfileUseCase _getCurrentUserProfileUseCase;
 
   NearbyController({
     GetNearbyMatchesUseCase? getNearbyMatchesUseCase,
-    UpdateLocationUseCase? updateLocationUseCase,
     GetCurrentUserProfileUseCase? getCurrentUserProfileUseCase,
   }) : _getNearbyMatchesUseCase =
             getNearbyMatchesUseCase ??
             GetNearbyMatchesUseCase(MatchingRepositoryImpl()),
-        _updateLocationUseCase =
-            updateLocationUseCase ??
-            UpdateLocationUseCase(MatchingRepositoryImpl()),
         _getCurrentUserProfileUseCase =
             getCurrentUserProfileUseCase ?? GetCurrentUserProfileUseCase();
 
@@ -54,8 +50,8 @@ class NearbyController extends ChangeNotifier {
   NearbyMatchEntity? _selectedMatch;
   NearbyMatchEntity? get selectedMatch => _selectedMatch;
 
-  double _radius = 10.0;
-  int _fetchLimit = 20;
+  double _radius = LocationConstants.defaultRadiusInKm;
+  int _fetchLimit = LocationConstants.defaultFetchLimit;
   double get radius => _radius;
 
   StreamSubscription? _settingsSubscription;
@@ -65,27 +61,32 @@ class NearbyController extends ChangeNotifier {
   Position? _lastPosition;
   String? _lastGeohash;
   bool _isDisposed = false;
-  // Ensures we only start the Geolocator stream once per loadUsers() call
-  bool _locationStarted = false;
+  bool _isInitialized = false;
 
   /// Load users (Initial fetch)
   Future<void> loadUsers(UserModel currentUser, {bool isRefresh = false}) async {
     // Prevent unneeded re-fetches if nothing changed
     if (!isRefresh && 
+        _isInitialized &&
         _currentUser?.id == currentUser.id && 
         _lastGeohash == currentUser.geohash && 
         _users.isNotEmpty) {
       return;
     }
 
+    if (_isLoading && !isRefresh) return;
+
     _currentUser = currentUser;
     _lastGeohash = currentUser.geohash;
+    _isInitialized = true;
     _resetPagination();
-
-    // Reset location started flag when a new load is explicitly requested
-    if (isRefresh) _locationStarted = false;
     
-    // Listen to admin settings dynamically
+    // Fetch initial settings to avoid using hardcoded default
+    final initialSettings = await AdminService.instance.getSettings();
+    _radius = initialSettings.nearbyRadiusInKm;
+    _fetchLimit = initialSettings.maxUsersPerFetch;
+
+    // Listen to admin settings dynamically for future changes
     _settingsSubscription?.cancel();
     _settingsSubscription = AdminService.instance.streamSettings().listen((settings) {
       bool changed = false;
@@ -97,13 +98,12 @@ class NearbyController extends ChangeNotifier {
         _fetchLimit = settings.maxUsersPerFetch;
         changed = true;
       }
-      // Settings changed: only re-fetch data, not the location stream
       if (changed) _fetchMatches(isInitial: true);
     });
 
     if (_currentUser?.latitude != null && _currentUser?.geohash != null) {
       await _fetchMatches(isInitial: true);
-      _startLocationUpdates(_currentUser!.id);
+      _setupLocationListener(_currentUser!.id);
       return;
     }
 
@@ -112,7 +112,7 @@ class NearbyController extends ChangeNotifier {
 
     _currentUser = await _getCurrentUserProfileUseCase(currentUser);
     await _fetchMatches(isInitial: true);
-    _startLocationUpdates(_currentUser!.id);
+    _setupLocationListener(_currentUser!.id);
   }
 
   /// Load more users for infinite scroll
@@ -147,7 +147,6 @@ class NearbyController extends ChangeNotifier {
     }
 
     try {
-      // Get Matched IDs to exclude
       final HomeService homeService = HomeService();
       final matchedIds = await homeService.getMatchedUserIds(_currentUser!.id);
 
@@ -162,7 +161,6 @@ class NearbyController extends ChangeNotifier {
       if (isInitial) {
         _users = result.matches;
       } else {
-        // Prevent duplicates
         final newMatches = result.matches.where((m) => !_users.any((u) => u.id == m.id)).toList();
         _users.addAll(newMatches);
       }
@@ -178,33 +176,14 @@ class NearbyController extends ChangeNotifier {
     }
   }
 
-  void _startLocationUpdates(String userId) async {
-    // Only start once per session — avoid duplicate streams if called again
-    if (_locationStarted) return;
-    _locationStarted = true;
-
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
-
+  void _setupLocationListener(String userId) {
+    // Only one listener per controller instance
     _locationSubscription?.cancel();
-    _locationSubscription =
-        Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 100, // Update Firestore every 100 meters
-          ),
-        ).listen((Position position) {
-          _onLocationChanged(userId, position);
-        });
+    
+    // Listen to the central location stream from BackgroundLocationService
+    _locationSubscription = BackgroundLocationService.instance.onLocationChanged.listen((position) {
+      _onLocationChanged(userId, position);
+    });
   }
 
   void _onLocationChanged(String userId, Position position) {
@@ -216,8 +195,8 @@ class NearbyController extends ChangeNotifier {
         position.longitude,
       );
 
-      // Only update Firestore if moved significantly (500m) to save writes
-      if (distance < 500) return;
+      // Only re-fetch if moved significantly (e.g. 100m)
+      if (distance < LocationConstants.distanceFilter) return;
     }
 
     _lastPosition = position;
@@ -226,7 +205,6 @@ class NearbyController extends ChangeNotifier {
       position.latitude,
     );
 
-    // Update query parameters locally and restart stream
     if (_currentUser != null) {
       _currentUser = _currentUser!.copyWith(
         latitude: position.latitude,
@@ -236,30 +214,20 @@ class NearbyController extends ChangeNotifier {
       _lastGeohash = geohash;
       _fetchMatches(isInitial: true);
     }
-
-  // Sync to cloud
-    _updateLocationUseCase(
-      userId: userId,
-      latitude: position.latitude,
-      longitude: position.longitude,
-      geohash: geohash,
-    );
+    
+    // Firestore sync is ALREADY handled by BackgroundLocationService
   }
 
   Future<void> likeUser(String currentUserId, NearbyMatchEntity match) async {
     final HomeService homeService = HomeService();
     try {
       await homeService.likeUser(currentUserId, match.id);
-      // Optional: remove from list after liking if that's the desired behavior
-      // _users.removeWhere((m) => m.id == match.id);
-      // notifyListeners();
     } catch (e) {
       debugPrint('Error liking user: $e');
     }
   }
 
   Future<void> dislikeUser(NearbyMatchEntity match) async {
-    // Local optimistic update
     _users.removeWhere((m) => m.id == match.id);
     notifyListeners();
   }
@@ -294,7 +262,6 @@ class NearbyController extends ChangeNotifier {
     _selectedMatch = match;
     notifyListeners();
 
-    // Perform reverse geocoding if not already available
     if (match.landmark == null || match.area == null) {
       _isLocationLoading = true;
       notifyListeners();
@@ -306,7 +273,6 @@ class NearbyController extends ChangeNotifier {
 
       _isLocationLoading = false;
 
-      // Check if the user is still selected (async gap)
       if (_selectedMatch?.id == match.id) {
         _selectedMatch = _selectedMatch!.copyWith(
           landmark: locationData['landmark'],
@@ -314,7 +280,6 @@ class NearbyController extends ChangeNotifier {
           fullAddress: locationData['fullAddress'],
         );
 
-        // Update in list so it's cached for this session
         final index = _users.indexWhere((u) => u.id == match.id);
         if (index != -1) {
           _users[index] = _selectedMatch!;

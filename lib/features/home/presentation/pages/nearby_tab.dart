@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/widgets/premium_gated_image.dart';
+import '../widgets/matching_skeleton.dart';
 
 class NearbyTab extends StatefulWidget {
   const NearbyTab({super.key});
@@ -23,12 +24,15 @@ class NearbyTab extends StatefulWidget {
   State<NearbyTab> createState() => _NearbyTabState();
 }
 
-class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
+class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late NearbyController _controller;
   late PageController _pageController;
   int _currentPage = 0;
   double _currentPageValue = 0.0;
   final StreamController<void> _heartTriggerController = StreamController<void>.broadcast();
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -40,9 +44,11 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
     );
 
     _pageController.addListener(() {
-      setState(() {
-        _currentPageValue = _pageController.page ?? 0.0;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPageValue = _pageController.page ?? 0.0;
+        });
+      }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -111,6 +117,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Consumer<SubscriptionController>(
       builder: (context, subController, _) {
         return ChangeNotifierProvider.value(
@@ -127,11 +134,29 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
                 return _buildEmptyState(controller.radius);
               }
 
-              return Stack(
-                children: [
-                  _buildCarousel(users, subController.isPremium),
-                  HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
-                ],
+              return RefreshIndicator(
+                onRefresh: () => controller.loadUsers(
+                  context.read<AuthProvider>().currentUser!,
+                  isRefresh: true,
+                ),
+                color: AppColors.primary,
+                backgroundColor: const Color(0xFF151515),
+                edgeOffset: MediaQuery.of(context).padding.top + 80,
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height,
+                      child: Stack(
+                        children: [
+                          _buildCarousel(users, subController.isPremium),
+                          HeartFlowOverlay(triggerStream: _heartTriggerController.stream),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -466,35 +491,7 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin {
   }
 
   Widget _buildLoadingState() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A)],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 3,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Finding people nearby...',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const MatchingSkeleton();
   }
 
   Widget _buildEmptyState(double radius) {

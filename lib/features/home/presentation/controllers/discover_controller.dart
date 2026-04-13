@@ -53,8 +53,9 @@ class DiscoverController extends ChangeNotifier {
   bool get showMatchDialog => _showMatchDialog;
 
   /// Load users (one-time fetch)
-  Future<void> loadUsers(UserModel currentUser) async {
-    if (_lastUserId == currentUser.id && 
+  Future<void> loadUsers(UserModel currentUser, {bool isRefresh = false}) async {
+    if (!isRefresh && 
+        _lastUserId == currentUser.id && 
         _lastGeohash == currentUser.geohash && 
         _matches.isNotEmpty) {
       return;
