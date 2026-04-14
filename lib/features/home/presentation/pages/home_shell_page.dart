@@ -15,8 +15,9 @@ import '../../../../core/providers/location_provider.dart';
 
 class HomeShellPage extends StatefulWidget {
   final int? initialTabIndex;
+  final int? initialSubTabIndex;
 
-  const HomeShellPage({super.key, this.initialTabIndex});
+  const HomeShellPage({super.key, this.initialTabIndex, this.initialSubTabIndex});
 
   @override
   State<HomeShellPage> createState() => _HomeShellPageState();
@@ -98,7 +99,7 @@ class _HomeShellPageState extends State<HomeShellPage>
                     child: IndexedStack(
                       index: controller.index,
                       children: [
-                        const HomePage(),
+                        HomePage(initialSubTabIndex: widget.initialSubTabIndex),
                         const LikePage(),
                         const ChatPage(),
                         const ProfilePage(isTab: true),

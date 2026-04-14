@@ -10,6 +10,7 @@ class NotificationPayloadModel {
   final String? profileId;
   final String? title;
   final String? body;
+  final String? screen;
   final Map<String, dynamic> originalData;
 
   NotificationPayloadModel({
@@ -20,6 +21,7 @@ class NotificationPayloadModel {
     this.profileId,
     this.title,
     this.body,
+    this.screen,
     required this.originalData,
   });
 
@@ -45,6 +47,7 @@ class NotificationPayloadModel {
 
     final title = data[NotificationConstants.keyTitle]?.toString();
     final body = data[NotificationConstants.keyBody]?.toString();
+    final screen = data[NotificationConstants.keyScreen]?.toString();
 
     return NotificationPayloadModel(
       type: type,
@@ -54,6 +57,7 @@ class NotificationPayloadModel {
       profileId: profileId,
       title: title,
       body: body,
+      screen: screen,
       originalData: data,
     );
   }
@@ -77,6 +81,11 @@ class NotificationPayloadModel {
       if (route == 'home_screen') return AppRoutes.home;
       
       return route!;
+    }
+
+    // 2.5 Screen field (specific for Discover/Nearby)
+    if (screen != null && (screen == NotificationConstants.screenDiscover || screen == NotificationConstants.screenNearby)) {
+      return AppRoutes.home;
     }
     
     // 3. Infer from type
@@ -128,7 +137,18 @@ class NotificationPayloadModel {
     if (route == AppRoutes.home) {
       final tabIndex = int.tryParse(originalData['tabIndex']?.toString() ?? 
                                    originalData['tab_index']?.toString() ?? '0') ?? 0;
-      return {'tabIndex': tabIndex};
+      
+      int? subTabIndex;
+      if (screen == NotificationConstants.screenNearby) {
+        subTabIndex = 0;
+      } else if (screen == NotificationConstants.screenDiscover) {
+        subTabIndex = 1;
+      }
+
+      return {
+        'tabIndex': tabIndex,
+        'subTabIndex': subTabIndex,
+      };
     }
      
     return originalData;

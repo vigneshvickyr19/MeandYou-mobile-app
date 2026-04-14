@@ -13,6 +13,8 @@ class DeepLinkRoutes {
   static const String verifyCode = '/verify-code';
   static const String createPassword = '/create-password';
   static const String profileSetup = '/profile-setup';
+  static const String discover = '/discover';
+  static const String nearby = '/nearby';
 
   // Map deep link paths to app routes
   static Map<String, String> get pathToRoute => {
@@ -27,6 +29,8 @@ class DeepLinkRoutes {
         verifyCode: '/verify-code',
         createPassword: '/create-password',
         profileSetup: '/profile-setup',
+        discover: '/home',
+        nearby: '/home',
       };
 
   // Extract route parameters from path
@@ -56,6 +60,18 @@ class DeepLinkRoutes {
     final homeTabMatch = homeTabRegex.firstMatch(path);
     if (homeTabMatch != null) {
       params['tabIndex'] = homeTabMatch.group(1)!;
+      params['route'] = '/home';
+      return params;
+    }
+
+    // Handle /discover and /nearby
+    if (path == '/discover') {
+      params['screen'] = 'DISCOVER';
+      params['route'] = '/home';
+      return params;
+    }
+    if (path == '/nearby') {
+      params['screen'] = 'NEARBY';
       params['route'] = '/home';
       return params;
     }

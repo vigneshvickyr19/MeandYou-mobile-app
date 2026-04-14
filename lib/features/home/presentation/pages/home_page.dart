@@ -10,7 +10,8 @@ import '../../../notifications/presentation/controllers/notification_controller.
 import '../widgets/home_notification_icon.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final int? initialSubTabIndex;
+  const HomePage({super.key, this.initialSubTabIndex});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -23,7 +24,11 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2, 
+      vsync: this,
+      initialIndex: widget.initialSubTabIndex ?? 0,
+    );
     _tabController.addListener(() {
       setState(() {}); // Rebuild to update header
     });

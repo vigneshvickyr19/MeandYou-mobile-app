@@ -31,6 +31,8 @@ class NotificationConstants {
   static const String screenProfile = 'profile_screen';
   static const String screenCall = 'call_screen';
   static const String screenHome = 'home_screen';
+  static const String screenDiscover = 'DISCOVER';
+  static const String screenNearby = 'NEARBY';
 
   // Message Type Descriptions (for notification body)
   static const String msgDescriptionText = ''; // Use actual message text

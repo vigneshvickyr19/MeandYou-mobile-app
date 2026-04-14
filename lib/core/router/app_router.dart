@@ -32,8 +32,10 @@ class AppRouter {
     switch (settings.name) {
       case AppRoutes.home:
         return MaterialPageRoute(
-          builder: (_) =>
-              HomeShellPage(initialTabIndex: args?['tabIndex'] as int?),
+          builder: (_) => HomeShellPage(
+            initialTabIndex: args?['tabIndex'] as int?,
+            initialSubTabIndex: args?['subTabIndex'] as int?,
+          ),
           settings: settings,
         );
 
