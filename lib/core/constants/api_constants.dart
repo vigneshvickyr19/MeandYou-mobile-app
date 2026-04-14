@@ -2,8 +2,9 @@ class ApiConstants {
   ApiConstants._();
 
   /// Base URL for the Notification Push Service
-  /// Managed on Render: https://push-notification-ve9s.onrender.com
-  static const String notificationBaseUrl = 'https://push-notification-ve9s.onrender.com';
+  /// Managed on Render: https://push-notification-meandyou.onrender.com
+  static const String notificationBaseUrl =
+      'https://push-notification-meandyou.onrender.com';
 
   /// Base URL for the AI Bio Service
   static const String aiBaseUrl = 'https://ai-api-meandyou.onrender.com';

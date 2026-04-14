@@ -26,6 +26,7 @@ class UserModel {
   final String? lookingFor;
   final int? minAge;
   final int? maxAge;
+  final DateTime? lastActiveAt;
 
   UserModel({
     required this.id,
@@ -52,6 +53,7 @@ class UserModel {
     this.lookingFor,
     this.minAge,
     this.maxAge,
+    this.lastActiveAt,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -87,11 +89,12 @@ class UserModel {
       maxAge: data[FirebaseConstants.maxAge] is int
           ? data[FirebaseConstants.maxAge]
           : int.tryParse(data[FirebaseConstants.maxAge]?.toString() ?? ''),
+      lastActiveAt: (data[FirebaseConstants.lastActiveAt] as Timestamp?)?.toDate(),
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       FirebaseConstants.email: email,
       FirebaseConstants.phoneNumber: phoneNumber,
       FirebaseConstants.isProfileComplete: isProfileComplete,
@@ -102,24 +105,32 @@ class UserModel {
       FirebaseConstants.updatedAt: FieldValue.serverTimestamp(),
       FirebaseConstants.fcmToken: fcmToken,
       FirebaseConstants.voipToken: voipToken,
-      FirebaseConstants.fullName: fullName,
-      FirebaseConstants.profileImageUrl: profileImageUrl,
-      FirebaseConstants.thumbnailUrl: thumbnailUrl,
-      FirebaseConstants.imageVersion: imageVersion,
-      FirebaseConstants.age: age,
-      FirebaseConstants.latitude: latitude,
-      FirebaseConstants.longitude: longitude,
-      FirebaseConstants.address: address,
-      FirebaseConstants.geohash: geohash,
-      FirebaseConstants.gender: gender,
-      FirebaseConstants.lastLocationUpdate: lastLocationUpdate != null
-          ? Timestamp.fromDate(lastLocationUpdate!)
-          : null,
       FirebaseConstants.role: role,
-      FirebaseConstants.lookingFor: lookingFor,
-      FirebaseConstants.minAge: minAge,
-      FirebaseConstants.maxAge: maxAge,
     };
+
+    if (fullName != null) map[FirebaseConstants.fullName] = fullName;
+    if (profileImageUrl != null) map[FirebaseConstants.profileImageUrl] = profileImageUrl;
+    if (thumbnailUrl != null) map[FirebaseConstants.thumbnailUrl] = thumbnailUrl;
+    if (imageVersion != null) map[FirebaseConstants.imageVersion] = imageVersion;
+    if (age != null) map[FirebaseConstants.age] = age;
+    if (latitude != null) map[FirebaseConstants.latitude] = latitude;
+    if (longitude != null) map[FirebaseConstants.longitude] = longitude;
+    if (address != null) map[FirebaseConstants.address] = address;
+    if (geohash != null) map[FirebaseConstants.geohash] = geohash;
+    if (gender != null) map[FirebaseConstants.gender] = gender;
+    if (lastLocationUpdate != null) {
+      map[FirebaseConstants.lastLocationUpdate] = Timestamp.fromDate(lastLocationUpdate!);
+    }
+    if (lookingFor != null) map[FirebaseConstants.lookingFor] = lookingFor;
+    if (minAge != null) map[FirebaseConstants.minAge] = minAge;
+    if (maxAge != null) map[FirebaseConstants.maxAge] = maxAge;
+    if (lastActiveAt != null) {
+      map[FirebaseConstants.lastActiveAt] = Timestamp.fromDate(lastActiveAt!);
+    } else {
+      map[FirebaseConstants.lastActiveAt] = FieldValue.serverTimestamp();
+    }
+
+    return map;
   }
 
   UserModel copyWith({
@@ -149,6 +160,7 @@ class UserModel {
     String? lookingFor,
     int? minAge,
     int? maxAge,
+    DateTime? lastActiveAt,
   }) {
     return UserModel(
       id: id,
@@ -175,6 +187,7 @@ class UserModel {
       lookingFor: lookingFor ?? this.lookingFor,
       minAge: minAge ?? this.minAge,
       maxAge: maxAge ?? this.maxAge,
+      lastActiveAt: lastActiveAt ?? this.lastActiveAt,
     );
   }
 }

@@ -123,10 +123,13 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser == null || _subscriptionsSynced) return;
     _subscriptionsSynced = true;
 
-    // 1. Update FCM Token to Firestore
+    // 1. Update Last Active Timestamp
+    await _userRepository.updateLastActive(_currentUser!.id);
+
+    // 2. Update FCM Token to Firestore
     await _updateFcmToken();
 
-    // 2. Subscribe to topics
+    // 3. Subscribe to topics
     await NotificationService.instance.subscribeToGlobalTopic();
 
     if (_currentUser?.gender != null) {

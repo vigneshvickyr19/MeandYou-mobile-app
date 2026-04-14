@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/models/user_model.dart';
 import '../../core/models/profile_model.dart';
+import '../../core/constants/firebase_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/database_service.dart';
 
@@ -32,6 +34,7 @@ class UserRepository {
       isProfileComplete: false,
       isVerified: false,
       createdAt: DateTime.now(),
+      lastActiveAt: DateTime.now(),
     );
 
     await _dbService.saveUserAccount(newUser);
@@ -71,6 +74,7 @@ class UserRepository {
                 isProfileComplete: false,
                 isVerified: true,
                 createdAt: DateTime.now(),
+                lastActiveAt: DateTime.now(),
               );
               await _dbService.saveUserAccount(existing);
             }
@@ -107,6 +111,7 @@ class UserRepository {
         isProfileComplete: false,
         isVerified: true, // Phone verified by default
         createdAt: DateTime.now(),
+        lastActiveAt: DateTime.now(),
       );
       await _dbService.saveUserAccount(existing);
     }
@@ -151,6 +156,13 @@ class UserRepository {
   // Update VoIP Token
   Future<void> updateVoipToken(String userId, String token) async {
     await _dbService.updateUserField(userId, {'voipToken': token});
+  }
+
+  // Update Last Active
+  Future<void> updateLastActive(String userId) async {
+    await _dbService.updateUserField(userId, {
+      FirebaseConstants.lastActiveAt: FieldValue.serverTimestamp(),
+    });
   }
 
 
