@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/providers/auth_provider.dart';
@@ -11,6 +12,9 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../subscription/presentation/controllers/subscription_controller.dart';
 import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/constants/subscription_constants.dart';
+import '../../../../core/constants/firebase_constants.dart';
+import '../../../../core/services/onboarding_service.dart';
+import '../../../../features/home/presentation/controllers/home_navigation_controller.dart';
 
 class LikePage extends StatefulWidget {
   const LikePage({super.key});
@@ -22,6 +26,10 @@ class LikePage extends StatefulWidget {
 class _LikePageState extends State<LikePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey _likedYouKey = GlobalKey();
+  final GlobalKey _matchesKey = GlobalKey();
+  final GlobalKey<ShowCaseWidgetState> _showcaseKey = GlobalKey();
+  HomeNavigationController? _navController;
 
   @override
   void initState() {
@@ -32,7 +40,29 @@ class _LikePageState extends State<LikePage>
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
+      
+      // Setup listener for navigation changes
+      _navController = context.read<HomeNavigationController>();
+      _navController?.addListener(_onNavChanged);
+      
+      // If we are already on this tab, check for tour
+      if (_navController?.index == 1) {
+        _checkAndShowTour();
+      }
     });
+  }
+
+  void _onNavChanged() {
+    if (_navController?.index == 1) {
+      _checkAndShowTour();
+    }
+  }
+
+  @override
+  void dispose() {
+    _navController?.removeListener(_onNavChanged);
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _loadData({bool force = false}) {
@@ -46,37 +76,46 @@ class _LikePageState extends State<LikePage>
     }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  void _checkAndShowTour() {
+    if (OnboardingService.instance.shouldShowTour(context, FirebaseConstants.onboardingLikes)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Show BOTH sequentially as requested
+        _showcaseKey.currentState?.startShowCase([_likedYouKey, _matchesKey]);
+      });
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.black,
-      body: Stack(
-        children: [
-          // Dynamic Background Glows
-          _buildBackgroundGlows(),
-
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                _buildTabBar(),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    physics: const BouncingScrollPhysics(),
-                    children: [_buildLikesTab(), _buildMatchesTab()],
+    return OnboardingService.buildShowcaseWrapper(
+      showcaseKey: _showcaseKey,
+      onFinish: () {
+        OnboardingService.instance.completeTour(context, FirebaseConstants.onboardingLikes);
+      },
+      builder: (context) => Scaffold(
+        backgroundColor: AppColors.black,
+        body: Stack(
+          children: [
+            _buildBackgroundGlows(),
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildTabBar(),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      physics: const BouncingScrollPhysics(),
+                      children: [_buildLikesTab(), _buildMatchesTab()],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -222,8 +261,18 @@ class _LikePageState extends State<LikePage>
             indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Colors.transparent,
             tabs: [
-              _buildTabTitle('Liked You', controller.receivedLikes.length),
-              _buildTabTitle('Matches', controller.matches.length),
+              OnboardingService.themedShowcase(
+                key: _likedYouKey,
+                description: 'See who liked your profile.',
+                targetPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: _buildTabTitle('Liked You', controller.receivedLikes.length),
+              ),
+              OnboardingService.themedShowcase(
+                key: _matchesKey,
+                description: 'View users where both of you liked each other.',
+                targetPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                child: _buildTabTitle('Matches', controller.matches.length),
+              ),
             ],
           ),
         );

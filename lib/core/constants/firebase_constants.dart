@@ -82,6 +82,8 @@ class FirebaseConstants {
   static const String imageVersion = 'imageVersion';
   static const String thumbnailUrl = 'thumbnailUrl';
   static const String lastActiveAt = 'lastActiveAt';
+  static const String onboardingHome = 'onboardingHome';
+  static const String onboardingLikes = 'onboardingLikes';
 
   // Storage Paths
   static const String profileImagesPath = 'profile_images';

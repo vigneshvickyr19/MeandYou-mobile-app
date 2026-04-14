@@ -27,6 +27,8 @@ class UserModel {
   final int? minAge;
   final int? maxAge;
   final DateTime? lastActiveAt;
+  final bool onboardingHome;
+  final bool onboardingLikes;
 
   UserModel({
     required this.id,
@@ -54,6 +56,8 @@ class UserModel {
     this.minAge,
     this.maxAge,
     this.lastActiveAt,
+    this.onboardingHome = false,
+    this.onboardingLikes = false,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -90,6 +94,8 @@ class UserModel {
           ? data[FirebaseConstants.maxAge]
           : int.tryParse(data[FirebaseConstants.maxAge]?.toString() ?? ''),
       lastActiveAt: (data[FirebaseConstants.lastActiveAt] as Timestamp?)?.toDate(),
+      onboardingHome: data[FirebaseConstants.onboardingHome] ?? false,
+      onboardingLikes: data[FirebaseConstants.onboardingLikes] ?? false,
     );
   }
 
@@ -106,6 +112,8 @@ class UserModel {
       FirebaseConstants.fcmToken: fcmToken,
       FirebaseConstants.voipToken: voipToken,
       FirebaseConstants.role: role,
+      FirebaseConstants.onboardingHome: onboardingHome,
+      FirebaseConstants.onboardingLikes: onboardingLikes,
     };
 
     if (fullName != null) map[FirebaseConstants.fullName] = fullName;
@@ -161,6 +169,8 @@ class UserModel {
     int? minAge,
     int? maxAge,
     DateTime? lastActiveAt,
+    bool? onboardingHome,
+    bool? onboardingLikes,
   }) {
     return UserModel(
       id: id,
@@ -188,6 +198,8 @@ class UserModel {
       minAge: minAge ?? this.minAge,
       maxAge: maxAge ?? this.maxAge,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
+      onboardingHome: onboardingHome ?? this.onboardingHome,
+      onboardingLikes: onboardingLikes ?? this.onboardingLikes,
     );
   }
 }

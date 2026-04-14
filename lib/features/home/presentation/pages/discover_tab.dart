@@ -8,6 +8,7 @@ import '../controllers/discover_controller.dart';
 import '../widgets/discover_action_button.dart';
 import '../widgets/heart_flow_overlay.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
+import '../../../../core/services/onboarding_service.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../../../core/services/like_action_service.dart';
@@ -28,7 +29,8 @@ import '../widgets/matching_skeleton.dart';
 /// - No swipe-to-like functionality
 /// - Modern iOS aesthetic with premium feel
 class DiscoverTab extends StatefulWidget {
-  const DiscoverTab({super.key});
+  final GlobalKey? onboardingKey;
+  const DiscoverTab({super.key, this.onboardingKey});
 
   @override
   State<DiscoverTab> createState() => _DiscoverTabState();
@@ -470,51 +472,56 @@ class _DiscoverTabState extends State<DiscoverTab>
     return Positioned(
       top: 24,
       left: 24,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          final authProvider = context.read<AuthProvider>();
-          if (authProvider.currentUser != null) {
-            MatchCompatibilitySheet.show(context, match, authProvider.currentUser!);
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: mainColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: mainColor.withValues(alpha: 0.25),
-              width: 1,
+      child: OnboardingService.themedShowcase(
+        key: widget.onboardingKey ?? GlobalKey(),
+        description: 'Explore profiles based on your preferences.',
+        targetPadding: const EdgeInsets.all(8),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            final authProvider = context.read<AuthProvider>();
+            if (authProvider.currentUser != null) {
+              MatchCompatibilitySheet.show(context, match, authProvider.currentUser!);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: mainColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: mainColor.withValues(alpha: 0.25),
+                width: 1,
+              ),
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  colors: [
-                    mainColor,
-                    mainColor.withValues(alpha: 0.7),
-                  ],
-                ).createShader(bounds),
-                child: Icon(
-                  isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
-                  color: Colors.white,
-                  size: 16,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [
+                      mainColor,
+                      mainColor.withValues(alpha: 0.7),
+                    ],
+                  ).createShader(bounds),
+                  child: Icon(
+                    isHighMatch ? Icons.bolt_rounded : Icons.flare_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "${pct.toInt()}% Match",
-                style: TextStyle(
-                  color: mainColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
+                const SizedBox(width: 4),
+                Text(
+                  "${pct.toInt()}% Match",
+                  style: TextStyle(
+                    color: mainColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

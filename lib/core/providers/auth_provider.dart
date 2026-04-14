@@ -9,6 +9,7 @@ import '../services/deep_link_service.dart';
 import '../services/storage_service.dart';
 import '../services/presence_service.dart';
 import '../services/background_location_service.dart';
+import '../constants/firebase_constants.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepository = UserRepository();
@@ -357,6 +358,41 @@ class AuthProvider extends ChangeNotifier {
   void updateUserLocally(UserModel updatedUser) {
     _currentUser = updatedUser;
     notifyListeners();
+  }
+
+  Future<void> completeOnboarding(String onboardingKey) async {
+    if (_currentUser == null) return;
+    
+    // Check if already shown using the specific field from the model
+    bool alreadyShown = false;
+    switch (onboardingKey) {
+      case FirebaseConstants.onboardingHome:
+        alreadyShown = _currentUser!.onboardingHome;
+        break;
+      case FirebaseConstants.onboardingLikes:
+        alreadyShown = _currentUser!.onboardingLikes;
+        break;
+    }
+
+    if (alreadyShown) return;
+    
+    try {
+      UserModel updatedUser = _currentUser!;
+      switch (onboardingKey) {
+        case FirebaseConstants.onboardingHome:
+          updatedUser = _currentUser!.copyWith(onboardingHome: true);
+          break;
+        case FirebaseConstants.onboardingLikes:
+          updatedUser = _currentUser!.copyWith(onboardingLikes: true);
+          break;
+      }
+      
+      await _userRepository.updateUserAccount(updatedUser);
+      _currentUser = updatedUser;
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error completing onboarding $onboardingKey: $e");
+    }
   }
 
   void _setLoading(bool value) {

@@ -73,6 +73,7 @@ dependencies:
   flutter_image_compress: ^2.3.0
   sqflite: ^2.3.3+3
   sqflite_common_ffi: ^2.3.2+1
+  showcaseview: ^5.0.1
 
 dev_dependencies:
   flutter_test:

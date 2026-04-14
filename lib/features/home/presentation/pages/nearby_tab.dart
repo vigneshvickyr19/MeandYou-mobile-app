@@ -8,6 +8,7 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/utils/location_formatter.dart';
 import '../../../matching/presentation/controllers/nearby_controller.dart';
 import '../../../matching/domain/entities/nearby_match_entity.dart';
+import '../../../../core/services/onboarding_service.dart';
 import '../widgets/discover_action_button.dart';
 import '../widgets/heart_flow_overlay.dart';
 import '../../../../core/services/like_action_service.dart';
@@ -18,7 +19,8 @@ import '../../../../core/widgets/premium_gated_image.dart';
 import '../widgets/matching_skeleton.dart';
 
 class NearbyTab extends StatefulWidget {
-  const NearbyTab({super.key});
+  final GlobalKey? onboardingKey;
+  const NearbyTab({super.key, this.onboardingKey});
 
   @override
   State<NearbyTab> createState() => _NearbyTabState();
@@ -425,35 +427,40 @@ class _NearbyTabState extends State<NearbyTab> with TickerProviderStateMixin, Au
     return Positioned(
       top: 24,
       right: 24,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1,
+      child: OnboardingService.themedShowcase(
+        key: widget.onboardingKey ?? GlobalKey(),
+        description: 'Here you can see people near you.',
+        targetPadding: const EdgeInsets.all(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.near_me_rounded,
-              color: Colors.white.withValues(alpha: 0.7),
-              size: 14,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              LocationFormatter.getDistanceString(match.distance),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.near_me_rounded,
+                color: Colors.white.withValues(alpha: 0.7),
+                size: 14,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                LocationFormatter.getDistanceString(match.distance),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

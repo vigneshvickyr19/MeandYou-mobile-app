@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/services/onboarding_service.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../widgets/pill_tab_switcher.dart';
 import 'nearby_tab.dart';
 import 'discover_tab.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../notifications/presentation/controllers/notification_controller.dart';
 import '../widgets/home_notification_icon.dart';
+import '../controllers/home_navigation_controller.dart';
 
 class HomePage extends StatefulWidget {
   final int? initialSubTabIndex;
@@ -20,6 +24,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey<ShowCaseWidgetState> _showcaseKey = GlobalKey();
+  final GlobalKey _homeKey = GlobalKey();
+  final GlobalKey _nearbyKey = GlobalKey();
+  final GlobalKey _discoverKey = GlobalKey();
+  HomeNavigationController? _navController;
 
   @override
   void initState() {
@@ -40,13 +49,39 @@ class _HomePageState extends State<HomePage>
           authProvider.currentUser!.id,
         );
       }
+      
+      // Setup listener for navigation changes
+      _navController = context.read<HomeNavigationController>();
+      _navController?.addListener(_onNavChanged);
+      
+      // If we are already on this tab, check for tour
+      if (_navController?.index == 0) {
+        _checkAndShowTour(authProvider);
+      }
     });
+  }
+
+  void _onNavChanged() {
+    if (_navController?.index == 0) {
+      final authProvider = context.read<AuthProvider>();
+      _checkAndShowTour(authProvider);
+    }
   }
 
   @override
   void dispose() {
+    _navController?.removeListener(_onNavChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _checkAndShowTour(AuthProvider auth) {
+    if (OnboardingService.instance.shouldShowTour(context, FirebaseConstants.onboardingHome)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Sequential tour: Home -> Nearby -> Discover
+        _showcaseKey.currentState?.startShowCase([_homeKey, _nearbyKey, _discoverKey]);
+      });
+    }
   }
 
   /// Get current user's location name
@@ -70,29 +105,38 @@ class _HomePageState extends State<HomePage>
     final screenHeight = mediaQuery.size.height;
     final isDiscoverTab = _tabController.index == 1;
 
-    return Scaffold(
-      backgroundColor: AppColors.black,
-      body: Stack(
-        children: [
-          // Full-screen content
-          SizedBox(
-            width: double.infinity,
-            height: screenHeight,
-            child: TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: const [NearbyTab(), DiscoverTab()],
+    return OnboardingService.buildShowcaseWrapper(
+      showcaseKey: _showcaseKey,
+      onFinish: () {
+        OnboardingService.instance.completeTour(context, FirebaseConstants.onboardingHome);
+      },
+      builder: (context) => Scaffold(
+        backgroundColor: AppColors.black,
+        body: Stack(
+          children: [
+            // Full-screen content
+            SizedBox(
+              width: double.infinity,
+              height: screenHeight,
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  NearbyTab(onboardingKey: _nearbyKey),
+                  DiscoverTab(onboardingKey: _discoverKey),
+                ],
+              ),
             ),
-          ),
 
-          // Dynamic floating header
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _buildDynamicHeader(context, isDiscoverTab),
-          ),
-        ],
+            // Dynamic floating header
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildDynamicHeader(context, isDiscoverTab),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -152,9 +196,14 @@ class _HomePageState extends State<HomePage>
         // Center: Pill Tab Switcher
         Expanded(
           child: Center(
-            child: PillTabSwitcher(
-              tabs: const ['Nearby', 'Discover'],
-              controller: _tabController,
+            child: OnboardingService.themedShowcase(
+              key: _homeKey,
+              description: 'Switch between Nearby and Discover to find your perfect match.',
+              targetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: PillTabSwitcher(
+                tabs: const ['Nearby', 'Discover'],
+                controller: _tabController,
+              ),
             ),
           ),
         ),
