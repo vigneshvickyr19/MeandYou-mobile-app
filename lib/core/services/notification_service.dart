@@ -176,12 +176,7 @@ class NotificationService {
     }
   }
 
-  /// Initialize local notifications plugin (Legacy FCM handling)
-  /// Note: Most local logic is now moved to LocalNotificationService
-  Future<void> _initializeLocalNotifications() async {
-    // This is already being handled by LocalNotificationService().initialize()
-    // It remains here only if we need FCM-specific initialization that differs.
-  }
+
 
   /// Configure Firebase Cloud Messaging
   Future<void> _configureFCM() async {
@@ -351,28 +346,7 @@ class NotificationService {
     );
   }
 
-  /// Handle notification tap (Legacy handler, still needed for FCM payloads)
-  void _onNotificationTapped(NotificationResponse response) {
-    if (response.payload != null) {
-      try {
-        final decoded = jsonDecode(response.payload!);
-        if (decoded is Map) {
-          final Map<String, dynamic> data = decoded.cast<String, dynamic>();
-          
-          // Handle local notification deep link
-          if (data.containsKey('route')) {
-             final String route = data['route'] as String;
-             _navigatorKey?.currentState?.pushNamed(route);
-             return;
-          }
 
-          _navigateToScreen(data);
-        }
-      } catch (e) {
-        debugPrint('NotificationService: Tap handling error: $e');
-      }
-    }
-  }
 
   // TOPIC SUBSCRIPTION MANAGEMENT
   /// Show a test local notification

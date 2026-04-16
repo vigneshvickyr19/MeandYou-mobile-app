@@ -96,11 +96,7 @@ class ProfileAnalysisResults extends StatelessWidget {
     }
   }
 
-  void _showEditOverlay(BuildContext context, String section) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Opening $section editor...")),
-    );
-  }
+
 
   String _getScoreFeedback(int score) {
     if (score >= 90) return "Exceptional! Your profile is highly optimized for maximum match potential.";

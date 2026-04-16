@@ -66,7 +66,7 @@ class _EditPhotosGridState extends State<EditPhotosGrid> {
           children: [
             AppUploadBox(
               size: double.infinity,
-              imageFile: (hasImage && !isNetwork) ? File(path!) : null,
+              imageFile: (hasImage && !isNetwork) ? File(path) : null,
               imageUrl: isNetwork ? path : null,
               onTap: () => _pickImage(index),
               onRemove: () => _removeImage(index),

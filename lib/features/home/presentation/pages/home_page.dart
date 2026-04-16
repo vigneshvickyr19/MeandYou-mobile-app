@@ -24,7 +24,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final GlobalKey<ShowCaseWidgetState> _showcaseKey = GlobalKey();
+
   final GlobalKey _homeKey = GlobalKey();
   final GlobalKey _nearbyKey = GlobalKey();
   final GlobalKey _discoverKey = GlobalKey();
@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage>
     if (OnboardingService.instance.shouldShowTour(context, FirebaseConstants.onboardingHome)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Sequential tour: Home -> Nearby -> Discover
-        _showcaseKey.currentState?.startShowCase([_homeKey, _nearbyKey, _discoverKey]);
+        ShowcaseView.get().startShowCase([_homeKey, _nearbyKey, _discoverKey]);
       });
     }
   }
@@ -106,11 +106,10 @@ class _HomePageState extends State<HomePage>
     final isDiscoverTab = _tabController.index == 1;
 
     return OnboardingService.buildShowcaseWrapper(
-      showcaseKey: _showcaseKey,
       onFinish: () {
         OnboardingService.instance.completeTour(context, FirebaseConstants.onboardingHome);
       },
-      builder: (context) => Scaffold(
+      child: Scaffold(
         backgroundColor: AppColors.black,
         body: Stack(
           children: [

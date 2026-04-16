@@ -39,7 +39,7 @@ class AppEmptyState extends StatelessWidget {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.05),
+                      color: AppColors.primary.withValues(alpha: 0.05),
                     ),
                   ),
                   Container(
@@ -47,7 +47,7 @@ class AppEmptyState extends StatelessWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                     ),
                   ),
                   Icon(
@@ -83,7 +83,7 @@ class AppEmptyState extends StatelessWidget {
                 description,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 15,
                   height: 1.5,
                 ),

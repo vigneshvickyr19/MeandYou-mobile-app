@@ -144,8 +144,7 @@ class _ProfileAnalysisPageState extends State<ProfileAnalysisPage> {
                 ),
                 onPressed: controller.isSaving ? null : () async {
                   final success = await controller.saveProfile();
-                  if (success) {
-                     if (!mounted) return;
+                  if (context.mounted && success) {
                      ScaffoldMessenger.of(context).showSnackBar(
                        const SnackBar(
                          content: Text("Profile updated successfully!"),
@@ -181,14 +180,14 @@ class _ProfileAnalysisPageState extends State<ProfileAnalysisPage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.primary.withOpacity(0.15),
-                    AppColors.primary.withOpacity(0.02),
+                    AppColors.primary.withValues(alpha: 0.15),
+                    AppColors.primary.withValues(alpha: 0.02),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
               ),
               child: Row(
                 children: [
@@ -196,7 +195,7 @@ class _ProfileAnalysisPageState extends State<ProfileAnalysisPage> {
                     alignment: Alignment.center,
                     children: [
                       Shimmer.fromColors(
-                        baseColor: AppColors.primary.withOpacity(0.3),
+                        baseColor: AppColors.primary.withValues(alpha: 0.3),
                         highlightColor: AppColors.primary,
                         child: Container(
                           width: 70,
@@ -230,7 +229,7 @@ class _ProfileAnalysisPageState extends State<ProfileAnalysisPage> {
                           child: Text(
                             controller.loadingMessage,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -247,8 +246,8 @@ class _ProfileAnalysisPageState extends State<ProfileAnalysisPage> {
           const SizedBox(height: 40),
           
           Shimmer.fromColors(
-            baseColor: Colors.white.withOpacity(0.9),
-            highlightColor: AppColors.primary.withOpacity(0.5),
+            baseColor: Colors.white.withValues(alpha: 0.9),
+            highlightColor: AppColors.primary.withValues(alpha: 0.5),
             child: const Text(
               "Analyzing Sections...",
               style: TextStyle(
@@ -270,8 +269,8 @@ class _ProfileAnalysisPageState extends State<ProfileAnalysisPage> {
 
   Widget _buildSkeletonCard({required int delay}) {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withOpacity(0.03),
-      highlightColor: Colors.white.withOpacity(0.08),
+      baseColor: Colors.white.withValues(alpha: 0.03),
+      highlightColor: Colors.white.withValues(alpha: 0.08),
       child: FadeInUp(
         duration: const Duration(milliseconds: 600),
         delay: Duration(milliseconds: delay),

@@ -20,7 +20,7 @@ class EditProfileController extends ChangeNotifier {
 
   double _completenessScore = 0.0;
   String? _photoFeedback;
-  Map<String, String> _sectionAnalysis = {};
+
 
   EditProfileController(this._authProvider);
 

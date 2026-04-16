@@ -28,7 +28,7 @@ class _LikePageState extends State<LikePage>
   late TabController _tabController;
   final GlobalKey _likedYouKey = GlobalKey();
   final GlobalKey _matchesKey = GlobalKey();
-  final GlobalKey<ShowCaseWidgetState> _showcaseKey = GlobalKey();
+
   HomeNavigationController? _navController;
 
   @override
@@ -80,7 +80,7 @@ class _LikePageState extends State<LikePage>
     if (OnboardingService.instance.shouldShowTour(context, FirebaseConstants.onboardingLikes)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Show BOTH sequentially as requested
-        _showcaseKey.currentState?.startShowCase([_likedYouKey, _matchesKey]);
+        ShowcaseView.get().startShowCase([_likedYouKey, _matchesKey]);
       });
     }
   }
@@ -90,11 +90,10 @@ class _LikePageState extends State<LikePage>
   @override
   Widget build(BuildContext context) {
     return OnboardingService.buildShowcaseWrapper(
-      showcaseKey: _showcaseKey,
       onFinish: () {
         OnboardingService.instance.completeTour(context, FirebaseConstants.onboardingLikes);
       },
-      builder: (context) => Scaffold(
+      child: Scaffold(
         backgroundColor: AppColors.black,
         body: Stack(
           children: [

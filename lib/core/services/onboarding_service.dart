@@ -31,18 +31,12 @@ class OnboardingService {
 
   /// Modern dark theme configuration for ShowcaseView
   static Widget buildShowcaseWrapper({
-    required GlobalKey showcaseKey,
-    required Widget Function(BuildContext) builder,
+    required Widget child,
     VoidCallback? onFinish,
   }) {
-    return ShowCaseWidget(
-      key: showcaseKey,
+    return _ShowcaseRegistrationWrapper(
       onFinish: onFinish,
-      enableAutoScroll: true,
-      blurValue: 1,
-      autoPlay: false,
-      autoPlayDelay: const Duration(seconds: 3),
-      builder: builder,
+      child: child,
     );
   }
 
@@ -70,5 +64,46 @@ class OnboardingService {
       targetBorderRadius: BorderRadius.circular(16),
       child: child,
     );
+  }
+}
+
+class _ShowcaseRegistrationWrapper extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onFinish;
+
+  const _ShowcaseRegistrationWrapper({
+    required this.child,
+    this.onFinish,
+  });
+
+  @override
+  State<_ShowcaseRegistrationWrapper> createState() => _ShowcaseRegistrationWrapperState();
+}
+
+class _ShowcaseRegistrationWrapperState extends State<_ShowcaseRegistrationWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // Use factory constructor to initialize showcase settings
+    // This sets up the singleton for this lifecycle
+    ShowcaseView.register(
+      onFinish: widget.onFinish,
+      enableAutoScroll: true,
+      blurValue: 1,
+      autoPlay: false,
+      autoPlayDelay: const Duration(seconds: 3),
+    );
+  }
+
+  @override
+  void dispose() {
+    // Clean up using the singleton getter
+    ShowcaseView.get().unregister();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

@@ -89,7 +89,7 @@ class GeneralAnalysisCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: const EdgeInsets.only(top: 4),
+            padding: EdgeInsets.only(top: 4),
             child: Icon(Icons.check_circle_rounded, color: Colors.white24, size: 14),
           ),
           const SizedBox(width: 12),
