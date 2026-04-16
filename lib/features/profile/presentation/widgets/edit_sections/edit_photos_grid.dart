@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../controllers/edit_profile_controller.dart';
@@ -57,14 +58,80 @@ class _EditPhotosGridState extends State<EditPhotosGrid> {
       ),
       itemBuilder: (_, index) {
         String? path = index < photos.length ? photos[index] : null;
-        bool isNetwork = path != null && path.startsWith('http');
+        bool hasImage = path != null && path.isNotEmpty;
+        bool isNetwork = hasImage && path.startsWith('http');
+        String quality = hasImage ? widget.controller.getPhotoAnalysis(index).label : "";
         
-        return AppUploadBox(
-          size: 100,
-          imageFile: (path != null && path.isNotEmpty && !isNetwork) ? File(path) : null,
-          imageUrl: isNetwork ? path : null,
-          onTap: () => _pickImage(index),
-          onRemove: () => _removeImage(index),
+        return Stack(
+          children: [
+            AppUploadBox(
+              size: double.infinity,
+              imageFile: (hasImage && !isNetwork) ? File(path!) : null,
+              imageUrl: isNetwork ? path : null,
+              onTap: () => _pickImage(index),
+              onRemove: () => _removeImage(index),
+            ),
+            if (hasImage)
+              Positioned(
+                bottom: 8,
+                left: 8,
+                right: 8,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            quality == "Excellent" ? Icons.verified_rounded : Icons.star_rounded,
+                            color: quality == "Excellent" ? Colors.blueAccent : Colors.amberAccent,
+                            size: 10,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            quality,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (!hasImage && index == 0)
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 40),
+                      child: Text(
+                        "Primary",
+                        style: TextStyle(
+                          color: Colors.white24,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );

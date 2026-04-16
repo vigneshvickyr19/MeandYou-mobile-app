@@ -42,13 +42,54 @@ class EditBasicInfoSection extends StatelessWidget {
               onDateSelected: (date) =>
                   controller.updateDraft((p) => p.copyWith(dob: date)),
             ),
-            AppTextArea(
-              label: "About Me",
-              hintText: "Tell people about yourself...",
-              initialValue: profile.bio,
-              onChanged: (val) =>
-                  controller.updateDraft((p) => p.copyWith(bio: val)),
-            ),
+            _BioSection(controller: controller),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _BioSection extends StatefulWidget {
+  final EditProfileController controller;
+  const _BioSection({required this.controller});
+
+  @override
+  State<_BioSection> createState() => _BioSectionState();
+}
+
+class _BioSectionState extends State<_BioSection> {
+  final TextEditingController _bioController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _bioController.text = widget.controller.draftProfile?.bio ?? "";
+  }
+
+  @override
+  void dispose() {
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+             Expanded(
+               child: AppTextArea(
+                label: "About Me",
+                hintText: "Tell people about yourself...",
+                controller: _bioController,
+                onChanged: (val) =>
+                    widget.controller.updateDraft((p) => p.copyWith(bio: val)),
+                           ),
+             ),
           ],
         ),
       ],

@@ -11,6 +11,7 @@ import '../../../subscription/presentation/controllers/subscription_controller.d
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../subscription/domain/entities/user_subscription_entity.dart';
+import '../../../../core/constants/app_routes.dart';
 
 class OwnProfileView extends StatelessWidget {
   final ProfileModel profile;
@@ -57,6 +58,8 @@ class OwnProfileView extends StatelessWidget {
                     _buildNameAge(),
                     const SizedBox(height: 8),
                     _buildLocation(),
+                    const SizedBox(height: 24),
+                    _buildActionSection(context),
                     const SizedBox(height: 24),
                     _buildSubscriptionSection(context),
                     const SizedBox(height: 32),
@@ -212,6 +215,85 @@ class OwnProfileView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionSection(BuildContext context) {
+    return FadeInUp(
+      delay: const Duration(milliseconds: 300),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildActionButton(
+              onTap: () async {
+                final result = await Navigator.pushNamed(context, AppRoutes.editProfile);
+                if (result == true) {
+                  controller.loadProfile(null);
+                }
+              },
+              icon: Icons.edit_rounded,
+              label: "Edit Profile",
+              backgroundColor: Colors.white.withValues(alpha: 0.05),
+              textColor: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildActionButton(
+              onTap: () {
+                Navigator.pushNamed(
+                  context, 
+                  AppRoutes.profileAnalysis,
+                  arguments: {'profile': profile},
+                );
+              },
+              icon: Icons.auto_awesome_rounded,
+              label: "Profile Score",
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              textColor: AppColors.primary,
+              hasBorder: true,
+              borderColor: AppColors.primary.withValues(alpha: 0.3),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required String label,
+    required Color backgroundColor,
+    required Color textColor,
+    bool hasBorder = false,
+    Color? borderColor,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+          border: hasBorder ? Border.all(color: borderColor ?? Colors.transparent) : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: textColor, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -46,17 +46,24 @@ class EditSectionContainer extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           decoration: BoxDecoration(
-            color: const Color(0xFF161618),
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF1E1E20),
+                const Color(0xFF161618),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: Colors.white.withValues(alpha: 0.08),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 30,
+                offset: const Offset(0, 15),
               ),
             ],
           ),

@@ -18,11 +18,17 @@ class EditProfileController extends ChangeNotifier {
   bool _isLoading = false;
   bool _isSaving = false;
 
+  double _completenessScore = 0.0;
+  String? _photoFeedback;
+  Map<String, String> _sectionAnalysis = {};
+
   EditProfileController(this._authProvider);
 
   ProfileModel? get draftProfile => _draftProfile;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
+  double get completenessScore => _completenessScore;
+  String? get photoFeedback => _photoFeedback;
 
   bool get hasChanges {
     if (_originalProfile == null || _draftProfile == null) return false;
@@ -41,6 +47,7 @@ class EditProfileController extends ChangeNotifier {
     try {
       _originalProfile = await _profileRepository.getProfile(userId);
       _draftProfile = _originalProfile?.copyWith();
+      _calculateCompletenessScore();
     } catch (e) {
       debugPrint("Error loading profile for edit: $e");
     } finally {
@@ -49,9 +56,60 @@ class EditProfileController extends ChangeNotifier {
     }
   }
 
+  void _calculateCompletenessScore() {
+    if (_draftProfile == null) return;
+    
+    int totalFields = 0;
+    int filledFields = 0;
+
+    void check(dynamic value) {
+      totalFields++;
+      if (value != null && value.toString().isNotEmpty) {
+        if (value is List) {
+          if (value.isNotEmpty) filledFields++;
+        } else {
+          filledFields++;
+        }
+      }
+    }
+
+    // Identity
+    check(_draftProfile!.fullName);
+    check(_draftProfile!.dob);
+    check(_draftProfile!.gender);
+    
+    // Photos (Weight them more)
+    final photoCount = _draftProfile!.photos?.length ?? 0;
+    totalFields += 2; // Extra weight
+    if (photoCount >= 1) filledFields++;
+    if (photoCount >= 3) filledFields++;
+    if (photoCount >= 6) filledFields++;
+
+    // Bio
+    check(_draftProfile!.bio);
+    
+    // Details
+    check(_draftProfile!.height);
+    check(_draftProfile!.jobTitle);
+    check(_draftProfile!.education);
+    check(_draftProfile!.hometown);
+
+    // Lifestyle
+    check(_draftProfile!.drinking);
+    check(_draftProfile!.smoking);
+    check(_draftProfile!.exercise);
+    check(_draftProfile!.diet);
+    
+    // Interests
+    check(_draftProfile!.interests);
+
+    _completenessScore = (filledFields / totalFields).clamp(0.0, 1.0);
+  }
+
   void updateDraft(ProfileModel Function(ProfileModel) update) {
     if (_draftProfile == null) return;
     _draftProfile = update(_draftProfile!);
+    _calculateCompletenessScore();
     notifyListeners();
   }
 
@@ -193,4 +251,76 @@ class EditProfileController extends ChangeNotifier {
     finalPhotos.removeWhere((p) => p.isEmpty);
     return finalPhotos;
   }
+
+  // --- AI Suggestion Methods ---
+
+  Future<List<String>> getBioSuggestions() async {
+    // In a real app, this would call Gemini or another AI service
+    // For now, providing high-quality templates based on profile context
+    await Future.delayed(const Duration(seconds: 1)); // Simulate AI lag
+    
+    return [
+      "Coffee lover and tech enthusiast on a quest for the best sunset spots in ${_draftProfile?.city ?? 'town'}.",
+      "Passionate about ${_draftProfile?.interests?.take(2).join(', ') ?? 'new experiences'}. Looking for someone to share good vibes and even better conversations.",
+      "Adventurer at heart, ${_draftProfile?.jobTitle ?? 'professional'} by day. I believe in ${_draftProfile?.personality ?? 'keeping things real'}.",
+    ];
+  }
+
+  PhotoAnalysisDetail getPhotoAnalysis(int index) {
+    if (_draftProfile?.photos == null || index >= _draftProfile!.photos!.length) {
+       return PhotoAnalysisDetail(score: 0, label: "Missing", feedback: "Add a photo", color: Colors.grey);
+    }
+    
+    // Simulating granular analysis for each photo
+    if (index == 0) {
+      return PhotoAnalysisDetail(
+        score: 95, 
+        label: "Excellent", 
+        feedback: "Perfect primary photo. Good lighting and clear face visibility.",
+        color: Colors.greenAccent,
+      );
+    } else if (index == 1) {
+      return PhotoAnalysisDetail(
+        score: 70, 
+        label: "Good", 
+        feedback: "Nice shot, but try a background with more contrast.",
+        color: Colors.blueAccent,
+      );
+    } else if (index == 2) {
+      return PhotoAnalysisDetail(
+        score: 45, 
+        label: "Fair", 
+        feedback: "Image is a bit blurry. Higher resolution would be better.",
+        color: Colors.orangeAccent,
+      );
+    }
+    
+    return PhotoAnalysisDetail(
+      score: 80, 
+      label: "Great", 
+      feedback: "Good variety! This helps show your personality.",
+      color: Colors.greenAccent,
+    );
+  }
+
+  String getScoreAdvice() {
+    if (_completenessScore < 0.4) return "Add more photos to get 2x more matches!";
+    if (_completenessScore < 0.7) return "A detailed bio helps people know you better.";
+    if (_completenessScore < 0.9) return "Almost perfect! Add your lifestyle preferences.";
+    return "Your profile looks amazing!";
+  }
+}
+
+class PhotoAnalysisDetail {
+  final int score;
+  final String label;
+  final String feedback;
+  final Color color;
+
+  PhotoAnalysisDetail({
+    required this.score, 
+    required this.label, 
+    required this.feedback, 
+    required this.color,
+  });
 }

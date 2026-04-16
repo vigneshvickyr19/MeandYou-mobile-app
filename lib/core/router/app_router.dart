@@ -8,7 +8,10 @@ import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/matching/presentation/pages/location_permission_page.dart';
 import '../models/user_model.dart';
+import '../models/profile_model.dart';
 import '../../features/auth/presentation/pages/auth_wrapper.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/profile_analysis_page.dart';
 import '../constants/app_routes.dart';
 
 class AppRouter {
@@ -114,6 +117,22 @@ class AppRouter {
           builder: (_) => const LocationPermissionPage(),
           settings: settings,
         );
+      
+      case AppRoutes.editProfile:
+        return MaterialPageRoute(
+          builder: (_) => const EditProfilePage(),
+          settings: settings,
+        );
+      
+      case AppRoutes.profileAnalysis:
+        final profile = args?['profile'];
+        if (profile is ProfileModel) {
+          return MaterialPageRoute(
+            builder: (_) => ProfileAnalysisPage(profile: profile),
+            settings: settings,
+          );
+        }
+        return null;
 
       default:
         return null;

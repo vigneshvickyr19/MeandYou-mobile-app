@@ -8,4 +8,5 @@ class StorageConstants {
 
   // Shared Preferences Keys
   static const String userTokenKey = 'auth_token';
+  static const String profileAuditCache = 'profile_audit_cache_';
 }

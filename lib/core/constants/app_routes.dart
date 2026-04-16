@@ -14,4 +14,6 @@ class AppRoutes {
   static const call = '/call';
   static const likes = '/likes';
   static const locationPermission = '/location-permission';
+  static const editProfile = '/edit-profile';
+  static const profileAnalysis = '/profile-analysis';
 }

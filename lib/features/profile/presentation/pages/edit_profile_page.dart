@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import 'package:intl/intl.dart';
+import '../widgets/profile_score_header.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -67,36 +68,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
               children: [
                 // Background Glows
                 Positioned(
-                  top: 100,
+                  top: -100,
                   right: -100,
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary.withValues(alpha: 0.05),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 200,
-                  left: -150,
                   child: Container(
                     width: 400,
                     height: 400,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.secondary.withValues(alpha: 0.03),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
 
                 SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 120),
+                  padding: const EdgeInsets.only(bottom: 140),
                   child: Column(
                     children: [
+                      const SizedBox(height: 12),
+                      ProfileScoreHeader(
+                        score: controller.completenessScore,
+                        advice: controller.getScoreAdvice(),
+                      ),
+                      const SizedBox(height: 32),
                       Padding(
-                        padding: const EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Column(
                           children: [
                             EditBasicInfoSection(controller: controller),
