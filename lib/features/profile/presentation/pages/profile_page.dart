@@ -226,6 +226,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: const Text("Privacy Settings", style: TextStyle(color: Colors.white)),
                 onTap: () => Navigator.pop(context),
               ),
+              // Hidden for now, but kept in code for future debugging
+              /*
+              ListTile(
+                leading: const Icon(Icons.notification_important_outlined, color: Colors.amber),
+                title: const Text("Test Notification 🔔", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, AppRoutes.notificationTest);
+                },
+              ),
+              */
               ListTile(
                 leading: const Icon(Icons.logout_rounded, color: AppColors.error),
                 title: const Text("Logout", style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),

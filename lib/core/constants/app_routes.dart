@@ -16,4 +16,5 @@ class AppRoutes {
   static const locationPermission = '/location-permission';
   static const editProfile = '/edit-profile';
   static const profileAnalysis = '/profile-analysis';
+  static const notificationTest = '/notification-test';
 }

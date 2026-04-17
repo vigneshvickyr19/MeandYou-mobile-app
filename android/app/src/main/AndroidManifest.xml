@@ -81,7 +81,7 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@android:color/white" />
 
-        <!--  Local Notification Boot Receiver -->
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" android:exported="false" />
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

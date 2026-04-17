@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/firebase_constants.dart';
 import '../../../../core/providers/auth_provider.dart';
-import '../../../../core/services/onboarding_service.dart';
-import 'package:showcaseview/showcaseview.dart';
 import '../widgets/pill_tab_switcher.dart';
 import 'nearby_tab.dart';
 import 'discover_tab.dart';
@@ -25,9 +22,6 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final GlobalKey _homeKey = GlobalKey();
-  final GlobalKey _nearbyKey = GlobalKey();
-  final GlobalKey _discoverKey = GlobalKey();
   HomeNavigationController? _navController;
 
   @override
@@ -76,12 +70,7 @@ class _HomePageState extends State<HomePage>
   }
 
   void _checkAndShowTour(AuthProvider auth) {
-    if (OnboardingService.instance.shouldShowTour(context, FirebaseConstants.onboardingHome)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Sequential tour: Home -> Nearby -> Discover
-        ShowcaseView.get().startShowCase([_homeKey, _nearbyKey, _discoverKey]);
-      });
-    }
+    // Showcase removed from Home page to prevent performance issues/freezes
   }
 
   /// Get current user's location name
@@ -105,27 +94,23 @@ class _HomePageState extends State<HomePage>
     final screenHeight = mediaQuery.size.height;
     final isDiscoverTab = _tabController.index == 1;
 
-    return OnboardingService.buildShowcaseWrapper(
-      onFinish: () {
-        OnboardingService.instance.completeTour(context, FirebaseConstants.onboardingHome);
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.black,
-        body: Stack(
-          children: [
-            // Full-screen content
-            SizedBox(
-              width: double.infinity,
-              height: screenHeight,
-              child: TabBarView(
-                controller: _tabController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  NearbyTab(onboardingKey: _nearbyKey),
-                  DiscoverTab(onboardingKey: _discoverKey),
-                ],
-              ),
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: [
+          // Full-screen content
+          SizedBox(
+            width: double.infinity,
+            height: screenHeight,
+            child: TabBarView(
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: const [
+                NearbyTab(),
+                DiscoverTab(),
+              ],
             ),
+          ),
 
             // Dynamic floating header
             Positioned(
@@ -136,7 +121,6 @@ class _HomePageState extends State<HomePage>
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -195,14 +179,9 @@ class _HomePageState extends State<HomePage>
         // Center: Pill Tab Switcher
         Expanded(
           child: Center(
-            child: OnboardingService.themedShowcase(
-              key: _homeKey,
-              description: 'Switch between Nearby and Discover to find your perfect match.',
-              targetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: PillTabSwitcher(
-                tabs: const ['Nearby', 'Discover'],
-                controller: _tabController,
-              ),
+            child: PillTabSwitcher(
+              tabs: const ['Nearby', 'Discover'],
+              controller: _tabController,
             ),
           ),
         ),

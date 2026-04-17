@@ -12,6 +12,7 @@ import '../models/profile_model.dart';
 import '../../features/auth/presentation/pages/auth_wrapper.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/profile_analysis_page.dart';
+import '../../features/notifications/presentation/pages/notification_test_page.dart';
 import '../constants/app_routes.dart';
 
 class AppRouter {
@@ -133,6 +134,12 @@ class AppRouter {
           );
         }
         return null;
+
+      case AppRoutes.notificationTest:
+        return MaterialPageRoute(
+          builder: (_) => const NotificationTestPage(),
+          settings: settings,
+        );
 
       default:
         return null;
