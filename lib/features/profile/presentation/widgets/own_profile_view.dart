@@ -156,13 +156,16 @@ class OwnProfileView extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(
-            profile.fullName ?? 'User',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+          Flexible(
+            child: Text(
+              profile.fullName ?? 'User',
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
           if (controller.age != null) ...[
@@ -206,12 +209,15 @@ class OwnProfileView extends StatelessWidget {
             size: 16,
           ),
           const SizedBox(width: 4),
-          Text(
-            locationText.isEmpty ? 'Location not set' : locationText,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              locationText.isEmpty ? 'Location not set' : locationText,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

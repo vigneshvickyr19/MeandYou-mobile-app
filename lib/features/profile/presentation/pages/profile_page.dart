@@ -12,6 +12,7 @@ import '../widgets/other_profile_view.dart';
 import 'edit_profile_page.dart';
 import '../../../home/presentation/controllers/home_navigation_controller.dart';
 import '../../../../core/services/like_action_service.dart';
+import '../../../../core/services/local_notification_service.dart';
 import '../../../home/presentation/widgets/heart_flow_overlay.dart';
 import '../../../subscription/presentation/widgets/subscription_upsell_sheet.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -226,17 +227,20 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: const Text("Privacy Settings", style: TextStyle(color: Colors.white)),
                 onTap: () => Navigator.pop(context),
               ),
-              // Hidden for now, but kept in code for future debugging
-              /*
               ListTile(
                 leading: const Icon(Icons.notification_important_outlined, color: Colors.amber),
-                title: const Text("Test Notification 🔔", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                title: const Text("Test Scheduling (60s) 🔔", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                subtitle: const Text("Tests background/daily repeating logic", style: TextStyle(color: Colors.white38, fontSize: 11)),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, AppRoutes.notificationTest);
+                  LocalNotificationService.instance.scheduleRepeatingTestNotification(secondsFromNow: 60);
+                  AppSnackbar.show(
+                    context,
+                    message: 'Daily Repeating Test scheduled for 60s from now!',
+                    type: SnackbarType.success,
+                  );
                 },
               ),
-              */
               ListTile(
                 leading: const Icon(Icons.logout_rounded, color: AppColors.error),
                 title: const Text("Logout", style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),

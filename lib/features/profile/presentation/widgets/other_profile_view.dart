@@ -169,12 +169,15 @@ class OtherProfileView extends StatelessWidget {
           children: [
             Icon(Icons.location_on_rounded, color: Colors.white.withValues(alpha: 0.6), size: 16),
             const SizedBox(width: 4),
-            Text(
-              profile.city ?? "Nearby",
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            Flexible(
+              child: Text(
+                profile.city ?? "Nearby",
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

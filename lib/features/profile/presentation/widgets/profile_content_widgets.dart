@@ -205,9 +205,13 @@ class ProfileContentWidgets {
               style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 15),
             ),
             const Spacer(),
-            Text(
-              value,
-              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+              ),
             ),
             if (onTap != null) ...[
               const SizedBox(width: 8),
